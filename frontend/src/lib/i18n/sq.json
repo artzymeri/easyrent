@@ -1,0 +1,290 @@
+{
+  "common": {
+    "loading": "Duke ngarkuar…",
+    "cancel": "Anulo",
+    "save": "Ruaj",
+    "delete": "Fshij",
+    "edit": "Ndrysho",
+    "back": "← Kthehu",
+    "next": "Tjetër",
+    "logOut": "Dilni",
+    "active": "Aktiv",
+    "inactive": "Joaktiv",
+    "activate": "Aktivizo",
+    "deactivate": "Çaktivizo",
+    "never": "Asnjëherë",
+    "noData": "—",
+    "more": "+{count} më shumë",
+    "required": "e detyrueshme"
+  },
+  "nav": {
+    "dashboard": "Paneli",
+    "bookings": "Rezervimet",
+    "cars": "Veturat",
+    "customers": "Klientët",
+    "staff": "Stafi",
+    "settings": "Cilësimet"
+  },
+  "roles": {
+    "manager": "Menaxher",
+    "regular": "I rregullt"
+  },
+  "landing": {
+    "staffLogin": "Hyrja e Stafit",
+    "heroTitle": "Menaxhoni Flotën Tuaj të Qiradhënies",
+    "heroHighlight": "Me Lehtësi",
+    "heroDescription": "EasyRent është një platformë e plotë për menaxhimin e qiradhënies së veturave. Ndiqni veturat, menaxhoni klientët, trajtoni rezervimet dhe rritni biznesin tuaj — të gjitha nga një panel.",
+    "goToDashboard": "Shko te Paneli →",
+    "featuresHeading": "Gjithçka që Ju Nevojitet për të Drejtuar një Biznes Qiradhënieje",
+    "copyright": "© {year} EasyRent. Të gjitha të drejtat e rezervuara.",
+    "featureFleetTitle": "Menaxhimi i Flotës",
+    "featureFleetDesc": "Ndiqni çdo veturë në flotën tuaj — marka, modeli, kilometrazhi, sigurimi, regjistrimi dhe statusi i mirëmbajtjes në një vend.",
+    "featureBookingTitle": "Kalendari i Rezervimeve",
+    "featureBookingDesc": "Kalendar vizual i rezervimeve për të parë disponueshmërinë me një shikim. Krijoni, modifikoni dhe ndiqni rezervimet pa mundim.",
+    "featureCustomerTitle": "Baza e Klientëve",
+    "featureCustomerDesc": "Mbani të organizuara të dhënat e klientëve — informacionet e kontaktit, dokumentet e identifikimit, patentën e shoferit dhe historinë e rezervimeve.",
+    "featureStaffTitle": "Menaxhimi i Stafit",
+    "featureStaffDesc": "Menaxherët mund të shtojnë dhe menaxhojnë anëtarët e stafit. Kontrolloni qasjen me leje të bazuara në role.",
+    "featureDashboardTitle": "Paneli & Raportet",
+    "featureDashboardDesc": "Merrni një pasqyrë të biznesit tuaj me një shikim. Rezervimet aktive, statusi i flotës dhe metrikat e të ardhurave.",
+    "featureSecureTitle": "I Sigurt & I Besueshëm",
+    "featureSecureDesc": "Çdo kompani merr nëndomainin e vet dhe të dhëna të izoluara. Autentifikim JWT, fjalëkalime të enkriptuara dhe API të sigurt."
+  },
+  "login": {
+    "title": "Hyrja e Stafit",
+    "description": "Identifikohuni me kredencialet e kompanisë tuaj",
+    "subdomain": "Nëndomaini i Kompanisë",
+    "email": "Email",
+    "password": "Fjalëkalimi",
+    "signIn": "Identifikohu",
+    "signingIn": "Duke u identifikuar…",
+    "allFieldsRequired": "Të gjitha fushat janë të detyrueshme",
+    "welcome": "Mirë se erdhe, {name}!"
+  },
+  "dashboard": {
+    "title": "Paneli",
+    "subtitle": "Pasqyrë e biznesit tuaj të qiradhënies",
+    "loadingDashboard": "Duke ngarkuar panelin…",
+    "totalCars": "Totali i Veturave",
+    "customers": "Klientët",
+    "totalBookings": "Totali i Rezervimeve",
+    "fleetUtilization": "Shfrytëzimi i Flotës",
+    "available": "të disponueshme",
+    "rented": "të dhëna me qira",
+    "maintenance": "mirëmbajtje",
+    "registeredCustomers": "Klientë të regjistruar",
+    "activeBookings": "aktive",
+    "pendingBookings": "në pritje",
+    "carsCurrentlyRented": "Vetura aktualisht me qira",
+    "recentBookings": "Rezervimet e Fundit",
+    "latestActivity": "Aktiviteti i fundit i rezervimeve",
+    "noBookingsYet": "Ende nuk ka rezervime. Krijoni rezervimin tuaj të parë!"
+  },
+  "customersPage": {
+    "title": "Klientët",
+    "subtitle": "{count} klient(ë) të regjistruar",
+    "loadingCustomers": "Duke ngarkuar klientët…",
+    "newCustomer": "+ Klient i Ri",
+    "dialogTitle": "Klient i Ri",
+    "dialogDescription": "Regjistroni një klient të ri për kompaninë tuaj",
+    "firstName": "Emri",
+    "lastName": "Mbiemri",
+    "email": "Email",
+    "phone": "Telefoni",
+    "idNumber": "Numri i ID",
+    "driversLicense": "Patenta e Shoferit",
+    "dateOfBirth": "Datëlindja",
+    "address": "Adresa",
+    "creating": "Duke krijuar…",
+    "createCustomer": "Krijo Klientin",
+    "emptyState": "Ende nuk ka klientë. Klikoni \"+ Klient i Ri\" për të shtuar një.",
+    "tableHeaders": {
+      "name": "Emri",
+      "phone": "Telefoni",
+      "email": "Email",
+      "idLicense": "ID / Patenta",
+      "registered": "Regjistruar"
+    },
+    "validation": {
+      "required": "Emri, mbiemri dhe telefoni janë të detyrueshëm"
+    },
+    "toast": {
+      "created": "Klienti u krijua!",
+      "failedLoad": "Dështoi ngarkimi i klientëve",
+      "failedCreate": "Dështoi krijimi i klientit"
+    }
+  },
+  "carsPage": {
+    "title": "Veturat",
+    "subtitle": "{count} veturë në flotë",
+    "loadingCars": "Duke ngarkuar veturat…",
+    "addCar": "+ Shto Veturë",
+    "dialogTitle": "Shto Veturë",
+    "dialogDescription": "Shtoni një veturë të re në flotën tuaj",
+    "make": "Marka",
+    "model": "Modeli",
+    "year": "Viti",
+    "color": "Ngjyra",
+    "licensePlate": "Targa",
+    "fuelType": "Lloji i Karburantit",
+    "transmission": "Transmisioni",
+    "dailyRate": "Tarifa Ditore (€)",
+    "selectMake": "Zgjidhni markën",
+    "selectModel": "Zgjidhni modelin",
+    "selectMakeFirst": "Zgjidhni markën fillimisht",
+    "adding": "Duke shtuar…",
+    "addCarBtn": "Shto Veturën",
+    "emptyState": "Ende nuk ka vetura në flotë. Klikoni \"+ Shto Veturë\" për të shtuar një.",
+    "fuelTypes": {
+      "gasoline": "Benzinë",
+      "diesel": "Naftë",
+      "electric": "Elektrike",
+      "hybrid": "Hibride"
+    },
+    "transmissions": {
+      "automatic": "Automatik",
+      "manual": "Manual"
+    },
+    "statuses": {
+      "available": "E disponueshme",
+      "rented": "E dhënë me qira",
+      "maintenance": "Mirëmbajtje",
+      "out_of_service": "Jashtë shërbimit"
+    },
+    "tableHeaders": {
+      "car": "Vetura",
+      "license": "Targa",
+      "fuelTrans": "Karburanti / Trans.",
+      "mileage": "Kilometrazhi",
+      "rate": "Tarifa",
+      "status": "Statusi"
+    },
+    "validation": {
+      "required": "Marka dhe modeli janë të detyrueshëm"
+    },
+    "toast": {
+      "added": "Vetura u shtua!",
+      "failedLoad": "Dështoi ngarkimi i veturave",
+      "failedLoadMakes": "Dështoi ngarkimi i markave",
+      "failedAdd": "Dështoi shtimi i veturës"
+    }
+  },
+  "bookingsPage": {
+    "title": "Rezervimet",
+    "subtitle": "{count} rezervim(e)",
+    "loadingBookings": "Duke ngarkuar rezervimet…",
+    "newBooking": "+ Rezervim i Ri",
+    "calendarView": "📅 Kalendari",
+    "listView": "📋 Lista",
+    "dialogTitle": "Rezervim i Ri",
+    "dialogDescription": "Krijoni një rezervim të ri për qiradhënie veture",
+    "customer": "Klienti",
+    "car": "Vetura",
+    "startDate": "Data e Fillimit",
+    "endDate": "Data e Përfundimit",
+    "dailyRate": "Tarifa Ditore (€)",
+    "pickupLocation": "Vendi i Marrjes",
+    "returnLocation": "Vendi i Kthimit",
+    "selectCustomer": "Zgjidhni klientin",
+    "selectCar": "Zgjidhni veturën",
+    "creating": "Duke krijuar…",
+    "createBooking": "Krijo Rezervimin",
+    "emptyState": "Ende nuk ka rezervime. Klikoni \"+ Rezervim i Ri\" për të krijuar një.",
+    "start": "Fillo",
+    "complete": "Përfundo",
+    "calendarDays": {
+      "sun": "Die",
+      "mon": "Hën",
+      "tue": "Mar",
+      "wed": "Mër",
+      "thu": "Enj",
+      "fri": "Pre",
+      "sat": "Sht"
+    },
+    "months": {
+      "january": "Janar",
+      "february": "Shkurt",
+      "march": "Mars",
+      "april": "Prill",
+      "may": "Maj",
+      "june": "Qershor",
+      "july": "Korrik",
+      "august": "Gusht",
+      "september": "Shtator",
+      "october": "Tetor",
+      "november": "Nëntor",
+      "december": "Dhjetor"
+    },
+    "statuses": {
+      "pending_start": "Në Pritje",
+      "in_progress": "Në Progres",
+      "pending_return": "Në Pritje Kthimi",
+      "completed": "Përfunduar",
+      "cancelled": "Anuluar",
+      "overdue": "Vonuar"
+    },
+    "tableHeaders": {
+      "customer": "Klienti",
+      "car": "Vetura",
+      "dates": "Datat",
+      "cost": "Kosto",
+      "status": "Statusi",
+      "actions": "Veprimet"
+    },
+    "validation": {
+      "required": "Vetura, klienti, data e fillimit dhe data e përfundimit janë të detyrueshme"
+    },
+    "toast": {
+      "created": "Rezervimi u krijua!",
+      "statusUpdated": "Statusi u përditësua!",
+      "failedLoad": "Dështoi ngarkimi i të dhënave",
+      "failedCreate": "Dështoi krijimi i rezervimit",
+      "failedUpdate": "Dështoi përditësimi"
+    }
+  },
+  "staffPage": {
+    "title": "Stafi",
+    "subtitle": "{count} anëtar(ë) stafi",
+    "loadingStaff": "Duke ngarkuar stafin…",
+    "addStaff": "+ Shto Staf",
+    "dialogTitle": "Shto Anëtar Stafi",
+    "dialogDescription": "Shtoni një anëtar të ri stafi në kompaninë tuaj",
+    "firstName": "Emri",
+    "lastName": "Mbiemri",
+    "email": "Email",
+    "password": "Fjalëkalimi",
+    "role": "Roli",
+    "phone": "Telefoni",
+    "adding": "Duke shtuar…",
+    "addStaffBtn": "Shto Stafin",
+    "emptyState": "Ende nuk ka anëtarë stafi.",
+    "tableHeaders": {
+      "name": "Emri",
+      "email": "Email",
+      "role": "Roli",
+      "status": "Statusi",
+      "lastLogin": "Hyrja e Fundit",
+      "actions": "Veprimet"
+    },
+    "validation": {
+      "required": "Emri, mbiemri, email-i dhe fjalëkalimi janë të detyrueshëm"
+    },
+    "toast": {
+      "added": "Anëtari i stafit u shtua!",
+      "deactivated": "Stafi u çaktivizua",
+      "activated": "Stafi u aktivizua",
+      "failedLoad": "Dështoi ngarkimi i stafit",
+      "failedAdd": "Dështoi shtimi i stafit",
+      "failedUpdate": "Dështoi përditësimi i stafit"
+    }
+  },
+  "settings": {
+    "title": "Cilësimet",
+    "subtitle": "Menaxhoni preferencat tuaja",
+    "language": "Gjuha",
+    "languageDescription": "Zgjidhni gjuhën e shfaqjes për aplikacionin",
+    "english": "English",
+    "albanian": "Shqip (Albanian)",
+    "saved": "Cilësimet u ruajtën!"
+  }
+}

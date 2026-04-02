@@ -1,0 +1,290 @@
+{
+  "common": {
+    "loading": "Loading…",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "← Back",
+    "next": "Next",
+    "logOut": "Log Out",
+    "active": "Active",
+    "inactive": "Inactive",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "never": "Never",
+    "noData": "—",
+    "more": "+{count} more",
+    "required": "required"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "bookings": "Bookings",
+    "cars": "Cars",
+    "customers": "Customers",
+    "staff": "Staff",
+    "settings": "Settings"
+  },
+  "roles": {
+    "manager": "Manager",
+    "regular": "Regular"
+  },
+  "landing": {
+    "staffLogin": "Staff Login",
+    "heroTitle": "Manage Your Rental Fleet",
+    "heroHighlight": "With Ease",
+    "heroDescription": "EasyRent is a complete car rental management platform. Track your cars, manage customers, handle bookings, and grow your business — all from one dashboard.",
+    "goToDashboard": "Go to Dashboard →",
+    "featuresHeading": "Everything You Need to Run a Rental Business",
+    "copyright": "© {year} EasyRent. All rights reserved.",
+    "featureFleetTitle": "Fleet Management",
+    "featureFleetDesc": "Track every car in your fleet — make, model, mileage, insurance, registration, and maintenance status all in one place.",
+    "featureBookingTitle": "Booking Calendar",
+    "featureBookingDesc": "Visual booking calendar to see availability at a glance. Create, modify, and track bookings effortlessly.",
+    "featureCustomerTitle": "Customer Database",
+    "featureCustomerDesc": "Keep customer records organized — contact info, ID documents, driver's license, and booking history.",
+    "featureStaffTitle": "Staff Management",
+    "featureStaffDesc": "Managers can add and manage staff members. Control who has access with role-based permissions.",
+    "featureDashboardTitle": "Dashboard & Reports",
+    "featureDashboardDesc": "Get an overview of your business at a glance. Active bookings, fleet status, and revenue metrics.",
+    "featureSecureTitle": "Secure & Reliable",
+    "featureSecureDesc": "Each company gets their own subdomain and isolated data. JWT auth, encrypted passwords, and secure API."
+  },
+  "login": {
+    "title": "Staff Login",
+    "description": "Sign in with your company credentials",
+    "subdomain": "Company Subdomain",
+    "email": "Email",
+    "password": "Password",
+    "signIn": "Sign In",
+    "signingIn": "Signing in…",
+    "allFieldsRequired": "All fields are required",
+    "welcome": "Welcome, {name}!"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Overview of your rental business",
+    "loadingDashboard": "Loading dashboard…",
+    "totalCars": "Total Cars",
+    "customers": "Customers",
+    "totalBookings": "Total Bookings",
+    "fleetUtilization": "Fleet Utilization",
+    "available": "available",
+    "rented": "rented",
+    "maintenance": "maintenance",
+    "registeredCustomers": "Registered customers",
+    "activeBookings": "active",
+    "pendingBookings": "pending",
+    "carsCurrentlyRented": "Cars currently rented",
+    "recentBookings": "Recent Bookings",
+    "latestActivity": "Latest booking activity",
+    "noBookingsYet": "No bookings yet. Create your first booking!"
+  },
+  "customersPage": {
+    "title": "Customers",
+    "subtitle": "{count} customer(s) registered",
+    "loadingCustomers": "Loading customers…",
+    "newCustomer": "+ New Customer",
+    "dialogTitle": "New Customer",
+    "dialogDescription": "Register a new customer for your company",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email",
+    "phone": "Phone",
+    "idNumber": "ID Number",
+    "driversLicense": "Driver's License",
+    "dateOfBirth": "Date of Birth",
+    "address": "Address",
+    "creating": "Creating…",
+    "createCustomer": "Create Customer",
+    "emptyState": "No customers yet. Click \"+ New Customer\" to add one.",
+    "tableHeaders": {
+      "name": "Name",
+      "phone": "Phone",
+      "email": "Email",
+      "idLicense": "ID / License",
+      "registered": "Registered"
+    },
+    "validation": {
+      "required": "First name, last name, and phone are required"
+    },
+    "toast": {
+      "created": "Customer created!",
+      "failedLoad": "Failed to load customers",
+      "failedCreate": "Failed to create customer"
+    }
+  },
+  "carsPage": {
+    "title": "Cars",
+    "subtitle": "{count} car(s) in fleet",
+    "loadingCars": "Loading cars…",
+    "addCar": "+ Add Car",
+    "dialogTitle": "Add Car",
+    "dialogDescription": "Add a new car to your fleet",
+    "make": "Make",
+    "model": "Model",
+    "year": "Year",
+    "color": "Color",
+    "licensePlate": "License Plate",
+    "fuelType": "Fuel Type",
+    "transmission": "Transmission",
+    "dailyRate": "Daily Rate ($)",
+    "selectMake": "Select make",
+    "selectModel": "Select model",
+    "selectMakeFirst": "Select make first",
+    "adding": "Adding…",
+    "addCarBtn": "Add Car",
+    "emptyState": "No cars in fleet yet. Click \"+ Add Car\" to add one.",
+    "fuelTypes": {
+      "gasoline": "Gasoline",
+      "diesel": "Diesel",
+      "electric": "Electric",
+      "hybrid": "Hybrid"
+    },
+    "transmissions": {
+      "automatic": "Automatic",
+      "manual": "Manual"
+    },
+    "statuses": {
+      "available": "Available",
+      "rented": "Rented",
+      "maintenance": "Maintenance",
+      "out_of_service": "Out of Service"
+    },
+    "tableHeaders": {
+      "car": "Car",
+      "license": "License",
+      "fuelTrans": "Fuel / Trans.",
+      "mileage": "Mileage",
+      "rate": "Rate",
+      "status": "Status"
+    },
+    "validation": {
+      "required": "Make and model are required"
+    },
+    "toast": {
+      "added": "Car added!",
+      "failedLoad": "Failed to load cars",
+      "failedLoadMakes": "Failed to load car makes",
+      "failedAdd": "Failed to add car"
+    }
+  },
+  "bookingsPage": {
+    "title": "Bookings",
+    "subtitle": "{count} booking(s)",
+    "loadingBookings": "Loading bookings…",
+    "newBooking": "+ New Booking",
+    "calendarView": "📅 Calendar",
+    "listView": "📋 List",
+    "dialogTitle": "New Booking",
+    "dialogDescription": "Create a new car rental booking",
+    "customer": "Customer",
+    "car": "Car",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "dailyRate": "Daily Rate ($)",
+    "pickupLocation": "Pickup Location",
+    "returnLocation": "Return Location",
+    "selectCustomer": "Select customer",
+    "selectCar": "Select car",
+    "creating": "Creating…",
+    "createBooking": "Create Booking",
+    "emptyState": "No bookings yet. Click \"+ New Booking\" to create one.",
+    "start": "Start",
+    "complete": "Complete",
+    "calendarDays": {
+      "sun": "Sun",
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat"
+    },
+    "months": {
+      "january": "January",
+      "february": "February",
+      "march": "March",
+      "april": "April",
+      "may": "May",
+      "june": "June",
+      "july": "July",
+      "august": "August",
+      "september": "September",
+      "october": "October",
+      "november": "November",
+      "december": "December"
+    },
+    "statuses": {
+      "pending_start": "Pending Start",
+      "in_progress": "In Progress",
+      "pending_return": "Pending Return",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "overdue": "Overdue"
+    },
+    "tableHeaders": {
+      "customer": "Customer",
+      "car": "Car",
+      "dates": "Dates",
+      "cost": "Cost",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "validation": {
+      "required": "Car, customer, start date, and end date are required"
+    },
+    "toast": {
+      "created": "Booking created!",
+      "statusUpdated": "Status updated!",
+      "failedLoad": "Failed to load data",
+      "failedCreate": "Failed to create booking",
+      "failedUpdate": "Failed to update"
+    }
+  },
+  "staffPage": {
+    "title": "Staff",
+    "subtitle": "{count} staff member(s)",
+    "loadingStaff": "Loading staff…",
+    "addStaff": "+ Add Staff",
+    "dialogTitle": "Add Staff Member",
+    "dialogDescription": "Add a new staff member to your company",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email",
+    "password": "Password",
+    "role": "Role",
+    "phone": "Phone",
+    "adding": "Adding…",
+    "addStaffBtn": "Add Staff",
+    "emptyState": "No staff members yet.",
+    "tableHeaders": {
+      "name": "Name",
+      "email": "Email",
+      "role": "Role",
+      "status": "Status",
+      "lastLogin": "Last Login",
+      "actions": "Actions"
+    },
+    "validation": {
+      "required": "First name, last name, email, and password are required"
+    },
+    "toast": {
+      "added": "Staff member added!",
+      "deactivated": "Staff deactivated",
+      "activated": "Staff activated",
+      "failedLoad": "Failed to load staff",
+      "failedAdd": "Failed to add staff",
+      "failedUpdate": "Failed to update staff"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your preferences",
+    "language": "Language",
+    "languageDescription": "Choose the display language for the application",
+    "english": "English",
+    "albanian": "Albanian (Shqip)",
+    "saved": "Settings saved!"
+  }
+}

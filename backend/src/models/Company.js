@@ -28,7 +28,7 @@ module.exports = (sequelize, DataTypes) => {
         unique: true,
       },
       logoUrl: {
-        type: DataTypes.STRING(500),
+        type: DataTypes.TEXT("long"),
         field: "logo_url",
       },
       email: DataTypes.STRING(255),

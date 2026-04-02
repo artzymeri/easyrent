@@ -4,6 +4,12 @@ import { useState, useRef, useCallback } from "react";
 import { useTranslation } from "@/lib/i18n";
 import { compressImage } from "@/lib/compress-image";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { ImagePlus, X, Star } from "lucide-react";
 import { toast } from "sonner";
 
@@ -109,11 +115,11 @@ export function ImageUpload({
     <div className="space-y-3">
       {/* Preview grid */}
       {images.length > 0 && (
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {images.map((img, i) => (
             <div
               key={img.id ?? img.tempId ?? i}
-              className="group relative aspect-[4/3] overflow-hidden rounded-lg border bg-muted"
+              className="group relative aspect-square overflow-hidden rounded-lg border bg-muted"
             >
               <img
                 src={img.url}
@@ -122,36 +128,55 @@ export function ImageUpload({
               />
               {/* Primary badge */}
               {img.isPrimary && (
-                <span className="absolute left-1 top-1 flex items-center gap-0.5 rounded bg-primary px-1.5 py-0.5 text-[10px] font-medium text-primary-foreground">
+                <span className="absolute left-1.5 top-1.5 flex items-center gap-0.5 rounded-md bg-primary px-1.5 py-0.5 text-[10px] font-medium text-primary-foreground shadow-sm">
                   <Star className="h-2.5 w-2.5" />
                   {t("imageUpload.primary")}
                 </span>
               )}
-              {/* Overlay actions */}
+              {/* Action buttons – top-right corner */}
               {!disabled && (
-                <div className="absolute inset-0 flex items-center justify-center gap-1 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
-                  {!img.isPrimary && (
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      className="h-7 px-2 text-xs"
-                      onClick={() => handleSetPrimary(i)}
-                    >
-                      <Star className="mr-1 h-3 w-3" />
-                      {t("imageUpload.setPrimary")}
-                    </Button>
-                  )}
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="sm"
-                    className="h-7 w-7 p-0"
-                    onClick={() => handleRemove(i)}
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
+                <TooltipProvider>
+                  <div className="absolute right-1.5 top-1.5 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                    {!img.isPrimary && (
+                      <Tooltip>
+                        <TooltipTrigger
+                          render={
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              size="icon"
+                              className="h-8 w-8 rounded-full shadow-md"
+                              onClick={() => handleSetPrimary(i)}
+                            />
+                          }
+                        >
+                          <Star className="h-4 w-4" />
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">
+                          {t("imageUpload.setPrimary")}
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            className="h-8 w-8 rounded-full shadow-md"
+                            onClick={() => handleRemove(i)}
+                          />
+                        }
+                      >
+                        <X className="h-4 w-4" />
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        {t("common.delete")}
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                </TooltipProvider>
               )}
             </div>
           ))}

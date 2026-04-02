@@ -32,6 +32,10 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
       year: DataTypes.INTEGER,
+      productionYear: {
+        type: DataTypes.INTEGER,
+        field: "production_year",
+      },
       color: DataTypes.STRING(50),
       licensePlate: {
         type: DataTypes.STRING(50),

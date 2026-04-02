@@ -48,6 +48,7 @@ interface CarDetail {
   make: string;
   model: string;
   year: number;
+  productionYear: number | null;
   color: string;
   licensePlate: string;
   vin: string;
@@ -155,6 +156,7 @@ export default function CarDetailPage() {
             </h1>
             <p className="text-muted-foreground">
               {car.year ? `${car.year}` : ""}
+              {car.productionYear ? ` · ${t("carsPage.productionYear")}: ${car.productionYear}` : ""}
               {car.color ? ` · ${car.color}` : ""}
               {car.licensePlate ? ` · ${car.licensePlate}` : ""}
             </p>
@@ -267,6 +269,11 @@ export default function CarDetailPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                <SpecItem
+                  icon={<Calendar className="h-4 w-4" />}
+                  label={t("carsPage.productionYear")}
+                  value={car.productionYear ? String(car.productionYear) : "—"}
+                />
                 <SpecItem
                   icon={<Fuel className="h-4 w-4" />}
                   label={t("carsPage.fuelType")}

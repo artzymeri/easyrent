@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,7 +21,26 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Spinner } from "@/components/ui/spinner";
+import { MoreHorizontal, Eye, Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface Company {
   id: number;
@@ -30,6 +50,7 @@ interface Company {
   phone: string | null;
   city: string | null;
   country: string | null;
+  logoUrl: string | null;
   isActive: boolean;
   onboardingCompleted: boolean;
   createdAt: string;
@@ -37,8 +58,11 @@ interface Company {
 }
 
 export default function CompaniesPage() {
+  const router = useRouter();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteTarget, setDeleteTarget] = useState<Company | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     api
@@ -47,6 +71,21 @@ export default function CompaniesPage() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await api.delete(`/companies/${deleteTarget.id}`);
+      setCompanies((prev) => prev.filter((c) => c.id !== deleteTarget.id));
+      toast.success(`${deleteTarget.name} deleted successfully`);
+    } catch {
+      toast.error("Failed to delete company");
+    } finally {
+      setDeleting(false);
+      setDeleteTarget(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -103,14 +142,27 @@ export default function CompaniesPage() {
               {companies.map((company) => (
                 <TableRow key={company.id}>
                   <TableCell>
-                    <div>
-                      <div className="font-medium">{company.name}</div>
-                      {company.city && (
-                        <div className="text-xs text-muted-foreground">
-                          {company.city}
-                          {company.country ? `, ${company.country}` : ""}
-                        </div>
-                      )}
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-muted">
+                        {company.logoUrl ? (
+                          <img
+                            src={company.logoUrl}
+                            alt={company.name}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg>
+                        )}
+                      </div>
+                      <div>
+                        <div className="font-medium">{company.name}</div>
+                        {company.city && (
+                          <div className="text-xs text-muted-foreground">
+                            {company.city}
+                            {company.country ? `, ${company.country}` : ""}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -132,11 +184,30 @@ export default function CompaniesPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Link href={`/dashboard/companies/${company.id}`}>
-                      <Button variant="outline" size="sm">
-                        View
-                      </Button>
-                    </Link>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" />}>
+                        <MoreHorizontal className="h-4 w-4" />
+                        <span className="sr-only">Actions</span>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => router.push(`/dashboard/companies/${company.id}`)}>
+                          <Eye className="mr-2 h-4 w-4" />
+                          View
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => router.push(`/dashboard/companies/${company.id}?edit=true`)}>
+                          <Pencil className="mr-2 h-4 w-4" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          variant="destructive"
+                          onClick={() => setDeleteTarget(company)}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))}
@@ -144,6 +215,24 @@ export default function CompaniesPage() {
           </Table>
         </Card>
       )}
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Company</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>{deleteTarget?.name}</strong>? This will permanently remove the company, all staff, cars, and bookings. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={handleDelete} disabled={deleting}>
+              {deleting ? "Deleting…" : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

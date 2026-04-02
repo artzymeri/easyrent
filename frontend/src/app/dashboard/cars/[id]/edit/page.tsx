@@ -32,6 +32,7 @@ interface CarDetail {
   make: string;
   model: string;
   year: number | null;
+  productionYear: number | null;
   color: string;
   licensePlate: string;
   vin: string;
@@ -69,6 +70,7 @@ export default function CarEditPage() {
     make: "",
     model: "",
     year: "",
+    productionYear: "",
     color: "",
     licensePlate: "",
     vin: "",
@@ -117,6 +119,7 @@ export default function CarEditPage() {
           make: car.make || "",
           model: car.model || "",
           year: car.year ? String(car.year) : "",
+          productionYear: car.productionYear ? String(car.productionYear) : "",
           color: car.color || "",
           licensePlate: car.licensePlate || "",
           vin: car.vin || "",
@@ -211,6 +214,7 @@ export default function CarEditPage() {
         make: form.make,
         model: form.model,
         year: form.year ? parseInt(form.year) : null,
+        productionYear: form.productionYear ? parseInt(form.productionYear) : null,
         color: form.color || null,
         licensePlate: form.licensePlate || null,
         vin: form.vin || null,
@@ -346,7 +350,7 @@ export default function CarEditPage() {
                     </Select>
                   </div>
                 </div>
-                <div className="grid gap-4 sm:grid-cols-3">
+                <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label>{t("carsPage.year")}</Label>
                     <Input
@@ -358,6 +362,19 @@ export default function CarEditPage() {
                       placeholder="2024"
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label>{t("carsPage.productionYear")}</Label>
+                    <Input
+                      type="number"
+                      value={form.productionYear}
+                      onChange={(e) =>
+                        setForm({ ...form, productionYear: e.target.value })
+                      }
+                      placeholder="2023"
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-3">
                   <div className="space-y-2">
                     <Label>{t("carsPage.color")}</Label>
                     <Input

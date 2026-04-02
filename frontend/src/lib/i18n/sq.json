@@ -136,6 +136,7 @@
     "make": "Marka",
     "model": "Modeli",
     "year": "Viti",
+    "productionYear": "Viti i Prodhimit",
     "color": "Ngjyra",
     "licensePlate": "Targa",
     "fuelType": "Lloji i Karburantit",

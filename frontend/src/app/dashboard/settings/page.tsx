@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslation, Locale } from "@/lib/i18n";
+import { Globe } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -46,8 +47,18 @@ export default function SettingsPage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="en">🇬🇧 {t("settings.english")}</SelectItem>
-              <SelectItem value="sq">🇦🇱 {t("settings.albanian")}</SelectItem>
+              <SelectItem value="en">
+                <span className="flex items-center gap-2">
+                  <Globe className="h-4 w-4" />
+                  {t("settings.english")}
+                </span>
+              </SelectItem>
+              <SelectItem value="sq">
+                <span className="flex items-center gap-2">
+                  <Globe className="h-4 w-4" />
+                  {t("settings.albanian")}
+                </span>
+              </SelectItem>
             </SelectContent>
           </Select>
         </CardContent>

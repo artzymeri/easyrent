@@ -7,6 +7,15 @@ import { api } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import {
+  LayoutDashboard,
+  CalendarDays,
+  Car,
+  Users,
+  UserCog,
+  Settings,
+  Menu,
+} from "lucide-react";
 
 interface StaffUser {
   id: number;
@@ -18,17 +27,17 @@ interface StaffUser {
 }
 
 const NAV_KEYS = [
-  { href: "/dashboard", labelKey: "nav.dashboard", icon: "📊" },
-  { href: "/dashboard/bookings", labelKey: "nav.bookings", icon: "📅" },
-  { href: "/dashboard/cars", labelKey: "nav.cars", icon: "🚗" },
-  { href: "/dashboard/customers", labelKey: "nav.customers", icon: "👥" },
+  { href: "/dashboard", labelKey: "nav.dashboard", icon: LayoutDashboard },
+  { href: "/dashboard/bookings", labelKey: "nav.bookings", icon: CalendarDays },
+  { href: "/dashboard/cars", labelKey: "nav.cars", icon: Car },
+  { href: "/dashboard/customers", labelKey: "nav.customers", icon: Users },
 ];
 
 const MANAGER_KEYS = [
-  { href: "/dashboard/staff", labelKey: "nav.staff", icon: "👨‍💼" },
+  { href: "/dashboard/staff", labelKey: "nav.staff", icon: UserCog },
 ];
 
-const SETTINGS_KEY = { href: "/dashboard/settings", labelKey: "nav.settings", icon: "⚙️" };
+const SETTINGS_KEY = { href: "/dashboard/settings", labelKey: "nav.settings", icon: Settings };
 
 export default function DashboardLayout({
   children,
@@ -108,6 +117,7 @@ export default function DashboardLayout({
         <nav className="flex-1 space-y-1 p-3">
           {allNav.map((item) => {
             const active = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+            const Icon = item.icon;
             return (
               <Link
                 key={item.href}
@@ -119,7 +129,7 @@ export default function DashboardLayout({
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 }`}
               >
-                <span>{item.icon}</span>
+                <Icon className="h-4 w-4" />
                 {t(item.labelKey)}
               </Link>
             );
@@ -153,7 +163,7 @@ export default function DashboardLayout({
             size="sm"
             onClick={() => setSidebarOpen(true)}
           >
-            ☰
+            <Menu className="h-5 w-5" />
           </Button>
           <span className="ml-2 font-bold">EasyRent</span>
         </header>

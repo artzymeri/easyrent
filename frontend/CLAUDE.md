@@ -34,8 +34,8 @@ frontend/
 ## Role in the System
 
 - **Consumers**: Tenants, prospective renters, general public.
-- **Talks to**: The backend REST API at `http://localhost:5000/api`.
-- **Port**: Runs on `http://localhost:3000` during development.
+- **Talks to**: The backend REST API at `http://localhost:4344/api`.
+- **Port**: Runs on `http://localhost:4345` during development.
 
 ## Guidelines for AI Assistants
 
@@ -45,6 +45,7 @@ frontend/
 4. Follow a consistent naming pattern: `kebab-case` for files, `PascalCase` for components.
 5. This is a public-facing app — prioritize UX, performance, accessibility, and mobile responsiveness.
 6. Features to expect (not yet implemented): property listing/search, rental application flow, tenant dashboard, payment portal, maintenance request submission, lease document viewing, account management.
+7. **NEVER use emojis in the UI.** Always use **Lucide React icons** (`lucide-react`) instead of emoji characters. This applies to navigation, buttons, feature cards, labels — everywhere.
 
 ## Localization (i18n) — MANDATORY
 

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n";
+import { CalendarDays, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -314,6 +315,7 @@ export default function BookingsPage() {
               size="sm"
               onClick={() => setView("calendar")}
             >
+              <CalendarDays className="mr-1.5 h-4 w-4" />
               {t("bookingsPage.calendarView")}
             </Button>
             <Button
@@ -321,6 +323,7 @@ export default function BookingsPage() {
               size="sm"
               onClick={() => setView("list")}
             >
+              <List className="mr-1.5 h-4 w-4" />
               {t("bookingsPage.listView")}
             </Button>
           </div>

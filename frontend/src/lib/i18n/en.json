@@ -15,7 +15,19 @@
     "never": "Never",
     "noData": "—",
     "more": "+{count} more",
-    "required": "required"
+    "required": "required",
+    "view": "View",
+    "actions": "Actions",
+    "search": "Search...",
+    "previous": "Previous",
+    "page": "Page",
+    "of": "of",
+    "showing": "Showing {from}-{to} of {total}",
+    "noResults": "No results found.",
+    "rowsPerPage": "Rows per page",
+    "confirmDelete": "Are you sure you want to delete this item?",
+    "deleted": "Deleted successfully",
+    "failedDelete": "Failed to delete"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -286,5 +298,49 @@
     "english": "English",
     "albanian": "Albanian (Shqip)",
     "saved": "Settings saved!"
+  },
+  "carDetail": {
+    "failedLoad": "Failed to load car details",
+    "noImages": "No images uploaded",
+    "specifications": "Specifications",
+    "mileage": "Mileage",
+    "seats": "Seats",
+    "engine": "Engine",
+    "vin": "VIN",
+    "notes": "Notes",
+    "damages": "Damages",
+    "status": "Status",
+    "currentStatus": "Current Status",
+    "insurance": "Registration & Insurance",
+    "registrationExpiry": "Registration Expiry",
+    "insuranceProvider": "Insurance Provider",
+    "policyNumber": "Policy Number",
+    "insuranceExpiry": "Insurance Expiry",
+    "service": "Service",
+    "lastService": "Last Service",
+    "nextService": "Next Service",
+    "nextServiceMileage": "Next Service (km)",
+    "addedOn": "Added on"
+  },
+  "carEdit": {
+    "title": "Edit Car",
+    "basicInfo": "Basic Information",
+    "pricingStatus": "Pricing & Status",
+    "images": "Photos",
+    "notesPlaceholder": "Add any notes about this car...",
+    "saved": "Car updated!",
+    "failedSave": "Failed to update car",
+    "saving": "Saving...",
+    "saveChanges": "Save Changes"
+  },
+  "imageUpload": {
+    "primary": "Main",
+    "setPrimary": "Set Main",
+    "maxReached": "Maximum of {max} images allowed",
+    "compressFailed": "Failed to compress image",
+    "compressing": "Compressing...",
+    "dropOrClick": "Drop images here or click to browse",
+    "formats": "JPG, PNG, WebP",
+    "remaining": "{count} remaining"
   }
 }

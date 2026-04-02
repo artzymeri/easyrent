@@ -15,7 +15,19 @@
     "never": "Asnjëherë",
     "noData": "—",
     "more": "+{count} më shumë",
-    "required": "e detyrueshme"
+    "required": "e detyrueshme",
+    "view": "Shiko",
+    "actions": "Veprime",
+    "search": "Kërko...",
+    "previous": "Mëparshme",
+    "page": "Faqja",
+    "of": "nga",
+    "showing": "Duke shfaqur {from}-{to} nga {total}",
+    "noResults": "Nuk u gjetën rezultate.",
+    "rowsPerPage": "Rreshta për faqe",
+    "confirmDelete": "A jeni i sigurt që dëshironi ta fshini këtë artikull?",
+    "deleted": "U fshi me sukses",
+    "failedDelete": "Fshirja dështoi"
   },
   "nav": {
     "dashboard": "Paneli",
@@ -286,5 +298,49 @@
     "english": "English",
     "albanian": "Shqip (Albanian)",
     "saved": "Cilësimet u ruajtën!"
+  },
+  "carDetail": {
+    "failedLoad": "Dështoi ngarkimi i detajeve të veturës",
+    "noImages": "Nuk ka foto të ngarkuara",
+    "specifications": "Specifikimet",
+    "mileage": "Kilometrazhi",
+    "seats": "Ulëset",
+    "engine": "Motori",
+    "vin": "VIN",
+    "notes": "Shënime",
+    "damages": "Dëmtimet",
+    "status": "Statusi",
+    "currentStatus": "Statusi aktual",
+    "insurance": "Regjistrimi & Sigurimi",
+    "registrationExpiry": "Skadimi i regjistrimit",
+    "insuranceProvider": "Siguruesi",
+    "policyNumber": "Numri i polisës",
+    "insuranceExpiry": "Skadimi i sigurimit",
+    "service": "Servisi",
+    "lastService": "Servisi i fundit",
+    "nextService": "Servisi i radhës",
+    "nextServiceMileage": "Servisi i radhës (km)",
+    "addedOn": "Shtuar më"
+  },
+  "carEdit": {
+    "title": "Ndrysho Veturën",
+    "basicInfo": "Informacioni bazë",
+    "pricingStatus": "Çmimi & Statusi",
+    "images": "Fotot",
+    "notesPlaceholder": "Shtoni shënime për këtë veturë...",
+    "saved": "Vetura u përditësua!",
+    "failedSave": "Dështoi përditësimi i veturës",
+    "saving": "Duke ruajtur...",
+    "saveChanges": "Ruaj Ndryshimet"
+  },
+  "imageUpload": {
+    "primary": "Kryesore",
+    "setPrimary": "Bëje Kryesore",
+    "maxReached": "Maksimumi i {max} fotove të lejuara",
+    "compressFailed": "Dështoi kompresimi i fotos",
+    "compressing": "Duke kompresuar...",
+    "dropOrClick": "Vendosni fotot këtu ose klikoni për të shfletuar",
+    "formats": "JPG, PNG, WebP",
+    "remaining": "{count} të mbetura"
   }
 }

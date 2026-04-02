@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n";
-import { CalendarDays, List } from "lucide-react";
+import { CalendarDays, List, Play, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,14 +15,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -39,6 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { DataTable, Eye, type DataTableAction } from "@/components/data-table";
 
 interface Booking {
   id: number;
@@ -408,84 +401,100 @@ export default function BookingsPage() {
 
       {/* List View */}
       {view === "list" && (
-        <Card>
-          <CardContent className="pt-6">
-            {bookings.length === 0 ? (
-              <p className="py-12 text-center text-muted-foreground">
-                {t("bookingsPage.emptyState")}
-              </p>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t("bookingsPage.tableHeaders.customer")}</TableHead>
-                    <TableHead>{t("bookingsPage.tableHeaders.car")}</TableHead>
-                    <TableHead>{t("bookingsPage.tableHeaders.dates")}</TableHead>
-                    <TableHead>{t("bookingsPage.tableHeaders.cost")}</TableHead>
-                    <TableHead>{t("bookingsPage.tableHeaders.status")}</TableHead>
-                    <TableHead>{t("bookingsPage.tableHeaders.actions")}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {bookings.map((b) => (
-                    <TableRow key={b.id}>
-                      <TableCell className="font-medium">
-                        {b.Customer?.firstName} {b.Customer?.lastName}
-                      </TableCell>
-                      <TableCell>
-                        {b.Car?.make} {b.Car?.model}
-                        {b.Car?.licensePlate && (
-                          <span className="ml-1 text-xs text-muted-foreground">({b.Car.licensePlate})</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {new Date(b.startDate).toLocaleDateString()} →{" "}
-                        {new Date(b.endDate).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        {b.totalCost ? `$${b.totalCost}` : "—"}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            b.status === "in_progress"
-                              ? "default"
-                              : b.status === "completed"
-                              ? "secondary"
-                              : b.status === "cancelled"
-                              ? "destructive"
-                              : "outline"
-                          }
-                        >
-                          {b.status.replace(/_/g, " ")}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          {b.status === "pending_start" && (
-                            <Button size="sm" variant="outline" onClick={() => updateStatus(b.id, "in_progress")}>
-                              {t("bookingsPage.start")}
-                            </Button>
-                          )}
-                          {b.status === "in_progress" && (
-                            <Button size="sm" variant="outline" onClick={() => updateStatus(b.id, "completed")}>
-                              {t("bookingsPage.complete")}
-                            </Button>
-                          )}
-                          {(b.status === "pending_start" || b.status === "in_progress") && (
-                            <Button size="sm" variant="destructive" onClick={() => updateStatus(b.id, "cancelled")}>
-                              {t("common.cancel")}
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
+        <DataTable<Booking>
+          data={bookings}
+          columns={[
+            {
+              key: "customer",
+              header: t("bookingsPage.tableHeaders.customer"),
+              sortValue: (b) => `${b.Customer?.firstName ?? ""} ${b.Customer?.lastName ?? ""}`,
+              render: (b) => (
+                <span className="font-medium">
+                  {b.Customer?.firstName} {b.Customer?.lastName}
+                </span>
+              ),
+            },
+            {
+              key: "car",
+              header: t("bookingsPage.tableHeaders.car"),
+              sortValue: (b) => `${b.Car?.make ?? ""} ${b.Car?.model ?? ""}`,
+              render: (b) => (
+                <div>
+                  <span>{b.Car?.make} {b.Car?.model}</span>
+                  {b.Car?.licensePlate && (
+                    <span className="ml-1.5 text-xs text-muted-foreground">({b.Car.licensePlate})</span>
+                  )}
+                </div>
+              ),
+            },
+            {
+              key: "dates",
+              header: t("bookingsPage.tableHeaders.dates"),
+              sortValue: (b) => new Date(b.startDate).getTime(),
+              render: (b) => (
+                <span className="text-sm">
+                  {new Date(b.startDate).toLocaleDateString()} → {new Date(b.endDate).toLocaleDateString()}
+                </span>
+              ),
+            },
+            {
+              key: "cost",
+              header: t("bookingsPage.tableHeaders.cost"),
+              sortValue: (b) => b.totalCost || 0,
+              render: (b) => <span>{b.totalCost ? `$${Number(b.totalCost).toFixed(2)}` : "—"}</span>,
+            },
+            {
+              key: "status",
+              header: t("bookingsPage.tableHeaders.status"),
+              sortValue: (b) => b.status,
+              render: (b) => (
+                <Badge
+                  variant={
+                    b.status === "in_progress" ? "default"
+                      : b.status === "completed" ? "secondary"
+                      : b.status === "cancelled" ? "destructive"
+                      : "outline"
+                  }
+                >
+                  {t(`bookingsPage.statuses.${b.status}`) || b.status.replace(/_/g, " ")}
+                </Badge>
+              ),
+            },
+          ]}
+          getRowId={(b) => b.id}
+          searchFn={(b, q) =>
+            `${b.Customer?.firstName ?? ""} ${b.Customer?.lastName ?? ""} ${b.Car?.make ?? ""} ${b.Car?.model ?? ""} ${b.Car?.licensePlate ?? ""} ${b.status}`.toLowerCase().includes(q)
+          }
+          actions={[
+            {
+              label: t("common.view"),
+              icon: <Eye className="h-4 w-4" />,
+              onClick: () => {},
+            },
+            {
+              label: t("bookingsPage.start"),
+              icon: <Play className="h-4 w-4" />,
+              onClick: (b) => updateStatus(b.id, "in_progress"),
+              hidden: (b) => b.status !== "pending_start",
+            },
+            {
+              label: t("bookingsPage.complete"),
+              icon: <CheckCircle2 className="h-4 w-4" />,
+              onClick: (b) => updateStatus(b.id, "completed"),
+              hidden: (b) => b.status !== "in_progress",
+            },
+            {
+              label: t("common.cancel"),
+              icon: <XCircle className="h-4 w-4" />,
+              onClick: (b) => updateStatus(b.id, "cancelled"),
+              variant: "destructive",
+              hidden: (b) => b.status !== "pending_start" && b.status !== "in_progress",
+            },
+          ]}
+          emptyMessage={t("bookingsPage.emptyState")}
+          defaultSortKey="dates"
+          defaultSortDir="desc"
+        />
       )}
     </div>
   );

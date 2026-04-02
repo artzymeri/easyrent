@@ -8,21 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -31,6 +16,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { DataTable, Eye, Pencil, Trash2 } from "@/components/data-table";
 
 interface Customer {
   id: number;
@@ -215,46 +201,84 @@ export default function CustomersPage() {
         </Dialog>
       </div>
 
-      <Card>
-        <CardContent className="pt-6">
-          {customers.length === 0 ? (
-            <p className="py-12 text-center text-muted-foreground">
-              {t("customersPage.emptyState")}
-            </p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("customersPage.tableHeaders.name")}</TableHead>
-                  <TableHead>{t("customersPage.tableHeaders.phone")}</TableHead>
-                  <TableHead>{t("customersPage.tableHeaders.email")}</TableHead>
-                  <TableHead>{t("customersPage.tableHeaders.idLicense")}</TableHead>
-                  <TableHead>{t("customersPage.tableHeaders.registered")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {customers.map((c) => (
-                  <TableRow key={c.id}>
-                    <TableCell className="font-medium">
-                      {c.firstName} {c.lastName}
-                    </TableCell>
-                    <TableCell>{c.phone}</TableCell>
-                    <TableCell>{c.email || "—"}</TableCell>
-                    <TableCell>
-                      {c.idNumber && <Badge variant="outline" className="mr-1">ID: {c.idNumber}</Badge>}
-                      {c.driversLicense && <Badge variant="outline">DL: {c.driversLicense}</Badge>}
-                      {!c.idNumber && !c.driversLicense && "—"}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {new Date(c.createdAt).toLocaleDateString()}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      <DataTable<Customer>
+        data={customers}
+        columns={[
+          {
+            key: "name",
+            header: t("customersPage.tableHeaders.name"),
+            sortValue: (c) => `${c.firstName} ${c.lastName}`,
+            render: (c) => <span className="font-medium">{c.firstName} {c.lastName}</span>,
+          },
+          {
+            key: "phone",
+            header: t("customersPage.tableHeaders.phone"),
+            sortValue: (c) => c.phone,
+            render: (c) => <span>{c.phone}</span>,
+          },
+          {
+            key: "email",
+            header: t("customersPage.tableHeaders.email"),
+            sortValue: (c) => c.email || "",
+            render: (c) => <span className="text-muted-foreground">{c.email || "—"}</span>,
+          },
+          {
+            key: "idLicense",
+            header: t("customersPage.tableHeaders.idLicense"),
+            sortable: false,
+            render: (c) => (
+              <div className="flex flex-wrap gap-1">
+                {c.idNumber && <Badge variant="outline" className="text-xs">ID: {c.idNumber}</Badge>}
+                {c.driversLicense && <Badge variant="outline" className="text-xs">DL: {c.driversLicense}</Badge>}
+                {!c.idNumber && !c.driversLicense && <span className="text-muted-foreground">—</span>}
+              </div>
+            ),
+          },
+          {
+            key: "registered",
+            header: t("customersPage.tableHeaders.registered"),
+            sortValue: (c) => new Date(c.createdAt).getTime(),
+            render: (c) => (
+              <span className="text-sm text-muted-foreground">
+                {new Date(c.createdAt).toLocaleDateString()}
+              </span>
+            ),
+          },
+        ]}
+        getRowId={(c) => c.id}
+        searchFn={(c, q) =>
+          `${c.firstName} ${c.lastName} ${c.phone} ${c.email} ${c.idNumber}`.toLowerCase().includes(q)
+        }
+        actions={[
+          {
+            label: t("common.view"),
+            icon: <Eye className="h-4 w-4" />,
+            onClick: () => {},
+          },
+          {
+            label: t("common.edit"),
+            icon: <Pencil className="h-4 w-4" />,
+            onClick: () => {},
+          },
+          {
+            label: t("common.delete"),
+            icon: <Trash2 className="h-4 w-4" />,
+            onClick: async (c) => {
+              if (!confirm(t("common.confirmDelete"))) return;
+              try {
+                await api.delete(`/customers/${c.id}`);
+                toast.success(t("common.deleted"));
+                fetchCustomers();
+              } catch {
+                toast.error(t("common.failedDelete"));
+              }
+            },
+            variant: "destructive",
+          },
+        ]}
+        emptyMessage={t("customersPage.emptyState")}
+        defaultSortKey="name"
+      />
     </div>
   );
 }

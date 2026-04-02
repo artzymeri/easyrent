@@ -9,18 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -36,6 +24,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { DataTable, Pencil, Trash2 } from "@/components/data-table";
+import { UserCheck, UserX } from "lucide-react";
 
 interface StaffMember {
   id: number;
@@ -196,60 +186,79 @@ export default function StaffPage() {
         </Dialog>
       </div>
 
-      <Card>
-        <CardContent className="pt-6">
-          {staff.length === 0 ? (
-            <p className="py-12 text-center text-muted-foreground">
-              {t("staffPage.emptyState")}
-            </p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("staffPage.tableHeaders.name")}</TableHead>
-                  <TableHead>{t("staffPage.tableHeaders.email")}</TableHead>
-                  <TableHead>{t("staffPage.tableHeaders.role")}</TableHead>
-                  <TableHead>{t("staffPage.tableHeaders.status")}</TableHead>
-                  <TableHead>{t("staffPage.tableHeaders.lastLogin")}</TableHead>
-                  <TableHead>{t("staffPage.tableHeaders.actions")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {staff.map((s) => (
-                  <TableRow key={s.id}>
-                    <TableCell className="font-medium">
-                      {s.firstName} {s.lastName}
-                    </TableCell>
-                    <TableCell>{s.email}</TableCell>
-                    <TableCell>
-                      <Badge variant={s.role === "manager" ? "default" : "secondary"}>
-                        {s.role}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={s.isActive ? "default" : "destructive"}>
-                        {s.isActive ? t("common.active") : t("common.inactive")}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {s.lastLoginAt ? new Date(s.lastLoginAt).toLocaleDateString() : t("common.never")}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        size="sm"
-                        variant={s.isActive ? "destructive" : "default"}
-                        onClick={() => toggleActive(s)}
-                      >
-                        {s.isActive ? t("common.deactivate") : t("common.activate")}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      <DataTable<StaffMember>
+        data={staff}
+        columns={[
+          {
+            key: "name",
+            header: t("staffPage.tableHeaders.name"),
+            sortValue: (s) => `${s.firstName} ${s.lastName}`,
+            render: (s) => <span className="font-medium">{s.firstName} {s.lastName}</span>,
+          },
+          {
+            key: "email",
+            header: t("staffPage.tableHeaders.email"),
+            sortValue: (s) => s.email,
+            render: (s) => <span className="text-muted-foreground">{s.email}</span>,
+          },
+          {
+            key: "role",
+            header: t("staffPage.tableHeaders.role"),
+            sortValue: (s) => s.role,
+            render: (s) => (
+              <Badge variant={s.role === "manager" ? "default" : "secondary"}>
+                {t(`roles.${s.role}`)}
+              </Badge>
+            ),
+          },
+          {
+            key: "status",
+            header: t("staffPage.tableHeaders.status"),
+            sortValue: (s) => (s.isActive ? 1 : 0),
+            render: (s) => (
+              <Badge variant={s.isActive ? "default" : "destructive"}>
+                {s.isActive ? t("common.active") : t("common.inactive")}
+              </Badge>
+            ),
+          },
+          {
+            key: "lastLogin",
+            header: t("staffPage.tableHeaders.lastLogin"),
+            sortValue: (s) => s.lastLoginAt ? new Date(s.lastLoginAt).getTime() : 0,
+            render: (s) => (
+              <span className="text-sm text-muted-foreground">
+                {s.lastLoginAt ? new Date(s.lastLoginAt).toLocaleDateString() : t("common.never")}
+              </span>
+            ),
+          },
+        ]}
+        getRowId={(s) => s.id}
+        searchFn={(s, q) =>
+          `${s.firstName} ${s.lastName} ${s.email} ${s.role}`.toLowerCase().includes(q)
+        }
+        actions={[
+          {
+            label: t("common.edit"),
+            icon: <Pencil className="h-4 w-4" />,
+            onClick: () => {},
+          },
+          {
+            label: t("common.activate"),
+            icon: <UserCheck className="h-4 w-4" />,
+            onClick: (s) => toggleActive(s),
+            hidden: (s) => s.isActive,
+          },
+          {
+            label: t("common.deactivate"),
+            icon: <UserX className="h-4 w-4" />,
+            onClick: (s) => toggleActive(s),
+            variant: "destructive",
+            hidden: (s) => !s.isActive,
+          },
+        ]}
+        emptyMessage={t("staffPage.emptyState")}
+        defaultSortKey="name"
+      />
     </div>
   );
 }

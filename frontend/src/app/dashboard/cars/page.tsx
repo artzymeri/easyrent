@@ -1,24 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -35,6 +24,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { DataTable, Eye, Pencil, Trash2, type Column, type DataTableAction } from "@/components/data-table";
+import { ImageUpload, type ImageItem } from "@/components/image-upload";
 
 interface Car {
   id: number;
@@ -49,16 +40,19 @@ interface Car {
   fuelType: string;
   transmission: string;
   seats: number;
+  images?: { id: number; isPrimary: boolean }[];
 }
 
 export default function CarsPage() {
   const { t } = useTranslation();
+  const router = useRouter();
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [makes, setMakes] = useState<string[]>([]);
   const [models, setModels] = useState<string[]>([]);
+  const [newImages, setNewImages] = useState<ImageItem[]>([]);
   const [form, setForm] = useState({
     make: "",
     model: "",
@@ -117,13 +111,15 @@ export default function CarsPage() {
 
     setSaving(true);
     try {
-      await api.post("/cars", {
+      const carData = {
         ...form,
         year: form.year ? parseInt(form.year) : null,
         mileage: form.mileage ? parseInt(form.mileage) : 0,
         seats: form.seats ? parseInt(form.seats) : 5,
         dailyRate: form.dailyRate ? parseFloat(form.dailyRate) : null,
-      });
+        images: newImages.map((img) => img.url),
+      };
+      await api.post("/cars", carData);
       toast.success(t("carsPage.toast.added"));
       setForm({
         make: "",
@@ -139,6 +135,7 @@ export default function CarsPage() {
         dailyRate: "",
       });
       setModels([]);
+      setNewImages([]);
       setDialogOpen(false);
       fetchCars();
     } catch (err) {
@@ -176,7 +173,7 @@ export default function CarsPage() {
         </div>
         <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (open) loadMakes(); }}>
           <DialogTrigger render={<Button />}>{t("carsPage.addCar")}</DialogTrigger>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{t("carsPage.dialogTitle")}</DialogTitle>
               <DialogDescription>{t("carsPage.dialogDescription")}</DialogDescription>
@@ -262,6 +259,11 @@ export default function CarsPage() {
                   <Input type="number" step="0.01" value={form.dailyRate} onChange={(e) => setForm({ ...form, dailyRate: e.target.value })} placeholder="50" />
                 </div>
               </div>
+              {/* Images */}
+              <div className="space-y-2">
+                <Label>{t("carEdit.images")}</Label>
+                <ImageUpload images={newImages} onChange={setNewImages} max={10} />
+              </div>
               <div className="flex justify-end gap-2 pt-2">
                 <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>{t("common.cancel")}</Button>
                 <Button type="submit" disabled={saving}>{saving ? t("carsPage.adding") : t("carsPage.addCarBtn")}</Button>
@@ -271,46 +273,94 @@ export default function CarsPage() {
         </Dialog>
       </div>
 
-      <Card>
-        <CardContent className="pt-6">
-          {cars.length === 0 ? (
-            <p className="py-12 text-center text-muted-foreground">
-              {t("carsPage.emptyState")}
-            </p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("carsPage.tableHeaders.car")}</TableHead>
-                  <TableHead>{t("carsPage.tableHeaders.license")}</TableHead>
-                  <TableHead>{t("carsPage.tableHeaders.fuelTrans")}</TableHead>
-                  <TableHead>{t("carsPage.tableHeaders.mileage")}</TableHead>
-                  <TableHead>{t("carsPage.tableHeaders.rate")}</TableHead>
-                  <TableHead>{t("carsPage.tableHeaders.status")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {cars.map((c) => (
-                  <TableRow key={c.id}>
-                    <TableCell className="font-medium">
-                      {c.make} {c.model}
-                      {c.year ? ` (${c.year})` : ""}
-                      {c.color ? ` · ${c.color}` : ""}
-                    </TableCell>
-                    <TableCell>{c.licensePlate || "—"}</TableCell>
-                    <TableCell className="capitalize">{c.fuelType} / {c.transmission}</TableCell>
-                    <TableCell>{c.mileage?.toLocaleString()} km</TableCell>
-                    <TableCell>{c.dailyRate ? `$${c.dailyRate}/day` : "—"}</TableCell>
-                    <TableCell>
-                      <Badge variant={statusColor(c.status)}>{c.status}</Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      <DataTable<Car>
+        data={cars}
+        columns={[
+          {
+            key: "car",
+            header: t("carsPage.tableHeaders.car"),
+            sortValue: (c) => `${c.make} ${c.model}`,
+            render: (c) => (
+              <div>
+                <span className="font-medium">{c.make} {c.model}</span>
+                <span className="ml-1 text-muted-foreground">
+                  {c.year ? `(${c.year})` : ""}
+                  {c.color ? ` · ${c.color}` : ""}
+                </span>
+              </div>
+            ),
+          },
+          {
+            key: "license",
+            header: t("carsPage.tableHeaders.license"),
+            sortValue: (c) => c.licensePlate || "",
+            render: (c) => (
+              <span className="font-mono text-sm">{c.licensePlate || "—"}</span>
+            ),
+          },
+          {
+            key: "fuelTrans",
+            header: t("carsPage.tableHeaders.fuelTrans"),
+            sortValue: (c) => `${c.fuelType} ${c.transmission}`,
+            render: (c) => (
+              <span className="capitalize">{c.fuelType} / {c.transmission}</span>
+            ),
+          },
+          {
+            key: "mileage",
+            header: t("carsPage.tableHeaders.mileage"),
+            sortValue: (c) => c.mileage || 0,
+            render: (c) => <span>{c.mileage?.toLocaleString()} km</span>,
+          },
+          {
+            key: "rate",
+            header: t("carsPage.tableHeaders.rate"),
+            sortValue: (c) => c.dailyRate || 0,
+            render: (c) => (
+              <span>{c.dailyRate ? `$${Number(c.dailyRate).toFixed(2)}/day` : "—"}</span>
+            ),
+          },
+          {
+            key: "status",
+            header: t("carsPage.tableHeaders.status"),
+            sortValue: (c) => c.status,
+            render: (c) => <Badge variant={statusColor(c.status)}>{t(`carsPage.statuses.${c.status}`) || c.status}</Badge>,
+          },
+        ]}
+        getRowId={(c) => c.id}
+        searchFn={(c, q) =>
+          `${c.make} ${c.model} ${c.licensePlate} ${c.color} ${c.status}`.toLowerCase().includes(q)
+        }
+        actions={[
+          {
+            label: t("common.view"),
+            icon: <Eye className="h-4 w-4" />,
+            onClick: (c) => router.push(`/dashboard/cars/${c.id}`),
+          },
+          {
+            label: t("common.edit"),
+            icon: <Pencil className="h-4 w-4" />,
+            onClick: (c) => router.push(`/dashboard/cars/${c.id}/edit`),
+          },
+          {
+            label: t("common.delete"),
+            icon: <Trash2 className="h-4 w-4" />,
+            onClick: async (c) => {
+              if (!confirm(t("common.confirmDelete"))) return;
+              try {
+                await api.delete(`/cars/${c.id}`);
+                toast.success(t("common.deleted"));
+                fetchCars();
+              } catch {
+                toast.error(t("common.failedDelete"));
+              }
+            },
+            variant: "destructive",
+          },
+        ]}
+        emptyMessage={t("carsPage.emptyState")}
+        defaultSortKey="car"
+      />
     </div>
   );
 }

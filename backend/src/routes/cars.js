@@ -22,7 +22,7 @@ router.get("/", async (req, res) => {
     const cars = await db.Car.findAll({
       where: { companyId: req.user.companyId },
       include: [
-        { model: db.CarImage, as: "images", attributes: ["id", "url", "isPrimary", "sortOrder"] },
+        { model: db.CarImage, as: "images", attributes: ["id", "isPrimary", "sortOrder"] },
         { model: db.CarDamage, as: "damages", where: { repaired: false }, required: false },
       ],
       order: [["createdAt", "DESC"]],
@@ -37,15 +37,16 @@ router.get("/", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     if (!req.user.companyId) return res.status(400).json({ error: "No company context" });
+    const { images, ...carFields } = req.body;
     const car = await db.Car.create({
       companyId: req.user.companyId,
-      ...req.body,
+      ...carFields,
     });
-    if (req.body.images && Array.isArray(req.body.images)) {
-      for (let i = 0; i < req.body.images.length; i++) {
+    if (images && Array.isArray(images)) {
+      for (let i = 0; i < images.length; i++) {
         await db.CarImage.create({
           carId: car.id,
-          url: req.body.images[i].url,
+          url: typeof images[i] === "string" ? images[i] : images[i].url,
           isPrimary: i === 0,
           sortOrder: i,
         });
@@ -67,7 +68,7 @@ router.get("/company/:companyId", ensureCompanyAccess, async (req, res) => {
     const cars = await db.Car.findAll({
       where: { companyId: req.params.companyId },
       include: [
-        { model: db.CarImage, as: "images", attributes: ["id", "url", "isPrimary", "sortOrder"] },
+        { model: db.CarImage, as: "images", attributes: ["id", "isPrimary", "sortOrder"] },
         { model: db.CarDamage, as: "damages", where: { repaired: false }, required: false },
       ],
       order: [["createdAt", "DESC"]],
@@ -106,17 +107,18 @@ router.post(
   validate,
   async (req, res) => {
     try {
+      const { images, ...carFields } = req.body;
       const car = await db.Car.create({
         companyId: req.params.companyId,
-        ...req.body,
+        ...carFields,
       });
 
       // Handle images if provided
-      if (req.body.images && Array.isArray(req.body.images)) {
-        for (let i = 0; i < req.body.images.length; i++) {
+      if (images && Array.isArray(images)) {
+        for (let i = 0; i < images.length; i++) {
           await db.CarImage.create({
             carId: car.id,
-            url: req.body.images[i].url,
+            url: typeof images[i] === "string" ? images[i] : images[i].url,
             isPrimary: i === 0,
             sortOrder: i,
           });
@@ -145,7 +147,23 @@ router.put("/:id", async (req, res) => {
       return res.status(403).json({ error: "Access denied" });
     }
 
-    await car.update(req.body);
+    // Separate images from car fields
+    const { images, ...carFields } = req.body;
+    await car.update(carFields);
+
+    // Handle new images if provided
+    if (images && Array.isArray(images)) {
+      const maxOrder = await db.CarImage.max("sortOrder", { where: { carId: car.id } }) || -1;
+      const hasExisting = await db.CarImage.count({ where: { carId: car.id } });
+      for (let i = 0; i < images.length; i++) {
+        await db.CarImage.create({
+          carId: car.id,
+          url: images[i],
+          isPrimary: hasExisting === 0 && i === 0,
+          sortOrder: maxOrder + 1 + i,
+        });
+      }
+    }
 
     const updated = await db.Car.findByPk(car.id, {
       include: [{ model: db.CarImage, as: "images" }, { model: db.CarDamage, as: "damages" }],
@@ -171,6 +189,94 @@ router.post("/:id/damages", async (req, res) => {
     res.status(201).json(damage);
   } catch (err) {
     res.status(500).json({ error: "Failed to add damage" });
+  }
+});
+
+// ── Add images to car ──────────────────────────────────────────
+router.post("/:id/images", async (req, res) => {
+  try {
+    const car = await db.Car.findByPk(req.params.id);
+    if (!car) return res.status(404).json({ error: "Car not found" });
+
+    if (req.user.type !== "admin" && String(req.user.companyId) !== String(car.companyId)) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const { images } = req.body;
+    if (!images || !Array.isArray(images) || images.length === 0) {
+      return res.status(400).json({ error: "No images provided" });
+    }
+
+    // Get current max sort order
+    const maxOrder = await db.CarImage.max("sortOrder", { where: { carId: car.id } }) || -1;
+    const hasExisting = await db.CarImage.count({ where: { carId: car.id } });
+
+    const created = [];
+    for (let i = 0; i < images.length; i++) {
+      const img = await db.CarImage.create({
+        carId: car.id,
+        url: images[i],
+        isPrimary: hasExisting === 0 && i === 0,
+        sortOrder: maxOrder + 1 + i,
+      });
+      created.push(img);
+    }
+
+    res.status(201).json(created);
+  } catch (err) {
+    console.error("Add images error:", err);
+    res.status(500).json({ error: "Failed to add images" });
+  }
+});
+
+// ── Delete a car image ────────────────────────────────────────
+router.delete("/images/:imageId", async (req, res) => {
+  try {
+    const image = await db.CarImage.findByPk(req.params.imageId, {
+      include: [{ model: db.Car, as: "car", attributes: ["companyId"] }],
+    });
+    if (!image) return res.status(404).json({ error: "Image not found" });
+
+    if (req.user.type !== "admin" && String(req.user.companyId) !== String(image.car.companyId)) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const wasPrimary = image.isPrimary;
+    const carId = image.carId;
+    await image.destroy();
+
+    // If deleted image was primary, make the first remaining image primary
+    if (wasPrimary) {
+      const next = await db.CarImage.findOne({ where: { carId }, order: [["sortOrder", "ASC"]] });
+      if (next) await next.update({ isPrimary: true });
+    }
+
+    res.json({ message: "Image deleted" });
+  } catch (err) {
+    console.error("Delete image error:", err);
+    res.status(500).json({ error: "Failed to delete image" });
+  }
+});
+
+// ── Set primary image ─────────────────────────────────────────
+router.put("/images/:imageId/primary", async (req, res) => {
+  try {
+    const image = await db.CarImage.findByPk(req.params.imageId, {
+      include: [{ model: db.Car, as: "car", attributes: ["companyId"] }],
+    });
+    if (!image) return res.status(404).json({ error: "Image not found" });
+
+    if (req.user.type !== "admin" && String(req.user.companyId) !== String(image.car.companyId)) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    // Unset all, then set this one
+    await db.CarImage.update({ isPrimary: false }, { where: { carId: image.carId } });
+    await image.update({ isPrimary: true });
+
+    res.json({ message: "Primary image updated" });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to update primary image" });
   }
 });
 

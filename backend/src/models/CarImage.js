@@ -21,7 +21,7 @@ module.exports = (sequelize, DataTypes) => {
         field: "car_id",
       },
       url: {
-        type: DataTypes.STRING(500),
+        type: DataTypes.TEXT("long"),
         allowNull: false,
       },
       isPrimary: {

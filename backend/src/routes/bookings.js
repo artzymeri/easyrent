@@ -16,6 +16,77 @@ function ensureCompanyAccess(req, res, next) {
   next();
 }
 
+// ── List bookings for authenticated user's company (shortcut)
+router.get("/", async (req, res) => {
+  try {
+    if (!req.user.companyId) return res.status(400).json({ error: "No company context" });
+    const { status, from, to, limit } = req.query;
+    const where = { companyId: req.user.companyId };
+    if (status) where.status = status;
+    if (from || to) {
+      where.startDate = {};
+      if (from) where.startDate[Op.gte] = new Date(from);
+      if (to) where.startDate[Op.lte] = new Date(to);
+    }
+    const bookings = await db.Booking.findAll({
+      where,
+      include: [
+        { model: db.Car, as: "car", attributes: ["id", "make", "model", "licensePlate", "color"] },
+        { model: db.Customer, as: "customer", attributes: ["id", "firstName", "lastName", "phone", "email"] },
+        { model: db.Staff, as: "createdBy", attributes: ["id", "firstName", "lastName"] },
+      ],
+      order: [["startDate", "ASC"]],
+      ...(limit ? { limit: parseInt(limit) } : {}),
+    });
+    res.json({ rows: bookings, count: bookings.length });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch bookings" });
+  }
+});
+
+// ── Create booking for authenticated user's company (shortcut)
+router.post("/", async (req, res) => {
+  try {
+    if (!req.user.companyId) return res.status(400).json({ error: "No company context" });
+    const { carId, customerId, startDate, endDate, dailyRate, discount, pickupLocation, returnLocation, notes, mileageOut } = req.body;
+    const conflicting = await db.Booking.findOne({
+      where: {
+        carId,
+        status: { [Op.notIn]: ["completed", "cancelled"] },
+        [Op.or]: [
+          { startDate: { [Op.between]: [startDate, endDate] } },
+          { endDate: { [Op.between]: [startDate, endDate] } },
+          { [Op.and]: [{ startDate: { [Op.lte]: startDate } }, { endDate: { [Op.gte]: endDate } }] },
+        ],
+      },
+    });
+    if (conflicting) return res.status(409).json({ error: "Car is not available for the selected dates" });
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const totalDays = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
+    const subtotal = totalDays * parseFloat(dailyRate);
+    const discountAmount = parseFloat(discount || 0);
+    const totalAmount = subtotal - discountAmount;
+    const booking = await db.Booking.create({
+      companyId: req.user.companyId,
+      carId, customerId,
+      createdByStaffId: req.user.type === "staff" ? req.user.id : null,
+      startDate, endDate, dailyRate, totalDays, subtotal,
+      discount: discountAmount, totalAmount,
+      pickupLocation, returnLocation, notes, mileageOut,
+      status: "pending_start",
+    });
+    await db.Car.update({ status: "rented" }, { where: { id: carId } });
+    const created = await db.Booking.findByPk(booking.id, {
+      include: [{ model: db.Car, as: "car" }, { model: db.Customer, as: "customer" }],
+    });
+    res.status(201).json(created);
+  } catch (err) {
+    console.error("Create booking error:", err);
+    res.status(500).json({ error: "Failed to create booking" });
+  }
+});
+
 // ── List bookings for a company ───────────────────────────────
 router.get("/company/:companyId", ensureCompanyAccess, async (req, res) => {
   try {

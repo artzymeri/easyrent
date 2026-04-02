@@ -123,14 +123,12 @@ export default function BookingsPage() {
     returnLocation: "",
   });
 
-  const subdomain = typeof window !== "undefined" ? localStorage.getItem("staff_subdomain") || "" : "";
-
   const fetchAll = async () => {
     try {
       const [bookingData, carData, custData] = await Promise.all([
-        api.get<{ rows: Booking[] }>(`/bookings?subdomain=${subdomain}&limit=100`),
-        api.get<{ rows: Car[] }>(`/cars?subdomain=${subdomain}`),
-        api.get<{ rows: Customer[] }>(`/customers?subdomain=${subdomain}`),
+        api.get<{ rows: Booking[] }>("/bookings?limit=100"),
+        api.get<{ rows: Car[] }>("/cars"),
+        api.get<{ rows: Customer[] }>("/customers"),
       ]);
       setBookings(bookingData.rows || []);
       setCars(carData.rows || []);
@@ -156,7 +154,7 @@ export default function BookingsPage() {
 
     setSaving(true);
     try {
-      await api.post(`/bookings?subdomain=${subdomain}`, {
+      await api.post("/bookings", {
         carId: parseInt(form.carId),
         customerId: parseInt(form.customerId),
         startDate: form.startDate,
@@ -178,7 +176,7 @@ export default function BookingsPage() {
 
   const updateStatus = async (bookingId: number, status: string) => {
     try {
-      await api.put(`/bookings/${bookingId}/status?subdomain=${subdomain}`, { status });
+      await api.put(`/bookings/${bookingId}/status`, { status });
       toast.success(t("bookingsPage.toast.statusUpdated"));
       fetchAll();
     } catch (err) {
@@ -328,9 +326,7 @@ export default function BookingsPage() {
             </Button>
           </div>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger>
-              <Button>{t("bookingsPage.newBooking")}</Button>
-            </DialogTrigger>
+            <DialogTrigger render={<Button />}>{t("bookingsPage.newBooking")}</DialogTrigger>
             <DialogContent className="max-w-lg">
               <DialogHeader>
                 <DialogTitle>{t("bookingsPage.dialogTitle")}</DialogTitle>

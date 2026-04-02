@@ -23,6 +23,52 @@ function ensureCompanyAccess(req, res, next) {
   next();
 }
 
+// ── List staff for authenticated user's company (shortcut) ───
+router.get("/", async (req, res) => {
+  try {
+    if (!req.user.companyId) return res.status(400).json({ error: "No company context" });
+    if (req.user.type !== "admin" && req.user.role !== "manager") {
+      return res.status(403).json({ error: "Only managers can view staff" });
+    }
+    const staff = await db.Staff.findAll({
+      where: { companyId: req.user.companyId },
+      attributes: { exclude: ["password"] },
+      order: [["createdAt", "DESC"]],
+    });
+    res.json(staff);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch staff" });
+  }
+});
+
+// ── Create staff for authenticated user's company (shortcut) ─
+router.post("/", async (req, res) => {
+  try {
+    if (!req.user.companyId) return res.status(400).json({ error: "No company context" });
+    if (req.user.type !== "admin" && req.user.role !== "manager") {
+      return res.status(403).json({ error: "Only managers can manage staff" });
+    }
+    const existing = await db.Staff.findOne({ where: { email: req.body.email } });
+    if (existing) return res.status(409).json({ error: "Email already in use" });
+    const bcrypt = require("bcrypt");
+    const hash = await bcrypt.hash(req.body.password, 12);
+    const staff = await db.Staff.create({
+      companyId: req.user.companyId,
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      email: req.body.email,
+      password: hash,
+      role: req.body.role,
+      phone: req.body.phone,
+    });
+    const { password, ...data } = staff.toJSON();
+    res.status(201).json(data);
+  } catch (err) {
+    console.error("Create staff error:", err);
+    res.status(500).json({ error: "Failed to create staff" });
+  }
+});
+
 // ── List staff for a company ──────────────────────────────────
 router.get("/company/:companyId", ensureCompanyAccess, async (req, res) => {
   try {

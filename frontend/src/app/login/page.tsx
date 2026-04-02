@@ -36,12 +36,12 @@ export default function LoginPage() {
     try {
       const data = await api.post<{
         token: string;
-        staff: { id: number; firstName: string; lastName: string; role: string; companyId: number };
+        user: { id: number; firstName: string; lastName: string; role: string; companyId: number };
       }>("/auth/staff/login", { email, password, subdomain });
 
       localStorage.setItem("staff_token", data.token);
       localStorage.setItem("staff_subdomain", subdomain);
-      toast.success(t("login.welcome", { name: data.staff.firstName }));
+      toast.success(t("login.welcome", { name: data.user.firstName }));
       router.push("/dashboard");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Login failed");

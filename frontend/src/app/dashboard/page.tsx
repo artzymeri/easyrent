@@ -43,10 +43,8 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const subdomain = localStorage.getItem("staff_subdomain") || "";
-
         // Fetch cars
-        const cars = await api.get<{ rows: { status: string }[]; count: number }>(`/cars?subdomain=${subdomain}`);
+        const cars = await api.get<{ rows: { status: string }[]; count: number }>("/cars");
         const totalCars = cars.count || 0;
         const carRows = cars.rows || [];
         const availableCars = carRows.filter((c) => c.status === "available").length;
@@ -54,10 +52,10 @@ export default function DashboardPage() {
         const maintenanceCars = carRows.filter((c) => c.status === "maintenance").length;
 
         // Fetch customers
-        const customers = await api.get<{ count: number }>(`/customers?subdomain=${subdomain}`);
+        const customers = await api.get<{ count: number }>("/customers");
 
         // Fetch bookings
-        const bookings = await api.get<{ rows: RecentBooking[]; count: number }>(`/bookings?subdomain=${subdomain}&limit=5`);
+        const bookings = await api.get<{ rows: RecentBooking[]; count: number }>("/bookings?limit=5");
         const totalBookings = bookings.count || 0;
         const bookingRows = bookings.rows || [];
         const activeBookings = bookingRows.filter((b) => b.status === "in_progress").length;

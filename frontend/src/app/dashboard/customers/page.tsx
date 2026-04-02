@@ -62,11 +62,9 @@ export default function CustomersPage() {
     address: "",
   });
 
-  const subdomain = typeof window !== "undefined" ? localStorage.getItem("staff_subdomain") || "" : "";
-
   const fetchCustomers = async () => {
     try {
-      const data = await api.get<{ rows: Customer[] }>(`/customers?subdomain=${subdomain}`);
+      const data = await api.get<{ rows: Customer[] }>("/customers");
       setCustomers(data.rows || []);
     } catch {
       toast.error(t("customersPage.toast.failedLoad"));
@@ -89,7 +87,7 @@ export default function CustomersPage() {
 
     setSaving(true);
     try {
-      await api.post(`/customers?subdomain=${subdomain}`, form);
+      await api.post("/customers", form);
       toast.success(t("customersPage.toast.created"));
       setForm({
         firstName: "",
@@ -128,9 +126,7 @@ export default function CustomersPage() {
           </p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger>
-            <Button>{t("customersPage.newCustomer")}</Button>
-          </DialogTrigger>
+          <DialogTrigger render={<Button />}>{t("customersPage.newCustomer")}</DialogTrigger>
           <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>{t("customersPage.dialogTitle")}</DialogTitle>

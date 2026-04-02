@@ -15,6 +15,38 @@ function ensureCompanyAccess(req, res, next) {
   next();
 }
 
+// ── List customers for authenticated user's company (shortcut)
+router.get("/", async (req, res) => {
+  try {
+    if (!req.user.companyId) return res.status(400).json({ error: "No company context" });
+    const customers = await db.Customer.findAll({
+      where: { companyId: req.user.companyId },
+      order: [["createdAt", "DESC"]],
+    });
+    res.json({ rows: customers, count: customers.length });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch customers" });
+  }
+});
+
+// ── Create customer for authenticated user's company (shortcut)
+router.post("/", async (req, res) => {
+  try {
+    if (!req.user.companyId) return res.status(400).json({ error: "No company context" });
+    const customer = await db.Customer.create({
+      companyId: req.user.companyId,
+      ...req.body,
+    });
+    res.status(201).json(customer);
+  } catch (err) {
+    if (err.name === "SequelizeUniqueConstraintError") {
+      return res.status(409).json({ error: "Customer with this phone already exists in this company" });
+    }
+    console.error("Create customer error:", err);
+    res.status(500).json({ error: "Failed to create customer" });
+  }
+});
+
 // ── List customers for a company ──────────────────────────────
 router.get("/company/:companyId", ensureCompanyAccess, async (req, res) => {
   try {

@@ -73,11 +73,9 @@ export default function CarsPage() {
     dailyRate: "",
   });
 
-  const subdomain = typeof window !== "undefined" ? localStorage.getItem("staff_subdomain") || "" : "";
-
   const fetchCars = async () => {
     try {
-      const data = await api.get<{ rows: Car[] }>(`/cars?subdomain=${subdomain}`);
+      const data = await api.get<{ rows: Car[] }>("/cars");
       setCars(data.rows || []);
     } catch {
       toast.error(t("carsPage.toast.failedLoad"));
@@ -119,7 +117,7 @@ export default function CarsPage() {
 
     setSaving(true);
     try {
-      await api.post(`/cars?subdomain=${subdomain}`, {
+      await api.post("/cars", {
         ...form,
         year: form.year ? parseInt(form.year) : null,
         mileage: form.mileage ? parseInt(form.mileage) : 0,
@@ -177,9 +175,7 @@ export default function CarsPage() {
           </p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (open) loadMakes(); }}>
-          <DialogTrigger>
-            <Button>{t("carsPage.addCar")}</Button>
-          </DialogTrigger>
+          <DialogTrigger render={<Button />}>{t("carsPage.addCar")}</DialogTrigger>
           <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>{t("carsPage.dialogTitle")}</DialogTitle>

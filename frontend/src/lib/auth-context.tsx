@@ -41,12 +41,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string, subdomain: string) => {
-    const data = await api.post<{ token: string; staff: StaffUser }>(
+    const data = await api.post<{ token: string; user: StaffUser }>(
       "/auth/staff/login",
       { email, password, subdomain }
     );
     localStorage.setItem("staff_token", data.token);
-    setUser(data.staff);
+    setUser(data.user);
   };
 
   const logout = () => {

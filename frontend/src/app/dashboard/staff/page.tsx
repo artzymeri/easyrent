@@ -65,11 +65,9 @@ export default function StaffPage() {
     phone: "",
   });
 
-  const subdomain = typeof window !== "undefined" ? localStorage.getItem("staff_subdomain") || "" : "";
-
   const fetchStaff = async () => {
     try {
-      const data = await api.get<StaffMember[]>(`/staff?subdomain=${subdomain}`);
+      const data = await api.get<StaffMember[]>("/staff");
       setStaff(Array.isArray(data) ? data : []);
     } catch (err) {
       // If not authorized (regular user), redirect
@@ -97,7 +95,7 @@ export default function StaffPage() {
 
     setSaving(true);
     try {
-      await api.post(`/staff?subdomain=${subdomain}`, form);
+      await api.post("/staff", form);
       toast.success(t("staffPage.toast.added"));
       setForm({
         firstName: "",
@@ -118,7 +116,7 @@ export default function StaffPage() {
 
   const toggleActive = async (staffMember: StaffMember) => {
     try {
-      await api.put(`/staff/${staffMember.id}?subdomain=${subdomain}`, {
+      await api.put(`/staff/${staffMember.id}`, {
         isActive: !staffMember.isActive,
       });
       toast.success(staffMember.isActive ? t("staffPage.toast.deactivated") : t("staffPage.toast.activated"));
@@ -146,9 +144,7 @@ export default function StaffPage() {
           </p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger>
-            <Button>{t("staffPage.addStaff")}</Button>
-          </DialogTrigger>
+          <DialogTrigger render={<Button />}>{t("staffPage.addStaff")}</DialogTrigger>
           <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>{t("staffPage.dialogTitle")}</DialogTitle>

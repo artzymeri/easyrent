@@ -34,8 +34,8 @@ admin/
 ## Role in the System
 
 - **Consumers**: Internal staff only — admins, property managers, support.
-- **Talks to**: The backend REST API at `http://localhost:5000/api`.
-- **Port**: Runs on `http://localhost:3001` during development (to avoid collision with the tenant-facing frontend on 3000).
+- **Talks to**: The backend REST API at `http://localhost:4344/api`.
+- **Port**: Runs on `http://localhost:4346` during development (to avoid collision with the tenant-facing frontend on 4345).
 
 ## Guidelines for AI Assistants
 
@@ -45,6 +45,7 @@ admin/
 4. Follow a consistent naming pattern: `kebab-case` for files, `PascalCase` for components.
 5. This panel will eventually need role-based access control — design pages with that in mind.
 6. Features to expect (not yet implemented): property management, tenant management, lease/contract management, payment tracking, maintenance requests, reporting/analytics dashboard, user & role management.
+7. **NEVER use emojis in the UI.** Always use **Lucide React icons** (`lucide-react`) instead of emoji characters. This applies to navigation, buttons, feature cards, labels — everywhere.
 
 ## Localization (i18n) — MANDATORY
 

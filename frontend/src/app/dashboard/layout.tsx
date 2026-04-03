@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { api } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
@@ -106,10 +107,8 @@ export default function DashboardLayout({
         }`}
       >
         {/* Logo */}
-        <div className="flex h-16 items-center gap-2 border-b px-4">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
-            E
-          </div>
+        <div className="flex h-16 items-center gap-2.5 border-b px-4">
+          <Image src="/logo_without_bg.png" alt="EasyRent" width={30} height={30} className="drop-shadow-md" />
           <span className="text-lg font-bold">EasyRent</span>
         </div>
 
@@ -165,7 +164,10 @@ export default function DashboardLayout({
           >
             <Menu className="h-5 w-5" />
           </Button>
-          <span className="ml-2 font-bold">EasyRent</span>
+          <span className="ml-2 flex items-center gap-2">
+            <Image src="/logo_without_bg.png" alt="EasyRent" width={24} height={24} />
+            <span className="font-bold">EasyRent</span>
+          </span>
         </header>
 
         <main className="flex-1 overflow-y-auto p-6">{children}</main>

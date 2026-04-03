@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n";
+import { useCurrency } from "@/lib/currency-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,7 +33,6 @@ interface Car {
   make: string;
   model: string;
   year: number;
-  productionYear: number | null;
   color: string;
   licensePlate: string;
   status: string;
@@ -46,6 +46,7 @@ interface Car {
 
 export default function CarsPage() {
   const { t } = useTranslation();
+  const { fc } = useCurrency();
   const router = useRouter();
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,7 +59,6 @@ export default function CarsPage() {
     make: "",
     model: "",
     year: "",
-    productionYear: "",
     color: "",
     licensePlate: "",
     engine: "",
@@ -116,7 +116,6 @@ export default function CarsPage() {
       const carData = {
         ...form,
         year: form.year ? parseInt(form.year) : null,
-        productionYear: form.productionYear ? parseInt(form.productionYear) : null,
         mileage: form.mileage ? parseInt(form.mileage) : 0,
         seats: form.seats ? parseInt(form.seats) : 5,
         dailyRate: form.dailyRate ? parseFloat(form.dailyRate) : null,
@@ -128,7 +127,6 @@ export default function CarsPage() {
         make: "",
         model: "",
         year: "",
-        productionYear: "",
         color: "",
         licensePlate: "",
         engine: "",
@@ -142,8 +140,8 @@ export default function CarsPage() {
       setNewImages([]);
       setDialogOpen(false);
       fetchCars();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : t("carsPage.toast.failedAdd"));
+    } catch {
+      toast.error(t("carsPage.toast.failedAdd"));
     } finally {
       setSaving(false);
     }
@@ -221,20 +219,14 @@ export default function CarsPage() {
                   </Select>
                 </div>
               </div>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-3">
                 <div className="space-y-2">
                   <Label>{t("carsPage.year")}</Label>
                   <Input type="number" value={form.year} onChange={(e) => setForm({ ...form, year: e.target.value })} placeholder="2024" />
                 </div>
                 <div className="space-y-2">
-                  <Label>{t("carsPage.productionYear")}</Label>
-                  <Input type="number" value={form.productionYear} onChange={(e) => setForm({ ...form, productionYear: e.target.value })} placeholder="2023" />
-                </div>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-3">
-                <div className="space-y-2">
                   <Label>{t("carsPage.color")}</Label>
-                  <Input value={form.color} onChange={(e) => setForm({ ...form, color: e.target.value })} placeholder="Black" />
+                  <Input value={form.color} onChange={(e) => setForm({ ...form, color: e.target.value })} placeholder={t("carsPage.colors.black")} />
                 </div>
                 <div className="space-y-2">
                   <Label>{t("carsPage.licensePlate")}</Label>
@@ -245,7 +237,7 @@ export default function CarsPage() {
                 <div className="space-y-2">
                   <Label>{t("carsPage.fuelType")}</Label>
                   <Select value={form.fuelType} onValueChange={(val) => setForm({ ...form, fuelType: val ?? "gasoline" })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={t(`carsPage.fuelTypes.${form.fuelType}`)} /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="gasoline">{t("carsPage.fuelTypes.gasoline")}</SelectItem>
                       <SelectItem value="diesel">{t("carsPage.fuelTypes.diesel")}</SelectItem>
@@ -257,7 +249,7 @@ export default function CarsPage() {
                 <div className="space-y-2">
                   <Label>{t("carsPage.transmission")}</Label>
                   <Select value={form.transmission} onValueChange={(val) => setForm({ ...form, transmission: val ?? "automatic" })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={t(`carsPage.transmissions.${form.transmission}`)} /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="automatic">{t("carsPage.transmissions.automatic")}</SelectItem>
                       <SelectItem value="manual">{t("carsPage.transmissions.manual")}</SelectItem>
@@ -295,7 +287,7 @@ export default function CarsPage() {
                 <span className="font-medium">{c.make} {c.model}</span>
                 <span className="ml-1 text-muted-foreground">
                   {c.year ? `(${c.year})` : ""}
-                  {c.color ? ` · ${c.color}` : ""}
+                  {c.color ? ` · ${t(`carsPage.colors.${c.color.toLowerCase()}`).startsWith("carsPage.") ? c.color : t(`carsPage.colors.${c.color.toLowerCase()}`)}` : ""}
                 </span>
               </div>
             ),
@@ -313,7 +305,7 @@ export default function CarsPage() {
             header: t("carsPage.tableHeaders.fuelTrans"),
             sortValue: (c) => `${c.fuelType} ${c.transmission}`,
             render: (c) => (
-              <span className="capitalize">{c.fuelType} / {c.transmission}</span>
+              <span>{t(`carsPage.fuelTypes.${c.fuelType}`)} / {t(`carsPage.transmissions.${c.transmission}`)}</span>
             ),
           },
           {
@@ -327,7 +319,7 @@ export default function CarsPage() {
             header: t("carsPage.tableHeaders.rate"),
             sortValue: (c) => c.dailyRate || 0,
             render: (c) => (
-              <span>{c.dailyRate ? `$${Number(c.dailyRate).toFixed(2)}/day` : "—"}</span>
+              <span>{c.dailyRate ? `${fc(c.dailyRate)}/${t("bookingsPage.perDay")}` : "—"}</span>
             ),
           },
           {

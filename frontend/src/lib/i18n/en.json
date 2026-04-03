@@ -5,7 +5,7 @@
     "save": "Save",
     "delete": "Delete",
     "edit": "Edit",
-    "back": "← Back",
+    "back": "Back",
     "next": "Next",
     "logOut": "Log Out",
     "active": "Active",
@@ -71,7 +71,8 @@
     "signIn": "Sign In",
     "signingIn": "Signing in…",
     "allFieldsRequired": "All fields are required",
-    "welcome": "Welcome, {name}!"
+    "welcome": "Welcome, {name}!",
+    "failed": "Login failed. Please check your credentials."
   },
   "dashboard": {
     "title": "Dashboard",
@@ -123,7 +124,8 @@
     "toast": {
       "created": "Customer created!",
       "failedLoad": "Failed to load customers",
-      "failedCreate": "Failed to create customer"
+      "failedCreate": "Failed to create customer",
+      "alreadyExists": "A customer with this phone number already exists"
     }
   },
   "carsPage": {
@@ -136,12 +138,11 @@
     "make": "Make",
     "model": "Model",
     "year": "Year",
-    "productionYear": "Production Year",
     "color": "Color",
     "licensePlate": "License Plate",
     "fuelType": "Fuel Type",
     "transmission": "Transmission",
-    "dailyRate": "Daily Rate ($)",
+    "dailyRate": "Daily Rate",
     "selectMake": "Select make",
     "selectModel": "Select model",
     "selectMakeFirst": "Select make first",
@@ -157,6 +158,25 @@
     "transmissions": {
       "automatic": "Automatic",
       "manual": "Manual"
+    },
+    "colors": {
+      "black": "Black",
+      "white": "White",
+      "silver": "Silver",
+      "gray": "Gray",
+      "grey": "Grey",
+      "red": "Red",
+      "blue": "Blue",
+      "green": "Green",
+      "yellow": "Yellow",
+      "orange": "Orange",
+      "brown": "Brown",
+      "beige": "Beige",
+      "gold": "Gold",
+      "maroon": "Maroon",
+      "navy": "Navy",
+      "purple": "Purple",
+      "pink": "Pink"
     },
     "statuses": {
       "available": "Available",
@@ -195,13 +215,14 @@
     "car": "Car",
     "startDate": "Start Date",
     "endDate": "End Date",
-    "dailyRate": "Daily Rate ($)",
+    "dailyRate": "Daily Rate",
     "pickupLocation": "Pickup Location",
     "returnLocation": "Return Location",
     "selectCustomer": "Select customer",
     "selectCar": "Select car",
     "creating": "Creating…",
     "createBooking": "Create Booking",
+    "perDay": "day",
     "emptyState": "No bookings yet. Click \"+ New Booking\" to create one.",
     "start": "Start",
     "complete": "Complete",
@@ -253,7 +274,31 @@
       "failedLoad": "Failed to load data",
       "failedCreate": "Failed to create booking",
       "failedUpdate": "Failed to update"
-    }
+    },
+    "paymentStatuses": {
+      "unpaid": "Unpaid",
+      "partial": "Partial",
+      "paid": "Paid",
+      "refunded": "Refunded"
+    },
+    "sheetDescription": "Booking #{id}",
+    "sheetCarName": "Vehicle",
+    "sheetSchedule": "Schedule",
+    "sheetDuration": "Duration",
+    "sheetDays": "days",
+    "sheetActualReturn": "Actual Return",
+    "sheetFinancial": "Financial Summary",
+    "sheetSubtotal": "Subtotal",
+    "sheetDiscount": "Discount",
+    "sheetExtraCharges": "Extra Charges",
+    "sheetTotal": "Total",
+    "sheetPaid": "Amount Paid",
+    "sheetMileage": "Mileage",
+    "sheetMileageOut": "Mileage Out",
+    "sheetMileageIn": "Mileage In",
+    "sheetNotes": "Notes",
+    "sheetCreatedAt": "Created {date}",
+    "sheetCreatedBy": "by {name}"
   },
   "staffPage": {
     "title": "Staff",
@@ -298,7 +343,10 @@
     "languageDescription": "Choose the display language for the application",
     "english": "English",
     "albanian": "Albanian (Shqip)",
-    "saved": "Settings saved!"
+    "saved": "Settings saved!",
+    "failedSave": "Failed to save settings",
+    "currency": "Currency",
+    "currencyDescription": "Choose the currency for prices and rates"
   },
   "carDetail": {
     "failedLoad": "Failed to load car details",
@@ -334,6 +382,11 @@
     "saving": "Saving...",
     "saveChanges": "Save Changes"
   },
+  "datePicker": {
+    "selectDate": "Select date",
+    "selectDateTime": "Select date & time",
+    "time": "Time"
+  },
   "imageUpload": {
     "primary": "Main",
     "setPrimary": "Set Main",
@@ -343,5 +396,54 @@
     "dropOrClick": "Drop images here or click to browse",
     "formats": "JPG, PNG, WebP",
     "remaining": "{count} remaining"
+  },
+  "report": {
+    "title": "Car Rental Agreement",
+    "generateReport": "Download Report",
+    "generating": "Generating…",
+    "customerInfo": "Customer Information",
+    "vehicleInfo": "Vehicle Information",
+    "rentalPeriod": "Rental Period",
+    "financialSummary": "Financial Summary",
+    "fullName": "Full Name",
+    "phone": "Phone",
+    "email": "Email",
+    "idNumber": "ID Number",
+    "driversLicense": "Driver's License",
+    "dateOfBirth": "Date of Birth",
+    "address": "Address",
+    "vehicle": "Vehicle",
+    "licensePlate": "License Plate",
+    "color": "Color",
+    "vin": "VIN",
+    "fuelType": "Fuel Type",
+    "transmission": "Transmission",
+    "mileage": "Mileage",
+    "pickupDate": "Pickup Date",
+    "returnDate": "Return Date",
+    "totalDays": "Total Days",
+    "pickupLocation": "Pickup Location",
+    "returnLocation": "Return Location",
+    "mileageOut": "Mileage at Pickup",
+    "mileageIn": "Mileage at Return",
+    "dailyRate": "Daily Rate",
+    "discount": "Discount",
+    "extraCharges": "Extra Charges",
+    "totalAmount": "Total Amount",
+    "amountPaid": "Amount Paid",
+    "remaining": "Remaining Balance",
+    "notes": "Notes",
+    "termsTitle": "Terms & Conditions",
+    "term1": "The vehicle is insured. In case of possible damage or theft, the client is responsible to cover the value of the vehicle and shall pay it.",
+    "term2": "The client is not held responsible only in case of possible failure of the vehicle that may occur due to manufacturing defects.",
+    "term3": "I have read and understood the terms and conditions of this rental agreement.",
+    "term4": "The renter agrees to return the vehicle in the same condition as received, excluding normal wear and tear.",
+    "term5": "Any traffic violations incurred during the rental period are the sole responsibility of the renter.",
+    "carDiagram": "Vehicle Diagram",
+    "fuelLevel": "Fuel Level",
+    "damageNotes": "Damage Notes",
+    "renterSignature": "Renter / Driver",
+    "companySignature": "Company Representative",
+    "generatedOn": "Generated on"
   }
 }

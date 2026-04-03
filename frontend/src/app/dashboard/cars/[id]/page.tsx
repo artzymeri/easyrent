@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n";
+import { useCurrency } from "@/lib/currency-context";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import {
@@ -17,14 +18,18 @@ import {
   Gauge,
   Users,
   Calendar,
-  DollarSign,
   Car,
   ChevronLeft,
   ChevronRight,
   Shield,
   Wrench,
-  FileText,
   ImageIcon,
+  Cog,
+  Hash,
+  Palette,
+  BadgeCheck,
+  CircleDollarSign,
+  AlertTriangle,
 } from "lucide-react";
 
 interface CarImage {
@@ -48,7 +53,6 @@ interface CarDetail {
   make: string;
   model: string;
   year: number;
-  productionYear: number | null;
   color: string;
   licensePlate: string;
   vin: string;
@@ -76,6 +80,7 @@ export default function CarDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { t } = useTranslation();
+  const { fc } = useCurrency();
   const [car, setCar] = useState<CarDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState(0);
@@ -85,7 +90,6 @@ export default function CarDetailPage() {
       try {
         const data = await api.get<CarDetail>(`/cars/${params.id}`);
         setCar(data);
-        // Set active image to primary
         const primaryIdx = data.images?.findIndex((img) => img.isPrimary) ?? 0;
         setActiveImage(primaryIdx >= 0 ? primaryIdx : 0);
       } catch {
@@ -110,16 +114,18 @@ export default function CarDetailPage() {
     }
   };
 
-  const statusColor = (status: string) => {
+  const statusConfig = (status: string) => {
     switch (status) {
       case "available":
-        return "default" as const;
+        return { variant: "default" as const, className: "bg-emerald-500/10 text-emerald-600 border-emerald-200 hover:bg-emerald-500/10" };
       case "rented":
-        return "destructive" as const;
+        return { variant: "default" as const, className: "bg-blue-500/10 text-blue-600 border-blue-200 hover:bg-blue-500/10" };
       case "maintenance":
-        return "secondary" as const;
+        return { variant: "default" as const, className: "bg-amber-500/10 text-amber-600 border-amber-200 hover:bg-amber-500/10" };
+      case "out_of_service":
+        return { variant: "default" as const, className: "bg-red-500/10 text-red-600 border-red-200 hover:bg-red-500/10" };
       default:
-        return "outline" as const;
+        return { variant: "outline" as const, className: "" };
     }
   };
 
@@ -137,27 +143,33 @@ export default function CarDetailPage() {
     (a, b) => a.sortOrder - b.sortOrder,
   );
 
+  const sc = statusConfig(car.status);
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      {/* ── Header ────────────────────────────────────────────── */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
           <Button
             variant="ghost"
-            size="sm"
+            size="icon"
+            className="h-9 w-9 shrink-0"
             onClick={() => router.push("/dashboard/cars")}
           >
-            <ArrowLeft className="mr-1 h-4 w-4" />
-            {t("common.back")}
+            <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">
-              {car.make} {car.model}
-            </h1>
-            <p className="text-muted-foreground">
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+                {car.make} {car.model}
+              </h1>
+              <Badge variant={sc.variant} className={sc.className}>
+                {t(`carsPage.statuses.${car.status}`) || car.status}
+              </Badge>
+            </div>
+            <p className="mt-0.5 text-sm text-muted-foreground">
               {car.year ? `${car.year}` : ""}
-              {car.productionYear ? ` · ${t("carsPage.productionYear")}: ${car.productionYear}` : ""}
-              {car.color ? ` · ${car.color}` : ""}
+              {car.color ? ` · ${t(`carsPage.colors.${car.color.toLowerCase()}`) || car.color}` : ""}
               {car.licensePlate ? ` · ${car.licensePlate}` : ""}
             </p>
           </div>
@@ -177,140 +189,140 @@ export default function CarDetailPage() {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Left column: Image gallery + details */}
-        <div className="space-y-6 lg:col-span-2">
-          {/* Image gallery */}
-          <Card>
-            <CardContent className="p-0">
-              {sortedImages.length > 0 ? (
-                <div>
-                  {/* Main image */}
-                  <div className="relative aspect-[16/9] overflow-hidden rounded-t-lg bg-muted">
-                    <img
-                      src={sortedImages[activeImage]?.url}
-                      alt={`${car.make} ${car.model}`}
-                      className="h-full w-full object-cover"
-                    />
-                    {/* Nav arrows */}
-                    {sortedImages.length > 1 && (
-                      <>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          className="absolute left-2 top-1/2 h-8 w-8 -translate-y-1/2 rounded-full p-0 opacity-80 hover:opacity-100"
-                          onClick={() =>
-                            setActiveImage(
-                              (prev) =>
-                                (prev - 1 + sortedImages.length) %
-                                sortedImages.length,
-                            )
-                          }
-                        >
-                          <ChevronLeft className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          className="absolute right-2 top-1/2 h-8 w-8 -translate-y-1/2 rounded-full p-0 opacity-80 hover:opacity-100"
-                          onClick={() =>
-                            setActiveImage(
-                              (prev) => (prev + 1) % sortedImages.length,
-                            )
-                          }
-                        >
-                          <ChevronRight className="h-4 w-4" />
-                        </Button>
-                        <span className="absolute bottom-2 right-2 rounded bg-black/60 px-2 py-0.5 text-xs text-white">
-                          {activeImage + 1} / {sortedImages.length}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                  {/* Thumbnails */}
-                  {sortedImages.length > 1 && (
-                    <div className="flex gap-1 overflow-x-auto p-2">
-                      {sortedImages.map((img, i) => (
-                        <button
-                          key={img.id}
-                          onClick={() => setActiveImage(i)}
-                          className={`h-16 w-20 flex-shrink-0 overflow-hidden rounded border-2 transition-colors ${
-                            i === activeImage
-                              ? "border-primary"
-                              : "border-transparent hover:border-muted-foreground/30"
-                          }`}
-                        >
-                          <img
-                            src={img.url}
-                            alt=""
-                            className="h-full w-full object-cover"
-                          />
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="flex aspect-[16/9] flex-col items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                  <ImageIcon className="mb-2 h-12 w-12" />
-                  <p className="text-sm">{t("carDetail.noImages")}</p>
+      {/* ── Image Gallery — Full width hero ───────────────────── */}
+      <Card className="overflow-hidden">
+        <CardContent className="p-0">
+          {sortedImages.length > 0 ? (
+            <div>
+              <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
+                <img
+                  src={sortedImages[activeImage]?.url}
+                  alt={`${car.make} ${car.model}`}
+                  className="h-full w-full object-cover"
+                />
+                {sortedImages.length > 1 && (
+                  <>
+                    <button
+                      className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition hover:bg-black/60"
+                      onClick={() =>
+                        setActiveImage((prev) => (prev - 1 + sortedImages.length) % sortedImages.length)
+                      }
+                    >
+                      <ChevronLeft className="h-5 w-5" />
+                    </button>
+                    <button
+                      className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition hover:bg-black/60"
+                      onClick={() =>
+                        setActiveImage((prev) => (prev + 1) % sortedImages.length)
+                      }
+                    >
+                      <ChevronRight className="h-5 w-5" />
+                    </button>
+                    <span className="absolute bottom-3 right-3 rounded-full bg-black/50 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">
+                      {activeImage + 1} / {sortedImages.length}
+                    </span>
+                  </>
+                )}
+              </div>
+              {sortedImages.length > 1 && (
+                <div className="flex gap-1.5 overflow-x-auto p-3">
+                  {sortedImages.map((img, i) => (
+                    <button
+                      key={img.id}
+                      onClick={() => setActiveImage(i)}
+                      className={`h-16 w-20 flex-shrink-0 overflow-hidden rounded-lg border-2 transition-all ${
+                        i === activeImage
+                          ? "border-primary ring-2 ring-primary/20"
+                          : "border-transparent opacity-60 hover:opacity-100"
+                      }`}
+                    >
+                      <img src={img.url} alt="" className="h-full w-full object-cover" />
+                    </button>
+                  ))}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          ) : (
+            <div className="flex aspect-[16/9] max-h-[300px] flex-col items-center justify-center bg-muted/50 text-muted-foreground">
+              <ImageIcon className="mb-2 h-12 w-12 opacity-40" />
+              <p className="text-sm">{t("carDetail.noImages")}</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-          {/* Specs grid */}
+      {/* ── Quick Stats Row ──────────────────────────────────── */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <QuickStat
+          icon={<CircleDollarSign className="h-4 w-4 text-emerald-500" />}
+          label={t("carsPage.dailyRate")}
+          value={car.dailyRate ? fc(car.dailyRate) : "—"}
+        />
+        <QuickStat
+          icon={<Gauge className="h-4 w-4 text-blue-500" />}
+          label={t("carDetail.mileage")}
+          value={car.mileage ? `${car.mileage.toLocaleString()} km` : "—"}
+        />
+        <QuickStat
+          icon={<Fuel className="h-4 w-4 text-amber-500" />}
+          label={t("carsPage.fuelType")}
+          value={car.fuelType ? t(`carsPage.fuelTypes.${car.fuelType}`) : "—"}
+        />
+        <QuickStat
+          icon={<Cog className="h-4 w-4 text-violet-500" />}
+          label={t("carsPage.transmission")}
+          value={car.transmission ? t(`carsPage.transmissions.${car.transmission}`) : "—"}
+        />
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* ── Left column ─────────────────────────────────────── */}
+        <div className="space-y-6 lg:col-span-2">
+          {/* Specifications */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Car className="h-5 w-5" />
+            <CardContent className="p-5">
+              <h3 className="mb-4 flex items-center gap-2 text-base font-semibold">
+                <Car className="h-4.5 w-4.5 text-primary" />
                 {t("carDetail.specifications")}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+              </h3>
+              <div className="grid grid-cols-2 gap-x-8 gap-y-4 sm:grid-cols-3">
                 <SpecItem
-                  icon={<Calendar className="h-4 w-4" />}
-                  label={t("carsPage.productionYear")}
-                  value={car.productionYear ? String(car.productionYear) : "—"}
-                />
-                <SpecItem
-                  icon={<Fuel className="h-4 w-4" />}
+                  icon={<Fuel className="h-3.5 w-3.5" />}
                   label={t("carsPage.fuelType")}
-                  value={
-                    car.fuelType
-                      ? t(`carsPage.fuelTypes.${car.fuelType}`)
-                      : "—"
-                  }
+                  value={car.fuelType ? t(`carsPage.fuelTypes.${car.fuelType}`) : "—"}
                 />
                 <SpecItem
-                  icon={<Gauge className="h-4 w-4" />}
+                  icon={<Gauge className="h-3.5 w-3.5" />}
                   label={t("carDetail.mileage")}
-                  value={
-                    car.mileage ? `${car.mileage.toLocaleString()} km` : "—"
-                  }
+                  value={car.mileage ? `${car.mileage.toLocaleString()} km` : "—"}
                 />
                 <SpecItem
-                  icon={<Users className="h-4 w-4" />}
+                  icon={<Users className="h-3.5 w-3.5" />}
                   label={t("carDetail.seats")}
                   value={car.seats ? String(car.seats) : "—"}
                 />
                 <SpecItem
-                  icon={<Car className="h-4 w-4" />}
+                  icon={<Cog className="h-3.5 w-3.5" />}
                   label={t("carsPage.transmission")}
-                  value={
-                    car.transmission
-                      ? t(`carsPage.transmissions.${car.transmission}`)
-                      : "—"
-                  }
+                  value={car.transmission ? t(`carsPage.transmissions.${car.transmission}`) : "—"}
                 />
                 <SpecItem
-                  icon={<FileText className="h-4 w-4" />}
+                  icon={<Hash className="h-3.5 w-3.5" />}
                   label={t("carDetail.engine")}
                   value={car.engine || "—"}
                 />
                 <SpecItem
-                  icon={<FileText className="h-4 w-4" />}
+                  icon={<Palette className="h-3.5 w-3.5" />}
+                  label={t("report.color")}
+                  value={car.color ? (t(`carsPage.colors.${car.color.toLowerCase()}`).startsWith("carsPage.") ? car.color : t(`carsPage.colors.${car.color.toLowerCase()}`)) : "—"}
+                />
+                <SpecItem
+                  icon={<BadgeCheck className="h-3.5 w-3.5" />}
+                  label={t("carsPage.licensePlate")}
+                  value={car.licensePlate || "—"}
+                />
+                <SpecItem
+                  icon={<Hash className="h-3.5 w-3.5" />}
                   label={t("carDetail.vin")}
                   value={car.vin || "—"}
                 />
@@ -321,13 +333,11 @@ export default function CarDetailPage() {
           {/* Notes */}
           {car.notes && (
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">
+              <CardContent className="p-5">
+                <h3 className="mb-3 text-base font-semibold">
                   {t("carDetail.notes")}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="whitespace-pre-wrap text-sm text-muted-foreground">
+                </h3>
+                <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
                   {car.notes}
                 </p>
               </CardContent>
@@ -337,29 +347,37 @@ export default function CarDetailPage() {
           {/* Damages */}
           {car.damages && car.damages.length > 0 && (
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Wrench className="h-5 w-5" />
-                  {t("carDetail.damages")} ({car.damages.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
+              <CardContent className="p-5">
+                <h3 className="mb-4 flex items-center gap-2 text-base font-semibold">
+                  <AlertTriangle className="h-4.5 w-4.5 text-amber-500" />
+                  {t("carDetail.damages")}
+                  <span className="ml-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+                    {car.damages.length}
+                  </span>
+                </h3>
+                <div className="space-y-2">
                   {car.damages.map((d) => (
                     <div
                       key={d.id}
-                      className="flex items-start gap-3 rounded-lg border p-3"
+                      className="flex items-start gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50"
                     >
-                      <div className="flex-1">
+                      <div className={`mt-0.5 h-2 w-2 shrink-0 rounded-full ${
+                        d.severity === "major" ? "bg-red-500" : d.severity === "moderate" ? "bg-amber-500" : "bg-blue-500"
+                      }`} />
+                      <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium">{d.description}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {d.location} &middot;{" "}
-                          {new Date(d.createdAt).toLocaleDateString()}
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          {d.location} · {new Date(d.createdAt).toLocaleDateString()}
                         </p>
                       </div>
                       <Badge
-                        variant={
-                          d.severity === "major" ? "destructive" : "secondary"
+                        variant="outline"
+                        className={
+                          d.severity === "major"
+                            ? "border-red-200 bg-red-50 text-red-600"
+                            : d.severity === "moderate"
+                              ? "border-amber-200 bg-amber-50 text-amber-600"
+                              : "border-blue-200 bg-blue-50 text-blue-600"
                         }
                       >
                         {d.severity}
@@ -372,106 +390,75 @@ export default function CarDetailPage() {
           )}
         </div>
 
-        {/* Right column: Status & quick info */}
-        <div className="space-y-6">
-          {/* Status card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">
-                {t("carDetail.status")}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">
-                  {t("carDetail.currentStatus")}
-                </span>
-                <Badge variant={statusColor(car.status)} className="text-sm">
-                  {t(`carsPage.statuses.${car.status}`) || car.status}
-                </Badge>
-              </div>
-              <Separator />
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">
-                  {t("carsPage.dailyRate")}
-                </span>
-                <span className="font-semibold">
-                  {car.dailyRate
-                    ? `$${Number(car.dailyRate).toFixed(2)}`
-                    : "—"}
-                </span>
-              </div>
-              <Separator />
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">
-                  {t("carsPage.licensePlate")}
-                </span>
-                <span className="font-mono font-medium">
-                  {car.licensePlate || "—"}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-
+        {/* ── Right column ────────────────────────────────────── */}
+        <div className="space-y-4">
           {/* Registration & Insurance */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Shield className="h-5 w-5" />
+            <CardContent className="p-5">
+              <h3 className="mb-4 flex items-center gap-2 text-base font-semibold">
+                <Shield className="h-4.5 w-4.5 text-primary" />
                 {t("carDetail.insurance")}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <InfoRow
-                label={t("carDetail.registrationExpiry")}
-                value={car.registrationExpiry || "—"}
-              />
-              <InfoRow
-                label={t("carDetail.insuranceProvider")}
-                value={car.insuranceProvider || "—"}
-              />
-              <InfoRow
-                label={t("carDetail.policyNumber")}
-                value={car.insurancePolicyNumber || "—"}
-              />
-              <InfoRow
-                label={t("carDetail.insuranceExpiry")}
-                value={car.insuranceExpiry || "—"}
-              />
+              </h3>
+              <div className="space-y-3">
+                <InfoRow
+                  label={t("carDetail.registrationExpiry")}
+                  value={car.registrationExpiry || "—"}
+                  warn={car.registrationExpiry ? isExpiringSoon(car.registrationExpiry) : false}
+                />
+                <Separator />
+                <InfoRow
+                  label={t("carDetail.insuranceProvider")}
+                  value={car.insuranceProvider || "—"}
+                />
+                <Separator />
+                <InfoRow
+                  label={t("carDetail.policyNumber")}
+                  value={car.insurancePolicyNumber || "—"}
+                />
+                <Separator />
+                <InfoRow
+                  label={t("carDetail.insuranceExpiry")}
+                  value={car.insuranceExpiry || "—"}
+                  warn={car.insuranceExpiry ? isExpiringSoon(car.insuranceExpiry) : false}
+                />
+              </div>
             </CardContent>
           </Card>
 
           {/* Service info */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Wrench className="h-5 w-5" />
+            <CardContent className="p-5">
+              <h3 className="mb-4 flex items-center gap-2 text-base font-semibold">
+                <Wrench className="h-4.5 w-4.5 text-primary" />
                 {t("carDetail.service")}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <InfoRow
-                label={t("carDetail.lastService")}
-                value={car.lastServiceDate || "—"}
-              />
-              <InfoRow
-                label={t("carDetail.nextService")}
-                value={car.nextServiceDate || "—"}
-              />
-              <InfoRow
-                label={t("carDetail.nextServiceMileage")}
-                value={
-                  car.nextServiceMileage
-                    ? `${car.nextServiceMileage.toLocaleString()} km`
-                    : "—"
-                }
-              />
+              </h3>
+              <div className="space-y-3">
+                <InfoRow
+                  label={t("carDetail.lastService")}
+                  value={car.lastServiceDate || "—"}
+                />
+                <Separator />
+                <InfoRow
+                  label={t("carDetail.nextService")}
+                  value={car.nextServiceDate || "—"}
+                  warn={car.nextServiceDate ? isExpiringSoon(car.nextServiceDate) : false}
+                />
+                <Separator />
+                <InfoRow
+                  label={t("carDetail.nextServiceMileage")}
+                  value={
+                    car.nextServiceMileage
+                      ? `${car.nextServiceMileage.toLocaleString()} km`
+                      : "—"
+                  }
+                />
+              </div>
             </CardContent>
           </Card>
 
           {/* Date added */}
           <Card>
-            <CardContent className="py-4">
+            <CardContent className="px-5 py-4">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Calendar className="h-4 w-4" />
                 {t("carDetail.addedOn")}{" "}
@@ -482,6 +469,32 @@ export default function CarDetailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+/* ─── Sub-components ──────────────────────────────────────────── */
+
+function QuickStat({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}) {
+  return (
+    <Card>
+      <CardContent className="flex items-center gap-3 px-4 py-3">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
+          {icon}
+        </div>
+        <div className="min-w-0">
+          <p className="truncate text-xs text-muted-foreground">{label}</p>
+          <p className="truncate text-sm font-semibold">{value}</p>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -500,16 +513,26 @@ function SpecItem({
         {icon}
         {label}
       </div>
-      <p className="font-medium">{value}</p>
+      <p className="text-sm font-medium">{value}</p>
     </div>
   );
 }
 
-function InfoRow({ label, value }: { label: string; value: string }) {
+function InfoRow({ label, value, warn }: { label: string; value: string; warn?: boolean }) {
   return (
-    <div className="flex items-center justify-between text-sm">
+    <div className="flex items-center justify-between gap-2 text-sm">
       <span className="text-muted-foreground">{label}</span>
-      <span className="font-medium">{value}</span>
+      <span className={`text-right font-medium ${warn ? "text-amber-600" : ""}`}>
+        {value}
+      </span>
     </div>
   );
+}
+
+/** Check if a date string is within 30 days of now */
+function isExpiringSoon(dateStr: string): boolean {
+  const d = new Date(dateStr);
+  const now = new Date();
+  const diffMs = d.getTime() - now.getTime();
+  return diffMs > 0 && diffMs < 30 * 24 * 60 * 60 * 1000;
 }

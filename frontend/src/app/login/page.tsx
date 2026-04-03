@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { api } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
@@ -43,8 +44,8 @@ export default function LoginPage() {
       localStorage.setItem("staff_subdomain", subdomain);
       toast.success(t("login.welcome", { name: data.user.firstName }));
       router.push("/dashboard");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Login failed");
+    } catch {
+      toast.error(t("login.failed"));
     } finally {
       setLoading(false);
     }
@@ -56,9 +57,7 @@ export default function LoginPage() {
       <header className="border-b">
         <div className="mx-auto flex h-16 max-w-6xl items-center px-4">
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
-              E
-            </div>
+            <Image src="/logo_without_bg.png" alt="EasyRent" width={32} height={32} className="drop-shadow-md" />
             <span className="text-xl font-bold">EasyRent</span>
           </Link>
         </div>

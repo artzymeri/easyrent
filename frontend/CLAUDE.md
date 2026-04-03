@@ -15,6 +15,23 @@ This is the **Tenant-Facing Frontend** for EasyRent — a rental enterprise appl
 | Styling     | **Tailwind CSS v4**                  |
 | State/Fetch | TBD (likely React Query / Zustand)   |
 
+## Design Theme
+
+The app uses a **blue primary color** inspired by mainstream car rental/sharing platforms (Turo, Getaround, Enterprise). This provides a modern, trustworthy feel suitable for a car rental SaaS.
+
+| Token               | Light Mode                           | Dark Mode                            |
+| -------------------- | ------------------------------------ | ------------------------------------ |
+| `--primary`          | `oklch(0.546 0.245 262.881)` (blue)  | `oklch(0.623 0.214 262.881)` (blue)  |
+| `--destructive`      | `oklch(0.577 0.245 27.325)` (red)    | `oklch(0.704 0.191 22.216)` (red)    |
+
+### Theme guidelines
+- **Primary (blue)** — main action buttons, active nav items, links, focus rings, badges
+- **Secondary** — subtle backgrounds, secondary actions (lightly tinted blue-gray)
+- **Destructive (red)** — delete actions, error states
+- **Accent** — hover backgrounds, selected rows (light blue tint)
+- Do NOT use pure black (`oklch(0.205 0 0)`) for primary buttons — always use `--primary`
+- Sidebar uses the same blue for active items and ring
+
 ## Directory Layout
 
 ```

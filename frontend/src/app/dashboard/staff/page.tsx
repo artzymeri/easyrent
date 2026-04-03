@@ -97,8 +97,8 @@ export default function StaffPage() {
       });
       setDialogOpen(false);
       fetchStaff();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : t("staffPage.toast.failedAdd"));
+    } catch {
+      toast.error(t("staffPage.toast.failedAdd"));
     } finally {
       setSaving(false);
     }
@@ -165,7 +165,7 @@ export default function StaffPage() {
                 <div className="space-y-2">
                   <Label>{t("staffPage.role")}</Label>
                   <Select value={form.role} onValueChange={(val) => setForm({ ...form, role: val ?? "regular" })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={t(`roles.${form.role}`)} /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="manager">{t("roles.manager")}</SelectItem>
                       <SelectItem value="regular">{t("roles.regular")}</SelectItem>

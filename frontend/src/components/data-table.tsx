@@ -79,6 +79,8 @@ interface DataTableProps<T> {
   /** Initial sort column key */
   defaultSortKey?: string;
   defaultSortDir?: "asc" | "desc";
+  /** Callback when a row is clicked */
+  onRowClick?: (row: T) => void;
 }
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50];
@@ -93,6 +95,7 @@ export function DataTable<T>({
   pageSize: initialPageSize = 10,
   defaultSortKey,
   defaultSortDir = "asc",
+  onRowClick,
 }: DataTableProps<T>) {
   const { t } = useTranslation();
 
@@ -237,14 +240,18 @@ export function DataTable<T>({
                 </TableRow>
               ) : (
                 pageData.map((row) => (
-                  <TableRow key={getRowId(row)} className="group">
+                  <TableRow
+                    key={getRowId(row)}
+                    className={`group ${onRowClick ? "cursor-pointer hover:bg-muted/50" : ""}`}
+                    onClick={() => onRowClick?.(row)}
+                  >
                     {columns.map((col) => (
                       <TableCell key={col.key} className={col.className}>
                         {col.render(row)}
                       </TableCell>
                     ))}
                     {hasActions && (
-                      <TableCell className="text-right">
+                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
                           <DropdownMenuTrigger render={<Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 data-[state=open]:opacity-100" />}>
                             <MoreHorizontal className="h-4 w-4" />

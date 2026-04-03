@@ -5,7 +5,7 @@
     "save": "Ruaj",
     "delete": "Fshij",
     "edit": "Ndrysho",
-    "back": "← Kthehu",
+    "back": "Kthehu",
     "next": "Tjetër",
     "logOut": "Dilni",
     "active": "Aktiv",
@@ -71,7 +71,8 @@
     "signIn": "Identifikohu",
     "signingIn": "Duke u identifikuar…",
     "allFieldsRequired": "Të gjitha fushat janë të detyrueshme",
-    "welcome": "Mirë se erdhe, {name}!"
+    "welcome": "Mirë se erdhe, {name}!",
+    "failed": "Identifikimi dështoi. Kontrolloni kredencialet tuaja."
   },
   "dashboard": {
     "title": "Paneli",
@@ -123,7 +124,8 @@
     "toast": {
       "created": "Klienti u krijua!",
       "failedLoad": "Dështoi ngarkimi i klientëve",
-      "failedCreate": "Dështoi krijimi i klientit"
+      "failedCreate": "Dështoi krijimi i klientit",
+      "alreadyExists": "Një klient me këtë numër telefoni ekziston tashmë"
     }
   },
   "carsPage": {
@@ -136,12 +138,11 @@
     "make": "Marka",
     "model": "Modeli",
     "year": "Viti",
-    "productionYear": "Viti i Prodhimit",
     "color": "Ngjyra",
     "licensePlate": "Targa",
     "fuelType": "Lloji i Karburantit",
     "transmission": "Transmisioni",
-    "dailyRate": "Tarifa Ditore (€)",
+    "dailyRate": "Tarifa Ditore",
     "selectMake": "Zgjidhni markën",
     "selectModel": "Zgjidhni modelin",
     "selectMakeFirst": "Zgjidhni markën fillimisht",
@@ -157,6 +158,25 @@
     "transmissions": {
       "automatic": "Automatik",
       "manual": "Manual"
+    },
+    "colors": {
+      "black": "E Zezë",
+      "white": "E Bardhë",
+      "silver": "Argjend",
+      "gray": "Gri",
+      "grey": "Gri",
+      "red": "E Kuqe",
+      "blue": "Blu",
+      "green": "E Gjelbër",
+      "yellow": "E Verdhë",
+      "orange": "Portokalli",
+      "brown": "Kafe",
+      "beige": "Bezhë",
+      "gold": "Ari",
+      "maroon": "Bordo",
+      "navy": "Blu e Errët",
+      "purple": "Vjollcë",
+      "pink": "Rozë"
     },
     "statuses": {
       "available": "E disponueshme",
@@ -195,13 +215,14 @@
     "car": "Vetura",
     "startDate": "Data e Fillimit",
     "endDate": "Data e Përfundimit",
-    "dailyRate": "Tarifa Ditore (€)",
+    "dailyRate": "Tarifa Ditore",
     "pickupLocation": "Vendi i Marrjes",
     "returnLocation": "Vendi i Kthimit",
     "selectCustomer": "Zgjidhni klientin",
     "selectCar": "Zgjidhni veturën",
     "creating": "Duke krijuar…",
     "createBooking": "Krijo Rezervimin",
+    "perDay": "ditë",
     "emptyState": "Ende nuk ka rezervime. Klikoni \"+ Rezervim i Ri\" për të krijuar një.",
     "start": "Fillo",
     "complete": "Përfundo",
@@ -253,7 +274,31 @@
       "failedLoad": "Dështoi ngarkimi i të dhënave",
       "failedCreate": "Dështoi krijimi i rezervimit",
       "failedUpdate": "Dështoi përditësimi"
-    }
+    },
+    "paymentStatuses": {
+      "unpaid": "Pa paguar",
+      "partial": "Pjesërisht",
+      "paid": "Paguar",
+      "refunded": "Rimbursuar"
+    },
+    "sheetDescription": "Rezervimi #{id}",
+    "sheetCarName": "Vetura",
+    "sheetSchedule": "Orari",
+    "sheetDuration": "Kohëzgjatja",
+    "sheetDays": "ditë",
+    "sheetActualReturn": "Kthimi Aktual",
+    "sheetFinancial": "Përmbledhja Financiare",
+    "sheetSubtotal": "Nëntotali",
+    "sheetDiscount": "Zbritja",
+    "sheetExtraCharges": "Tarifa Shtesë",
+    "sheetTotal": "Totali",
+    "sheetPaid": "Shuma e Paguar",
+    "sheetMileage": "Kilometrazhi",
+    "sheetMileageOut": "Kilometrazhi në Dalje",
+    "sheetMileageIn": "Kilometrazhi në Kthim",
+    "sheetNotes": "Shënime",
+    "sheetCreatedAt": "Krijuar më {date}",
+    "sheetCreatedBy": "nga {name}"
   },
   "staffPage": {
     "title": "Stafi",
@@ -298,7 +343,10 @@
     "languageDescription": "Zgjidhni gjuhën e shfaqjes për aplikacionin",
     "english": "English",
     "albanian": "Shqip (Albanian)",
-    "saved": "Cilësimet u ruajtën!"
+    "saved": "Cilësimet u ruajtën!",
+    "failedSave": "Dështoi ruajtja e cilësimeve",
+    "currency": "Monedha",
+    "currencyDescription": "Zgjidhni monedhën për çmimet dhe tarifat"
   },
   "carDetail": {
     "failedLoad": "Dështoi ngarkimi i detajeve të veturës",
@@ -334,6 +382,11 @@
     "saving": "Duke ruajtur...",
     "saveChanges": "Ruaj Ndryshimet"
   },
+  "datePicker": {
+    "selectDate": "Zgjidh datën",
+    "selectDateTime": "Zgjidh datën & orën",
+    "time": "Ora"
+  },
   "imageUpload": {
     "primary": "Kryesore",
     "setPrimary": "Bëje Kryesore",
@@ -343,5 +396,54 @@
     "dropOrClick": "Vendosni fotot këtu ose klikoni për të shfletuar",
     "formats": "JPG, PNG, WebP",
     "remaining": "{count} të mbetura"
+  },
+  "report": {
+    "title": "Marrëveshje Huazimi të Veturës",
+    "generateReport": "Shkarko Raportin",
+    "generating": "Duke gjeneruar…",
+    "customerInfo": "Informacionet e Klientit",
+    "vehicleInfo": "Informacionet e Veturës",
+    "rentalPeriod": "Periudha e Huazimit",
+    "financialSummary": "Përmbledhja Financiare",
+    "fullName": "Emri i Plotë",
+    "phone": "Telefoni",
+    "email": "Email",
+    "idNumber": "Numri i ID",
+    "driversLicense": "Patenta e Shoferit",
+    "dateOfBirth": "Datëlindja",
+    "address": "Adresa",
+    "vehicle": "Vetura",
+    "licensePlate": "Targa",
+    "color": "Ngjyra",
+    "vin": "VIN",
+    "fuelType": "Lloji i Karburantit",
+    "transmission": "Transmisioni",
+    "mileage": "Kilometrazhi",
+    "pickupDate": "Data e Marrjes",
+    "returnDate": "Data e Kthimit",
+    "totalDays": "Ditët Totale",
+    "pickupLocation": "Vendi i Marrjes",
+    "returnLocation": "Vendi i Kthimit",
+    "mileageOut": "Kilometrazhi në Marrje",
+    "mileageIn": "Kilometrazhi në Kthim",
+    "dailyRate": "Tarifa Ditore",
+    "discount": "Zbritja",
+    "extraCharges": "Tarifa Shtesë",
+    "totalAmount": "Shuma Totale",
+    "amountPaid": "Shuma e Paguar",
+    "remaining": "Bilanci i Mbetur",
+    "notes": "Shënime",
+    "termsTitle": "Kushtet & Termat",
+    "term1": "Vetura është e siguruar. Në rast të dëmtimit apo vjedhjes, klienti është përgjegjës për të paguar vlerën e veturës.",
+    "term2": "Klienti nuk mbahet përgjegjës vetëm në rast të mundësisë së defektit eventual të veturës që mund të ndodhë nga defektet e prodhimit.",
+    "term3": "Kam lexuar dhe kam kuptuar kushtet e kësaj marrëveshje huazimi.",
+    "term4": "Huazimuesi pranon të kthejë veturën në të njëjtën gjendje si kur e ka marrë, duke përjashtuar konsumin normal.",
+    "term5": "Çdo shkelje e rregullave të trafikut gjatë periudhës së huazimit është përgjegjësi e vetme e huazimuesit.",
+    "carDiagram": "Diagrami i Veturës",
+    "fuelLevel": "Niveli i Karburantit",
+    "damageNotes": "Shënimet e Dëmtimeve",
+    "renterSignature": "Huazimuesi / Shoferi",
+    "companySignature": "Përfaqësuesi i Kompanisë",
+    "generatedOn": "Gjeneruar më"
   }
 }

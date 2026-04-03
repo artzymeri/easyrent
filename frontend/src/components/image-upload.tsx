@@ -10,7 +10,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { ImagePlus, X, Star } from "lucide-react";
+import { ImagePlus, X, Star, GripVertical } from "lucide-react";
 import { toast } from "sonner";
 
 export interface ImageItem {
@@ -41,6 +41,10 @@ export function ImageUpload({
   const inputRef = useRef<HTMLInputElement>(null);
   const [compressing, setCompressing] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+
+  // Drag-to-reorder state
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [overIdx, setOverIdx] = useState<number | null>(null);
 
   const processFiles = useCallback(
     async (files: FileList | File[]) => {
@@ -111,6 +115,48 @@ export function ImageUpload({
     onChange(updated);
   };
 
+  // ── Drag-to-reorder handlers ──────────────────────────────────
+  const handleReorderDragStart = (e: React.DragEvent, index: number) => {
+    // Mark this as an internal reorder drag (not a file drop)
+    e.dataTransfer.setData("text/x-reorder", String(index));
+    e.dataTransfer.effectAllowed = "move";
+    setDragIdx(index);
+  };
+
+  const handleReorderDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = "move";
+    if (dragIdx !== null && index !== dragIdx) {
+      setOverIdx(index);
+    }
+  };
+
+  const handleReorderDrop = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (dragIdx === null || dragIdx === index) {
+      setDragIdx(null);
+      setOverIdx(null);
+      return;
+    }
+    const updated = [...images];
+    const [moved] = updated.splice(dragIdx, 1);
+    updated.splice(index, 0, moved);
+    onChange(updated);
+    setDragIdx(null);
+    setOverIdx(null);
+  };
+
+  const handleReorderDragEnd = () => {
+    setDragIdx(null);
+    setOverIdx(null);
+  };
+
+  /** Check whether a drag event is an internal reorder (not files from desktop) */
+  const isReorderDrag = (e: React.DragEvent) =>
+    dragIdx !== null || e.dataTransfer.types.includes("text/x-reorder");
+
   return (
     <div className="space-y-3">
       {/* Preview grid */}
@@ -119,12 +165,24 @@ export function ImageUpload({
           {images.map((img, i) => (
             <div
               key={img.id ?? img.tempId ?? i}
-              className="group relative aspect-square overflow-hidden rounded-lg border bg-muted"
+              draggable={!disabled}
+              onDragStart={(e) => handleReorderDragStart(e, i)}
+              onDragOver={(e) => handleReorderDragOver(e, i)}
+              onDragLeave={() => { if (overIdx === i) setOverIdx(null); }}
+              onDrop={(e) => handleReorderDrop(e, i)}
+              onDragEnd={handleReorderDragEnd}
+              className={`group relative aspect-square overflow-hidden rounded-lg border bg-muted transition-all select-none ${
+                dragIdx === i
+                  ? "scale-95 opacity-40 ring-2 ring-primary"
+                  : overIdx === i
+                    ? "ring-2 ring-primary ring-offset-2"
+                    : ""
+              } ${!disabled ? "cursor-grab active:cursor-grabbing" : ""}`}
             >
               <img
                 src={img.url}
                 alt=""
-                className="h-full w-full object-cover"
+                className="h-full w-full object-cover pointer-events-none"
               />
               {/* Primary badge */}
               {img.isPrimary && (
@@ -132,6 +190,12 @@ export function ImageUpload({
                   <Star className="h-2.5 w-2.5" />
                   {t("imageUpload.primary")}
                 </span>
+              )}
+              {/* Drag handle hint – bottom left */}
+              {!disabled && (
+                <div className="absolute bottom-1.5 left-1.5 flex items-center gap-0.5 rounded-md bg-black/40 px-1 py-0.5 text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100">
+                  <GripVertical className="h-3 w-3" />
+                </div>
               )}
               {/* Action buttons – top-right corner */}
               {!disabled && (
@@ -193,11 +257,21 @@ export function ImageUpload({
           }`}
           onClick={() => inputRef.current?.click()}
           onDragOver={(e) => {
+            if (isReorderDrag(e)) return;
             e.preventDefault();
             setDragOver(true);
           }}
           onDragLeave={() => setDragOver(false)}
-          onDrop={handleDrop}
+          onDrop={(e) => {
+            if (isReorderDrag(e)) {
+              // End the reorder – drop landed outside the grid
+              e.preventDefault();
+              setDragIdx(null);
+              setOverIdx(null);
+              return;
+            }
+            handleDrop(e);
+          }}
         >
           <ImagePlus className="h-8 w-8 text-muted-foreground" />
           <div className="text-center">

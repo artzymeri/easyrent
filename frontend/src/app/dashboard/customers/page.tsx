@@ -16,6 +16,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { DatePicker } from "@/components/date-picker";
 import { DataTable, Eye, Pencil, Trash2 } from "@/components/data-table";
 
 interface Customer {
@@ -88,7 +89,13 @@ export default function CustomersPage() {
       setDialogOpen(false);
       fetchCustomers();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t("customersPage.toast.failedCreate"));
+      // Show specific backend message for conflicts, localized fallback otherwise
+      const msg = err instanceof Error ? err.message : "";
+      if (msg.includes("already exists")) {
+        toast.error(t("customersPage.toast.alreadyExists"));
+      } else {
+        toast.error(t("customersPage.toast.failedCreate"));
+      }
     } finally {
       setSaving(false);
     }
@@ -174,10 +181,10 @@ export default function CustomersPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>{t("customersPage.dateOfBirth")}</Label>
-                  <Input
-                    type="date"
+                  <DatePicker
                     value={form.dateOfBirth}
-                    onChange={(e) => setForm({ ...form, dateOfBirth: e.target.value })}
+                    onChange={(val) => setForm({ ...form, dateOfBirth: val })}
+                    maxDate={new Date()}
                   />
                 </div>
                 <div className="space-y-2">

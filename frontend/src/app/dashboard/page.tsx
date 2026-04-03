@@ -29,9 +29,9 @@ interface RecentBooking {
   startDate: string;
   endDate: string;
   status: string;
-  totalCost: number;
-  Customer: { firstName: string; lastName: string };
-  Car: { make: string; model: string };
+  totalAmount: number;
+  customer: { firstName: string; lastName: string };
+  car: { make: string; model: string };
 }
 
 export default function DashboardPage() {
@@ -169,10 +169,10 @@ export default function DashboardPage() {
                 >
                   <div>
                     <span className="font-medium">
-                      {b.Customer?.firstName} {b.Customer?.lastName}
+                      {b.customer?.firstName} {b.customer?.lastName}
                     </span>
                     <span className="ml-2 text-sm text-muted-foreground">
-                      {b.Car?.make} {b.Car?.model}
+                      {b.car?.make} {b.car?.model}
                     </span>
                     <div className="text-xs text-muted-foreground">
                       {new Date(b.startDate).toLocaleDateString()} →{" "}
@@ -190,7 +190,7 @@ export default function DashboardPage() {
                         : "outline"
                     }
                   >
-                    {b.status.replace(/_/g, " ")}
+                    {t(`bookingsPage.statuses.${b.status}`) || b.status.replace(/_/g, " ")}
                   </Badge>
                 </div>
               ))}

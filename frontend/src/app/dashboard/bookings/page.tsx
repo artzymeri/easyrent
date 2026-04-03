@@ -3,18 +3,22 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n";
-import { CalendarDays, List, Play, CheckCircle2, XCircle } from "lucide-react";
+import { useCurrency } from "@/lib/currency-context";
+import { CalendarDays, List, Play, CheckCircle2, XCircle, Car as CarIcon, User, MapPin, Clock, CreditCard, FileText, Hash, Download, ChevronLeft, ChevronRight } from "lucide-react";
+import { DateTimePicker } from "@/components/date-time-picker";
 import { Button } from "@/components/ui/button";
+import { generateRentalReport, type ReportBooking, type ReportCompany } from "@/lib/generate-rental-report";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
 import {
   Dialog,
   DialogContent,
@@ -38,12 +42,23 @@ interface Booking {
   startDate: string;
   endDate: string;
   status: string;
-  totalCost: number;
+  totalAmount: number;
+  totalDays: number;
   dailyRate: number;
+  subtotal: number;
+  discount: number;
+  extraCharges: number;
+  amountPaid: number;
+  paymentStatus: string;
   pickupLocation: string;
   returnLocation: string;
-  Customer: { id: number; firstName: string; lastName: string; phone: string };
-  Car: { id: number; make: string; model: string; licensePlate: string };
+  mileageOut: number | null;
+  mileageIn: number | null;
+  notes: string | null;
+  actualReturnDate: string | null;
+  customer: { id: number; firstName: string; lastName: string; phone: string; email?: string };
+  car: { id: number; make: string; model: string; licensePlate: string; color: string };
+  createdBy?: { id: number; firstName: string; lastName: string };
   createdAt: string;
 }
 
@@ -94,15 +109,30 @@ const STATUS_COLORS: Record<string, string> = {
   pending_return: "bg-orange-200 text-orange-900",
 };
 
+const BOOKING_COLORS = [
+  { bg: "bg-blue-500", text: "text-white", dot: "bg-blue-500" },
+  { bg: "bg-emerald-500", text: "text-white", dot: "bg-emerald-500" },
+  { bg: "bg-purple-500", text: "text-white", dot: "bg-purple-500" },
+  { bg: "bg-amber-500", text: "text-white", dot: "bg-amber-500" },
+  { bg: "bg-rose-500", text: "text-white", dot: "bg-rose-500" },
+  { bg: "bg-cyan-500", text: "text-white", dot: "bg-cyan-500" },
+  { bg: "bg-indigo-500", text: "text-white", dot: "bg-indigo-500" },
+  { bg: "bg-orange-500", text: "text-white", dot: "bg-orange-500" },
+];
+
 export default function BookingsPage() {
   const { t } = useTranslation();
+  const { fc, currency } = useCurrency();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [cars, setCars] = useState<Car[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [generatingReport, setGeneratingReport] = useState(false);
   const [view, setView] = useState<"list" | "calendar">("calendar");
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [calYear, setCalYear] = useState(new Date().getFullYear());
   const [calMonth, setCalMonth] = useState(new Date().getMonth());
 
@@ -160,8 +190,8 @@ export default function BookingsPage() {
       setForm({ carId: "", customerId: "", startDate: "", endDate: "", dailyRate: "", pickupLocation: "", returnLocation: "" });
       setDialogOpen(false);
       fetchAll();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : t("bookingsPage.toast.failedCreate"));
+    } catch {
+      toast.error(t("bookingsPage.toast.failedCreate"));
     } finally {
       setSaving(false);
     }
@@ -172,113 +202,226 @@ export default function BookingsPage() {
       await api.put(`/bookings/${bookingId}/status`, { status });
       toast.success(t("bookingsPage.toast.statusUpdated"));
       fetchAll();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : t("bookingsPage.toast.failedUpdate"));
+    } catch {
+      toast.error(t("bookingsPage.toast.failedUpdate"));
     }
   };
 
-  // Calendar rendering
+  const handleDownloadReport = async (bookingId: number) => {
+    setGeneratingReport(true);
+    try {
+      // Fetch full booking detail with all customer/car/company info
+      const fullBooking = await api.get<ReportBooking & { company?: ReportCompany }>(`/bookings/${bookingId}`);
+      const company: ReportCompany = fullBooking.company || {
+        name: "Company",
+      };
+      await generateRentalReport(fullBooking, company, currency.code, t);
+      toast.success(t("report.generateReport"));
+    } catch {
+      toast.error(t("bookingsPage.toast.failedLoad"));
+    } finally {
+      setGeneratingReport(false);
+    }
+  };
+
+  // Calendar rendering — Berry-style with spanning event bars
   const renderCalendar = () => {
     const daysInMonth = getDaysInMonth(calYear, calMonth);
     const firstDay = getFirstDayOfMonth(calYear, calMonth);
-    const days: (number | null)[] = [];
 
-    for (let i = 0; i < firstDay; i++) days.push(null);
-    for (let d = 1; d <= daysInMonth; d++) days.push(d);
+    // Build the grid including overflow from previous/next month
+    const prevMonth = calMonth === 0 ? 11 : calMonth - 1;
+    const prevYear = calMonth === 0 ? calYear - 1 : calYear;
+    const daysInPrevMonth = getDaysInMonth(prevYear, prevMonth);
 
-    const getBookingsForDay = (day: number) => {
-      const date = new Date(calYear, calMonth, day);
-      return bookings.filter((b) => {
+    type CalDay = { day: number; month: number; year: number; isCurrentMonth: boolean };
+    const calDays: CalDay[] = [];
+
+    // Previous month overflow
+    for (let i = firstDay - 1; i >= 0; i--) {
+      calDays.push({ day: daysInPrevMonth - i, month: prevMonth, year: prevYear, isCurrentMonth: false });
+    }
+    // Current month
+    for (let d = 1; d <= daysInMonth; d++) {
+      calDays.push({ day: d, month: calMonth, year: calYear, isCurrentMonth: true });
+    }
+    // Next month overflow
+    const nextMonth = calMonth === 11 ? 0 : calMonth + 1;
+    const nextYear = calMonth === 11 ? calYear + 1 : calYear;
+    const remaining = 7 - (calDays.length % 7);
+    if (remaining < 7) {
+      for (let d = 1; d <= remaining; d++) {
+        calDays.push({ day: d, month: nextMonth, year: nextYear, isCurrentMonth: false });
+      }
+    }
+    // Ensure at least 6 rows for consistency
+    while (calDays.length < 42) {
+      const last = calDays[calDays.length - 1];
+      const nd = last.day + 1;
+      const nm = nd > getDaysInMonth(last.year, last.month) ? (last.month + 1) % 12 : last.month;
+      const ny = nd > getDaysInMonth(last.year, last.month) && last.month === 11 ? last.year + 1 : last.year;
+      calDays.push({ day: nm !== last.month ? 1 : nd, month: nm, year: ny, isCurrentMonth: false });
+    }
+
+    const weeks: CalDay[][] = [];
+    for (let i = 0; i < calDays.length; i += 7) {
+      weeks.push(calDays.slice(i, i + 7));
+    }
+
+    // Active (non-cancelled) bookings
+    const activeBookings = bookings.filter((b) => b.status !== "cancelled");
+
+    // Build a stable color map per booking id
+    const bookingColorMap = new Map<number, typeof BOOKING_COLORS[0]>();
+    activeBookings.forEach((b, i) => {
+      bookingColorMap.set(b.id, BOOKING_COLORS[i % BOOKING_COLORS.length]);
+    });
+
+    // Get bookings for a specific date
+    const getBookingsForDate = (d: CalDay) => {
+      const date = new Date(d.year, d.month, d.day);
+      date.setHours(0, 0, 0, 0);
+      return activeBookings.filter((b) => {
         const start = new Date(b.startDate);
         const end = new Date(b.endDate);
         start.setHours(0, 0, 0, 0);
         end.setHours(23, 59, 59, 999);
-        return date >= start && date <= end && b.status !== "cancelled";
+        return date >= start && date <= end;
       });
     };
 
-    const weeks: (number | null)[][] = [];
-    for (let i = 0; i < days.length; i += 7) {
-      weeks.push(days.slice(i, i + 7));
-    }
-    // Pad last week
-    while (weeks.length > 0 && weeks[weeks.length - 1].length < 7) {
-      weeks[weeks.length - 1].push(null);
-    }
+    // Check if a booking starts on this specific day
+    const isBookingStart = (b: Booking, d: CalDay) => {
+      const start = new Date(b.startDate);
+      return start.getFullYear() === d.year && start.getMonth() === d.month && start.getDate() === d.day;
+    };
+
+    // Check if this day is a Sunday (start of week) — the booking bar should re-render
+    const isDayStartOfWeek = (d: CalDay, dayIndex: number) => dayIndex === 0;
+
+    // Calculate how many days a booking bar should span from this cell
+    const getSpanInWeek = (b: Booking, d: CalDay, dayIndex: number) => {
+      const end = new Date(b.endDate);
+      end.setHours(23, 59, 59, 999);
+      const remainingInWeek = 7 - dayIndex;
+      let span = 0;
+      for (let i = 0; i < remainingInWeek; i++) {
+        const checkDate = new Date(d.year, d.month, d.day + i);
+        checkDate.setHours(0, 0, 0, 0);
+        if (checkDate <= end) span++;
+        else break;
+      }
+      return span;
+    };
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
     return (
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <Button variant="outline" size="sm" onClick={() => {
-              if (calMonth === 0) { setCalMonth(11); setCalYear(calYear - 1); }
-              else setCalMonth(calMonth - 1);
-            }}>
-              ←
-            </Button>
-            <CardTitle>{t(MONTH_KEYS[calMonth])} {calYear}</CardTitle>
-            <Button variant="outline" size="sm" onClick={() => {
-              if (calMonth === 11) { setCalMonth(0); setCalYear(calYear + 1); }
-              else setCalMonth(calMonth + 1);
-            }}>
-              →
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-7 gap-px rounded-lg border bg-border">
-            {DAY_KEYS.map((dk) => (
-              <div key={dk} className="bg-muted p-2 text-center text-xs font-medium text-muted-foreground">
-                {t(dk)}
-              </div>
-            ))}
-            {weeks.map((week, wi) =>
-              week.map((day, di) => {
-                const dayBookings = day ? getBookingsForDay(day) : [];
-                const isToday = day &&
-                  calYear === new Date().getFullYear() &&
-                  calMonth === new Date().getMonth() &&
-                  day === new Date().getDate();
+      <div className="rounded-xl border bg-card shadow-sm">
+        {/* Header with month navigation */}
+        <div className="flex items-center justify-between border-b px-6 py-4">
+          <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => {
+            if (calMonth === 0) { setCalMonth(11); setCalYear(calYear - 1); }
+            else setCalMonth(calMonth - 1);
+          }}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <h2 className="text-lg font-semibold">{t(MONTH_KEYS[calMonth])} {calYear}</h2>
+          <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => {
+            if (calMonth === 11) { setCalMonth(0); setCalYear(calYear + 1); }
+            else setCalMonth(calMonth + 1);
+          }}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
 
-                return (
-                  <div
-                    key={`${wi}-${di}`}
-                    className={`min-h-[80px] bg-white p-1 ${
-                      isToday ? "ring-2 ring-primary ring-inset" : ""
-                    } ${!day ? "bg-muted/50" : ""}`}
-                  >
-                    {day && (
-                      <>
-                        <div className={`mb-1 text-xs ${isToday ? "font-bold text-primary" : "text-muted-foreground"}`}>
-                          {day}
-                        </div>
-                        <div className="space-y-0.5">
-                          {dayBookings.slice(0, 3).map((b) => (
-                            <div
-                              key={b.id}
-                              className={`truncate rounded px-1 text-[10px] leading-4 ${
-                                STATUS_COLORS[b.status] || "bg-gray-100"
-                              }`}
-                              title={`${b.Car?.make} ${b.Car?.model} — ${b.Customer?.firstName} ${b.Customer?.lastName}`}
-                            >
-                              {b.Car?.make} {b.Car?.model}
-                            </div>
-                          ))}
-                          {dayBookings.length > 3 && (
-                            <div className="text-[10px] text-muted-foreground">
-                              {t("common.more", { count: String(dayBookings.length - 3) })}
-                            </div>
-                          )}
-                        </div>
-                      </>
+        {/* Day header row */}
+        <div className="grid grid-cols-7 border-b">
+          {DAY_KEYS.map((dk) => (
+            <div key={dk} className="border-r last:border-r-0 px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              {t(dk)}
+            </div>
+          ))}
+        </div>
+
+        {/* Calendar grid */}
+        <div className="grid grid-cols-7">
+          {weeks.map((week, wi) =>
+            week.map((d, di) => {
+              const dayBookings = getBookingsForDate(d);
+              const isToday = d.year === today.getFullYear() && d.month === today.getMonth() && d.day === today.getDate();
+
+              return (
+                <div
+                  key={`${wi}-${di}`}
+                  className={`relative min-h-[120px] border-b border-r p-1.5 transition-colors ${
+                    di === 6 ? "border-r-0" : ""
+                  } ${wi === weeks.length - 1 ? "border-b-0" : ""} ${
+                    !d.isCurrentMonth ? "bg-muted/30" : "bg-card"
+                  } ${dayBookings.length > 0 ? "cursor-pointer hover:bg-accent/50" : ""}`}
+                  onClick={() => {
+                    if (dayBookings.length === 1) {
+                      setSelectedBooking(dayBookings[0]);
+                      setSheetOpen(true);
+                    }
+                  }}
+                >
+                  {/* Day number */}
+                  <div className={`mb-1 flex h-7 w-7 items-center justify-center rounded-full text-sm ${
+                    isToday
+                      ? "bg-primary font-bold text-primary-foreground"
+                      : d.isCurrentMonth
+                      ? "font-medium text-foreground"
+                      : "text-muted-foreground/50"
+                  }`}>
+                    {d.day}
+                  </div>
+
+                  {/* Booking events */}
+                  <div className="space-y-0.5">
+                    {dayBookings.slice(0, 3).map((b) => {
+                      const color = bookingColorMap.get(b.id) || BOOKING_COLORS[0];
+                      const startsHere = isBookingStart(b, d);
+                      const isWeekStart = isDayStartOfWeek(d, di);
+
+                      // Multi-day spanning bar
+                      if (startsHere || isWeekStart) {
+                        const span = getSpanInWeek(b, d, di);
+                        const label = startsHere
+                          ? `${b.car?.make} ${b.car?.model} — ${b.customer?.firstName} ${b.customer?.lastName}`
+                          : `${b.car?.make} ${b.car?.model}`;
+
+                        return (
+                          <div
+                            key={b.id}
+                            className={`${color.bg} ${color.text} relative z-10 cursor-pointer truncate rounded-md px-1.5 py-0.5 text-[11px] font-medium leading-4 shadow-sm transition-opacity hover:opacity-80`}
+                            style={{
+                              width: `calc(${span * 100}% + ${(span - 1) * 1}px)`,
+                            }}
+                            title={`${b.car?.make} ${b.car?.model} — ${b.customer?.firstName} ${b.customer?.lastName} (${new Date(b.startDate).toLocaleDateString()} → ${new Date(b.endDate).toLocaleDateString()})`}
+                            onClick={(e) => { e.stopPropagation(); setSelectedBooking(b); setSheetOpen(true); }}
+                          >
+                            {label}
+                          </div>
+                        );
+                      }
+
+                      // Mid-booking day — don't render (the spanning bar covers it)
+                      return null;
+                    })}
+                    {dayBookings.length > 3 && (
+                      <div className="text-[10px] font-medium text-muted-foreground">
+                        {t("common.more", { count: String(dayBookings.length - 3) })}
+                      </div>
                     )}
                   </div>
-                );
-              })
-            )}
-          </div>
-        </CardContent>
-      </Card>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
     );
   };
 
@@ -356,7 +499,7 @@ export default function BookingsPage() {
                     <SelectContent>
                       {cars.filter((c) => c.status === "available").map((c) => (
                         <SelectItem key={c.id} value={String(c.id)}>
-                          {c.make} {c.model} ({c.licensePlate}) — ${c.dailyRate}/day
+                          {c.make} {c.model} ({c.licensePlate}) — {fc(c.dailyRate)}/{t("bookingsPage.perDay")}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -365,11 +508,11 @@ export default function BookingsPage() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label>{t("bookingsPage.startDate")} *</Label>
-                    <Input type="date" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} required />
+                    <DateTimePicker value={form.startDate} onChange={(val) => setForm({ ...form, startDate: val })} minDate={new Date()} />
                   </div>
                   <div className="space-y-2">
                     <Label>{t("bookingsPage.endDate")} *</Label>
-                    <Input type="date" value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} required />
+                    <DateTimePicker value={form.endDate} onChange={(val) => setForm({ ...form, endDate: val })} minDate={new Date()} />
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -399,6 +542,274 @@ export default function BookingsPage() {
       {/* Calendar View */}
       {view === "calendar" && renderCalendar()}
 
+      {/* Booking Detail Sheet */}
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <SheetContent side="right" className="w-full gap-0 sm:max-w-lg">
+          {selectedBooking && (() => {
+            const b = selectedBooking;
+            const startDate = new Date(b.startDate);
+            const endDate = new Date(b.endDate);
+            const formatDate = (d: Date) => d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+            const formatTime = (d: Date) => d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+            return (
+              <>
+                <SheetHeader className="border-b">
+                  <div className="flex items-center gap-2">
+                    <SheetTitle className="text-lg">
+                      {b.car?.make} {b.car?.model}
+                    </SheetTitle>
+                    <Badge
+                      variant={
+                        b.status === "in_progress" ? "default"
+                          : b.status === "completed" ? "secondary"
+                          : b.status === "cancelled" ? "destructive"
+                          : "outline"
+                      }
+                    >
+                      {t(`bookingsPage.statuses.${b.status}`) || b.status.replace(/_/g, " ")}
+                    </Badge>
+                  </div>
+                  <SheetDescription>
+                    {t("bookingsPage.sheetDescription", { id: String(b.id) })}
+                  </SheetDescription>
+                </SheetHeader>
+
+                <div className="flex-1 space-y-6 overflow-y-auto px-4 py-6">
+                  {/* Car Info */}
+                  <div className="rounded-lg border p-4">
+                    <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+                      <CarIcon className="h-4 w-4 text-primary" />
+                      {t("bookingsPage.car")}
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <p className="text-muted-foreground">{t("bookingsPage.sheetCarName")}</p>
+                        <p className="font-medium">{b.car?.make} {b.car?.model}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">{t("carsPage.licensePlate")}</p>
+                        <p className="font-medium">{b.car?.licensePlate || "—"}</p>
+                      </div>
+                      {b.car?.color && (
+                        <div>
+                          <p className="text-muted-foreground">{t("carsPage.color")}</p>
+                          <p className="font-medium">{t(`carsPage.colors.${b.car.color.toLowerCase()}`).startsWith("carsPage.") ? b.car.color : t(`carsPage.colors.${b.car.color.toLowerCase()}`)}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Customer Info */}
+                  <div className="rounded-lg border p-4">
+                    <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+                      <User className="h-4 w-4 text-primary" />
+                      {t("bookingsPage.customer")}
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <p className="text-muted-foreground">{t("customersPage.firstName")}</p>
+                        <p className="font-medium">{b.customer?.firstName} {b.customer?.lastName}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">{t("customersPage.phone")}</p>
+                        <p className="font-medium">{b.customer?.phone || "—"}</p>
+                      </div>
+                      {b.customer?.email && (
+                        <div className="col-span-2">
+                          <p className="text-muted-foreground">{t("customersPage.email")}</p>
+                          <p className="font-medium">{b.customer.email}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Dates & Location */}
+                  <div className="rounded-lg border p-4">
+                    <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+                      <Clock className="h-4 w-4 text-primary" />
+                      {t("bookingsPage.sheetSchedule")}
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <p className="text-muted-foreground">{t("bookingsPage.startDate")}</p>
+                        <p className="font-medium">{formatDate(startDate)}</p>
+                        <p className="text-xs text-muted-foreground">{formatTime(startDate)}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">{t("bookingsPage.endDate")}</p>
+                        <p className="font-medium">{formatDate(endDate)}</p>
+                        <p className="text-xs text-muted-foreground">{formatTime(endDate)}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">{t("bookingsPage.sheetDuration")}</p>
+                        <p className="font-medium">{b.totalDays} {t("bookingsPage.sheetDays")}</p>
+                      </div>
+                      {b.actualReturnDate && (
+                        <div>
+                          <p className="text-muted-foreground">{t("bookingsPage.sheetActualReturn")}</p>
+                          <p className="font-medium">{formatDate(new Date(b.actualReturnDate))}</p>
+                        </div>
+                      )}
+                    </div>
+                    {(b.pickupLocation || b.returnLocation) && (
+                      <>
+                        <Separator className="my-3" />
+                        <div className="grid grid-cols-2 gap-3 text-sm">
+                          {b.pickupLocation && (
+                            <div>
+                              <p className="flex items-center gap-1 text-muted-foreground">
+                                <MapPin className="h-3 w-3" /> {t("bookingsPage.pickupLocation")}
+                              </p>
+                              <p className="font-medium">{b.pickupLocation}</p>
+                            </div>
+                          )}
+                          {b.returnLocation && (
+                            <div>
+                              <p className="flex items-center gap-1 text-muted-foreground">
+                                <MapPin className="h-3 w-3" /> {t("bookingsPage.returnLocation")}
+                              </p>
+                              <p className="font-medium">{b.returnLocation}</p>
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Financial */}
+                  <div className="rounded-lg border p-4">
+                    <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+                      <CreditCard className="h-4 w-4 text-primary" />
+                      {t("bookingsPage.sheetFinancial")}
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">{t("bookingsPage.dailyRate")}</span>
+                        <span className="font-medium">{fc(b.dailyRate)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">{t("bookingsPage.sheetSubtotal")}</span>
+                        <span className="font-medium">{fc(b.subtotal)}</span>
+                      </div>
+                      {Number(b.discount) > 0 && (
+                        <div className="flex justify-between text-green-600">
+                          <span>{t("bookingsPage.sheetDiscount")}</span>
+                          <span>-{fc(b.discount)}</span>
+                        </div>
+                      )}
+                      {Number(b.extraCharges) > 0 && (
+                        <div className="flex justify-between text-orange-600">
+                          <span>{t("bookingsPage.sheetExtraCharges")}</span>
+                          <span>+{fc(b.extraCharges)}</span>
+                        </div>
+                      )}
+                      <Separator />
+                      <div className="flex justify-between text-base font-semibold">
+                        <span>{t("bookingsPage.sheetTotal")}</span>
+                        <span>{fc(b.totalAmount)}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">{t("bookingsPage.sheetPaid")}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{fc(b.amountPaid)}</span>
+                          <Badge variant={
+                            b.paymentStatus === "paid" ? "secondary"
+                              : b.paymentStatus === "partial" ? "outline"
+                              : b.paymentStatus === "refunded" ? "destructive"
+                              : "outline"
+                          } className="text-[10px]">
+                            {t(`bookingsPage.paymentStatuses.${b.paymentStatus}`) || b.paymentStatus}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Mileage */}
+                  {(b.mileageOut != null || b.mileageIn != null) && (
+                    <div className="rounded-lg border p-4">
+                      <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+                        <Hash className="h-4 w-4 text-primary" />
+                        {t("bookingsPage.sheetMileage")}
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        {b.mileageOut != null && (
+                          <div>
+                            <p className="text-muted-foreground">{t("bookingsPage.sheetMileageOut")}</p>
+                            <p className="font-medium">{b.mileageOut.toLocaleString()} km</p>
+                          </div>
+                        )}
+                        {b.mileageIn != null && (
+                          <div>
+                            <p className="text-muted-foreground">{t("bookingsPage.sheetMileageIn")}</p>
+                            <p className="font-medium">{b.mileageIn.toLocaleString()} km</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Notes */}
+                  {b.notes && (
+                    <div className="rounded-lg border p-4">
+                      <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+                        <FileText className="h-4 w-4 text-primary" />
+                        {t("bookingsPage.sheetNotes")}
+                      </div>
+                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">{b.notes}</p>
+                    </div>
+                  )}
+
+                  {/* Created Info */}
+                  <div className="text-xs text-muted-foreground">
+                    {t("bookingsPage.sheetCreatedAt", { date: new Date(b.createdAt).toLocaleString() })}
+                    {b.createdBy && (
+                      <span> · {t("bookingsPage.sheetCreatedBy", { name: `${b.createdBy.firstName} ${b.createdBy.lastName}` })}</span>
+                    )}
+                  </div>
+
+                </div>
+
+                {/* Action Buttons — sticky footer */}
+                <div className="flex flex-col gap-2 border-t px-4 py-3">
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    disabled={generatingReport}
+                    onClick={() => handleDownloadReport(b.id)}
+                  >
+                    <Download className="mr-1.5 h-4 w-4" />
+                    {generatingReport ? t("report.generating") : t("report.generateReport")}
+                  </Button>
+                  {b.status !== "completed" && b.status !== "cancelled" && (
+                    <div className="flex gap-2">
+                      {b.status === "pending_start" && (
+                        <Button className="flex-1" onClick={() => { updateStatus(b.id, "in_progress"); setSheetOpen(false); }}>
+                          <Play className="mr-1.5 h-4 w-4" />
+                          {t("bookingsPage.start")}
+                        </Button>
+                      )}
+                      {b.status === "in_progress" && (
+                        <Button className="flex-1" onClick={() => { updateStatus(b.id, "completed"); setSheetOpen(false); }}>
+                          <CheckCircle2 className="mr-1.5 h-4 w-4" />
+                          {t("bookingsPage.complete")}
+                        </Button>
+                      )}
+                      {(b.status === "pending_start" || b.status === "in_progress") && (
+                        <Button variant="outline" className="flex-1" onClick={() => { updateStatus(b.id, "cancelled"); setSheetOpen(false); }}>
+                          <XCircle className="mr-1.5 h-4 w-4" />
+                          {t("common.cancel")}
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </>
+            );
+          })()}
+        </SheetContent>
+      </Sheet>
+
       {/* List View */}
       {view === "list" && (
         <DataTable<Booking>
@@ -407,22 +818,22 @@ export default function BookingsPage() {
             {
               key: "customer",
               header: t("bookingsPage.tableHeaders.customer"),
-              sortValue: (b) => `${b.Customer?.firstName ?? ""} ${b.Customer?.lastName ?? ""}`,
+              sortValue: (b) => `${b.customer?.firstName ?? ""} ${b.customer?.lastName ?? ""}`,
               render: (b) => (
                 <span className="font-medium">
-                  {b.Customer?.firstName} {b.Customer?.lastName}
+                  {b.customer?.firstName} {b.customer?.lastName}
                 </span>
               ),
             },
             {
               key: "car",
               header: t("bookingsPage.tableHeaders.car"),
-              sortValue: (b) => `${b.Car?.make ?? ""} ${b.Car?.model ?? ""}`,
+              sortValue: (b) => `${b.car?.make ?? ""} ${b.car?.model ?? ""}`,
               render: (b) => (
                 <div>
-                  <span>{b.Car?.make} {b.Car?.model}</span>
-                  {b.Car?.licensePlate && (
-                    <span className="ml-1.5 text-xs text-muted-foreground">({b.Car.licensePlate})</span>
+                  <span>{b.car?.make} {b.car?.model}</span>
+                  {b.car?.licensePlate && (
+                    <span className="ml-1.5 text-xs text-muted-foreground">({b.car.licensePlate})</span>
                   )}
                 </div>
               ),
@@ -440,8 +851,8 @@ export default function BookingsPage() {
             {
               key: "cost",
               header: t("bookingsPage.tableHeaders.cost"),
-              sortValue: (b) => b.totalCost || 0,
-              render: (b) => <span>{b.totalCost ? `$${Number(b.totalCost).toFixed(2)}` : "—"}</span>,
+              sortValue: (b) => b.totalAmount || 0,
+              render: (b) => <span>{b.totalAmount ? fc(b.totalAmount) : "—"}</span>,
             },
             {
               key: "status",
@@ -463,13 +874,14 @@ export default function BookingsPage() {
           ]}
           getRowId={(b) => b.id}
           searchFn={(b, q) =>
-            `${b.Customer?.firstName ?? ""} ${b.Customer?.lastName ?? ""} ${b.Car?.make ?? ""} ${b.Car?.model ?? ""} ${b.Car?.licensePlate ?? ""} ${b.status}`.toLowerCase().includes(q)
+            `${b.customer?.firstName ?? ""} ${b.customer?.lastName ?? ""} ${b.car?.make ?? ""} ${b.car?.model ?? ""} ${b.car?.licensePlate ?? ""} ${b.status}`.toLowerCase().includes(q)
           }
+          onRowClick={(b) => { setSelectedBooking(b); setSheetOpen(true); }}
           actions={[
             {
               label: t("common.view"),
               icon: <Eye className="h-4 w-4" />,
-              onClick: () => {},
+              onClick: (b) => { setSelectedBooking(b); setSheetOpen(true); },
             },
             {
               label: t("bookingsPage.start"),

@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ImageUpload, type ImageItem } from "@/components/image-upload";
+import { DatePicker } from "@/components/date-picker";
 import { toast } from "sonner";
 import { ArrowLeft, Save, Loader2 } from "lucide-react";
 
@@ -32,7 +33,6 @@ interface CarDetail {
   make: string;
   model: string;
   year: number | null;
-  productionYear: number | null;
   color: string;
   licensePlate: string;
   vin: string;
@@ -70,7 +70,6 @@ export default function CarEditPage() {
     make: "",
     model: "",
     year: "",
-    productionYear: "",
     color: "",
     licensePlate: "",
     vin: "",
@@ -119,7 +118,6 @@ export default function CarEditPage() {
           make: car.make || "",
           model: car.model || "",
           year: car.year ? String(car.year) : "",
-          productionYear: car.productionYear ? String(car.productionYear) : "",
           color: car.color || "",
           licensePlate: car.licensePlate || "",
           vin: car.vin || "",
@@ -214,7 +212,6 @@ export default function CarEditPage() {
         make: form.make,
         model: form.model,
         year: form.year ? parseInt(form.year) : null,
-        productionYear: form.productionYear ? parseInt(form.productionYear) : null,
         color: form.color || null,
         licensePlate: form.licensePlate || null,
         vin: form.vin || null,
@@ -244,12 +241,20 @@ export default function CarEditPage() {
         await api.put(`/cars/images/${primaryImg.id}/primary`, {});
       }
 
+      // 5. Persist image sort order for existing images
+      const existingImageIds = images
+        .filter((img) => img.id)
+        .map((img) => img.id!);
+      if (existingImageIds.length > 0) {
+        await api.put(`/cars/${params.id}/images/reorder`, {
+          imageIds: existingImageIds,
+        });
+      }
+
       toast.success(t("carEdit.saved"));
       router.push(`/dashboard/cars/${params.id}`);
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : t("carEdit.failedSave"),
-      );
+    } catch {
+      toast.error(t("carEdit.failedSave"));
     } finally {
       setSaving(false);
     }
@@ -270,11 +275,11 @@ export default function CarEditPage() {
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
-            size="sm"
+            size="icon"
+            className="h-9 w-9 shrink-0"
             onClick={() => router.push(`/dashboard/cars/${params.id}`)}
           >
-            <ArrowLeft className="mr-1 h-4 w-4" />
-            {t("common.back")}
+            <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
             <h1 className="text-3xl font-bold tracking-tight">
@@ -350,7 +355,7 @@ export default function CarEditPage() {
                     </Select>
                   </div>
                 </div>
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-4 sm:grid-cols-3">
                   <div className="space-y-2">
                     <Label>{t("carsPage.year")}</Label>
                     <Input
@@ -362,19 +367,6 @@ export default function CarEditPage() {
                       placeholder="2024"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label>{t("carsPage.productionYear")}</Label>
-                    <Input
-                      type="number"
-                      value={form.productionYear}
-                      onChange={(e) =>
-                        setForm({ ...form, productionYear: e.target.value })
-                      }
-                      placeholder="2023"
-                    />
-                  </div>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-3">
                   <div className="space-y-2">
                     <Label>{t("carsPage.color")}</Label>
                     <Input
@@ -434,7 +426,7 @@ export default function CarEditPage() {
                       }
                     >
                       <SelectTrigger>
-                        <SelectValue />
+                        <SelectValue placeholder={t(`carsPage.fuelTypes.${form.fuelType}`)} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="gasoline">
@@ -461,7 +453,7 @@ export default function CarEditPage() {
                       }
                     >
                       <SelectTrigger>
-                        <SelectValue />
+                        <SelectValue placeholder={t(`carsPage.transmissions.${form.transmission}`)} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="automatic">
@@ -514,7 +506,7 @@ export default function CarEditPage() {
                       }
                     >
                       <SelectTrigger>
-                        <SelectValue />
+                        <SelectValue placeholder={t(`carsPage.statuses.${form.status}`)} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="available">
@@ -545,13 +537,12 @@ export default function CarEditPage() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label>{t("carDetail.registrationExpiry")}</Label>
-                    <Input
-                      type="date"
+                    <DatePicker
                       value={form.registrationExpiry}
-                      onChange={(e) =>
+                      onChange={(val) =>
                         setForm({
                           ...form,
-                          registrationExpiry: e.target.value,
+                          registrationExpiry: val,
                         })
                       }
                     />
@@ -584,11 +575,10 @@ export default function CarEditPage() {
                   </div>
                   <div className="space-y-2">
                     <Label>{t("carDetail.insuranceExpiry")}</Label>
-                    <Input
-                      type="date"
+                    <DatePicker
                       value={form.insuranceExpiry}
-                      onChange={(e) =>
-                        setForm({ ...form, insuranceExpiry: e.target.value })
+                      onChange={(val) =>
+                        setForm({ ...form, insuranceExpiry: val })
                       }
                     />
                   </div>
@@ -605,21 +595,19 @@ export default function CarEditPage() {
                 <div className="grid gap-4 sm:grid-cols-3">
                   <div className="space-y-2">
                     <Label>{t("carDetail.lastService")}</Label>
-                    <Input
-                      type="date"
+                    <DatePicker
                       value={form.lastServiceDate}
-                      onChange={(e) =>
-                        setForm({ ...form, lastServiceDate: e.target.value })
+                      onChange={(val) =>
+                        setForm({ ...form, lastServiceDate: val })
                       }
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>{t("carDetail.nextService")}</Label>
-                    <Input
-                      type="date"
+                    <DatePicker
                       value={form.nextServiceDate}
-                      onChange={(e) =>
-                        setForm({ ...form, nextServiceDate: e.target.value })
+                      onChange={(val) =>
+                        setForm({ ...form, nextServiceDate: val })
                       }
                     />
                   </div>

@@ -258,6 +258,32 @@ router.delete("/images/:imageId", async (req, res) => {
   }
 });
 
+// ── Reorder car images ────────────────────────────────────────
+router.put("/:id/images/reorder", async (req, res) => {
+  try {
+    const car = await db.Car.findByPk(req.params.id);
+    if (!car) return res.status(404).json({ error: "Car not found" });
+
+    if (req.user.type !== "admin" && String(req.user.companyId) !== String(car.companyId)) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const { imageIds } = req.body;
+    if (!imageIds || !Array.isArray(imageIds)) {
+      return res.status(400).json({ error: "imageIds array is required" });
+    }
+
+    for (let i = 0; i < imageIds.length; i++) {
+      await db.CarImage.update({ sortOrder: i }, { where: { id: imageIds[i], carId: car.id } });
+    }
+
+    res.json({ message: "Image order updated" });
+  } catch (err) {
+    console.error("Reorder images error:", err);
+    res.status(500).json({ error: "Failed to reorder images" });
+  }
+});
+
 // ── Set primary image ─────────────────────────────────────────
 router.put("/images/:imageId/primary", async (req, res) => {
   try {

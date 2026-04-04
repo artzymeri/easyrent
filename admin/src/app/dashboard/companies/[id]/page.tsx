@@ -3,6 +3,7 @@
 import { useEffect, useState, use, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
+import { formatCurrency } from "@/lib/currency";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -68,6 +69,7 @@ interface Company {
   address: string | null;
   city: string | null;
   country: string | null;
+  currency: string;
   logoUrl: string | null;
   isActive: boolean;
   onboardingCompleted: boolean;
@@ -744,7 +746,7 @@ export default function CompanyDetailPage({
                           {c.mileage?.toLocaleString()} km
                         </TableCell>
                         <TableCell>
-                          {c.dailyRate ? `€${c.dailyRate}/day` : "—"}
+                          {c.dailyRate ? `${formatCurrency(c.dailyRate, company.currency)}/day` : "—"}
                         </TableCell>
                         <TableCell>
                           <Badge

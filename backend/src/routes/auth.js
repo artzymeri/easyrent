@@ -71,7 +71,7 @@ router.post(
 
       const staff = await db.Staff.findOne({
         where: { email, companyId: company.id },
-        include: [{ model: db.Company, as: "company", attributes: ["id", "name", "subdomain", "logoUrl", "isActive"] }],
+        include: [{ model: db.Company, as: "company", attributes: ["id", "name", "subdomain", "logoUrl", "isActive", "currency"] }],
       });
 
       if (!staff || !staff.isActive) {
@@ -118,6 +118,7 @@ router.post(
           name: staff.company.name,
           subdomain: staff.company.subdomain,
           logoUrl: staff.company.logoUrl,
+          currency: staff.company.currency,
         },
       });
     } catch (err) {
@@ -139,7 +140,7 @@ router.get("/me", require("../middleware/auth").authenticate, async (req, res) =
 
     const staff = await db.Staff.findByPk(req.user.id, {
       attributes: { exclude: ["password"] },
-      include: [{ model: db.Company, as: "company", attributes: ["id", "name", "subdomain", "logoUrl"] }],
+      include: [{ model: db.Company, as: "company", attributes: ["id", "name", "subdomain", "logoUrl", "currency"] }],
     });
     res.json({ type: "staff", user: staff });
   } catch (err) {

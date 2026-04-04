@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import { formatCurrency } from "@/lib/currency";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { DatePicker } from "@/components/date-picker";
 import { toast } from "sonner";
 
 // ── Types ────────────────────────────────────────────────────
@@ -540,7 +542,7 @@ export default function OnboardingPage() {
                         )}
                       </div>
                       {c.dailyRate && (
-                        <Badge variant="outline">${c.dailyRate}/day</Badge>
+                        <Badge variant="outline">{formatCurrency(c.dailyRate)}/day</Badge>
                       )}
                     </div>
                   ))}
@@ -702,10 +704,9 @@ export default function OnboardingPage() {
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-2">
                 <Label>Registration Expiry</Label>
-                <Input
-                  type="date"
+                <DatePicker
                   value={currentCar.registrationExpiry}
-                  onChange={(e) => setCurrentCar({ ...currentCar, registrationExpiry: e.target.value })}
+                  onChange={(val) => setCurrentCar({ ...currentCar, registrationExpiry: val })}
                 />
               </div>
               <div className="space-y-2">
@@ -718,10 +719,9 @@ export default function OnboardingPage() {
               </div>
               <div className="space-y-2">
                 <Label>Insurance Expiry</Label>
-                <Input
-                  type="date"
+                <DatePicker
                   value={currentCar.insuranceExpiry}
-                  onChange={(e) => setCurrentCar({ ...currentCar, insuranceExpiry: e.target.value })}
+                  onChange={(val) => setCurrentCar({ ...currentCar, insuranceExpiry: val })}
                 />
               </div>
             </div>
@@ -801,7 +801,7 @@ export default function OnboardingPage() {
                       <span className="font-medium">
                         {c.make} {c.model} {c.year && `(${c.year})`}
                       </span>
-                      {c.dailyRate && <Badge variant="outline">${c.dailyRate}/day</Badge>}
+                      {c.dailyRate && <Badge variant="outline">{formatCurrency(c.dailyRate)}/day</Badge>}
                     </div>
                   ))}
                 </div>

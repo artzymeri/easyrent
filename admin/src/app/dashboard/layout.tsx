@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { api } from "@/lib/api";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -95,9 +96,7 @@ export default function DashboardLayout({
       <aside className="fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r bg-background">
         {/* Logo */}
         <div className="flex h-16 items-center gap-2 border-b px-6">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground text-sm font-bold">
-            ER
-          </div>
+          <Image src="/logo_without_bg.png" alt="EasyRent" width={30} height={30} className="drop-shadow-md" />
           <span className="text-lg font-semibold">EasyRent</span>
           <span className="ml-auto rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
             Admin

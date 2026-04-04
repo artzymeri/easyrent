@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,9 +45,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-muted/40 p-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-primary text-primary-foreground text-2xl font-bold">
-            ER
-          </div>
+          <Image src="/logo_without_bg.png" alt="EasyRent" width={56} height={56} className="mx-auto mb-4 drop-shadow-lg" />
           <CardTitle className="text-2xl">EasyRent Admin</CardTitle>
           <CardDescription>
             Sign in to the administration dashboard

@@ -33,9 +33,17 @@ router.get("/", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     if (!req.user.companyId) return res.status(400).json({ error: "No company context" });
+
+    // Clean optional fields – convert empty strings to null
+    const data = { ...req.body };
+    const optionalFields = ["email", "idNumber", "driversLicense", "driversLicenseExpiry", "dateOfBirth", "address", "city", "country", "notes"];
+    for (const key of optionalFields) {
+      if (data[key] === "" || data[key] === undefined) data[key] = null;
+    }
+
     const customer = await db.Customer.create({
       companyId: req.user.companyId,
-      ...req.body,
+      ...data,
     });
     res.status(201).json(customer);
   } catch (err) {

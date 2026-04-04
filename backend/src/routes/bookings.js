@@ -122,6 +122,7 @@ router.get("/:id", async (req, res) => {
       include: [
         { model: db.Car, as: "car", include: [{ model: db.CarImage, as: "images" }] },
         { model: db.Customer, as: "customer" },
+        { model: db.Company, as: "company", attributes: ["id", "name", "email", "phone", "address", "city", "country", "currency"] },
         { model: db.Staff, as: "createdBy", attributes: ["id", "firstName", "lastName"] },
         { model: db.CarDamage, as: "damages" },
       ],

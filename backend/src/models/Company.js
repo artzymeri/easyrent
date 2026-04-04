@@ -36,6 +36,11 @@ module.exports = (sequelize, DataTypes) => {
       address: DataTypes.TEXT,
       city: DataTypes.STRING(100),
       country: DataTypes.STRING(100),
+      currency: {
+        type: DataTypes.STRING(3),
+        allowNull: false,
+        defaultValue: "EUR",
+      },
       isActive: {
         type: DataTypes.BOOLEAN,
         defaultValue: true,

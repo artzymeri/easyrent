@@ -15,7 +15,6 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
   SheetFooter,
 } from "@/components/ui/sheet";
 import {
@@ -25,9 +24,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { DatePicker } from "@/components/date-picker";
 import { toast } from "sonner";
 import { DataTable, Eye, Pencil, Trash2, type Column, type DataTableAction } from "@/components/data-table";
 import { ImageUpload, type ImageItem } from "@/components/image-upload";
+import { X } from "lucide-react";
 
 interface Car {
   id: number;
@@ -51,30 +53,57 @@ const COLOR_KEYS = [
   "maroon", "navy", "purple", "pink",
 ] as const;
 
+const REPAIR_PARTS = [
+  "door", "engine", "windshield", "tires", "brakes", "suspension",
+  "exhaust", "lights", "mirrors", "bumper", "hood", "trunk",
+  "interior", "electrical", "ac", "battery", "radiator", "clutch",
+  "steering", "wipers",
+] as const;
+
+const EMPTY_FORM = {
+  make: "",
+  model: "",
+  year: "",
+  color: "",
+  licensePlate: "",
+  vin: "",
+  engine: "",
+  fuelType: "gasoline",
+  transmission: "automatic",
+  mileage: "",
+  seats: "5",
+  dailyRate: "",
+  status: "available",
+  notes: "",
+  registrationExpiry: "",
+  insuranceProvider: "",
+  insurancePolicyNumber: "",
+  insuranceExpiry: "",
+  lastServiceDate: "",
+  nextServiceDate: "",
+  nextServiceMileage: "",
+  repairParts: [] as string[],
+};
+
 export default function CarsPage() {
   const { t } = useTranslation();
   const { fc } = useCurrency();
   const router = useRouter();
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Sheet state
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [sheetMode, setSheetMode] = useState<"create" | "edit">("create");
+  const [editCarId, setEditCarId] = useState<number | null>(null);
+  const [sheetLoading, setSheetLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+
   const [makes, setMakes] = useState<string[]>([]);
   const [models, setModels] = useState<string[]>([]);
-  const [newImages, setNewImages] = useState<ImageItem[]>([]);
-  const [form, setForm] = useState({
-    make: "",
-    model: "",
-    year: "",
-    color: "",
-    licensePlate: "",
-    engine: "",
-    fuelType: "gasoline",
-    transmission: "automatic",
-    mileage: "",
-    seats: "5",
-    dailyRate: "",
-  });
+  const [images, setImages] = useState<ImageItem[]>([]);
+  const [deletedImageIds, setDeletedImageIds] = useState<number[]>([]);
+  const [form, setForm] = useState({ ...EMPTY_FORM });
 
   const fetchCars = async () => {
     try {
@@ -111,6 +140,97 @@ export default function CarsPage() {
     }
   };
 
+  // ── Open sheet for creating ──────────────────────────────────
+  const openCreateSheet = () => {
+    setSheetMode("create");
+    setEditCarId(null);
+    setForm({ ...EMPTY_FORM });
+    setImages([]);
+    setDeletedImageIds([]);
+    setModels([]);
+    setSheetOpen(true);
+    loadMakes();
+  };
+
+  // ── Open sheet for editing ───────────────────────────────────
+  const openEditSheet = async (car: Car) => {
+    setSheetMode("edit");
+    setEditCarId(car.id);
+    setImages([]);
+    setDeletedImageIds([]);
+    setSheetOpen(true);
+    setSheetLoading(true);
+    loadMakes();
+
+    try {
+      const detail = await api.get<{
+        id: number; make: string; model: string; year: number | null;
+        color: string; licensePlate: string; vin: string; engine: string;
+        fuelType: string; transmission: string; mileage: number; seats: number;
+        dailyRate: number | null; status: string; notes: string;
+        registrationExpiry: string; insuranceProvider: string;
+        insurancePolicyNumber: string; insuranceExpiry: string;
+        lastServiceDate: string; nextServiceDate: string;
+        nextServiceMileage: number | null; repairParts: string[] | null;
+        images: { id: number; url: string; isPrimary: boolean; sortOrder: number }[];
+      }>(`/cars/${car.id}`);
+
+      if (detail.make) {
+        try {
+          const modelsData = await api.get<string[]>(`/data/car-models/${encodeURIComponent(detail.make)}`);
+          setModels(modelsData);
+        } catch { setModels([]); }
+      }
+
+      setForm({
+        make: detail.make || "",
+        model: detail.model || "",
+        year: detail.year ? String(detail.year) : "",
+        color: detail.color || "",
+        licensePlate: detail.licensePlate || "",
+        vin: detail.vin || "",
+        engine: detail.engine || "",
+        fuelType: detail.fuelType || "gasoline",
+        transmission: detail.transmission || "automatic",
+        mileage: detail.mileage ? String(detail.mileage) : "",
+        seats: detail.seats ? String(detail.seats) : "5",
+        dailyRate: detail.dailyRate ? String(detail.dailyRate) : "",
+        status: detail.status || "available",
+        notes: detail.notes || "",
+        registrationExpiry: detail.registrationExpiry || "",
+        insuranceProvider: detail.insuranceProvider || "",
+        insurancePolicyNumber: detail.insurancePolicyNumber || "",
+        insuranceExpiry: detail.insuranceExpiry || "",
+        lastServiceDate: detail.lastServiceDate || "",
+        nextServiceDate: detail.nextServiceDate || "",
+        nextServiceMileage: detail.nextServiceMileage ? String(detail.nextServiceMileage) : "",
+        repairParts: detail.repairParts || [],
+      });
+
+      setImages(
+        (detail.images || [])
+          .sort((a, b) => a.sortOrder - b.sortOrder)
+          .map((img) => ({ id: img.id, url: img.url, isPrimary: img.isPrimary })),
+      );
+    } catch {
+      toast.error(t("carDetail.failedLoad"));
+      setSheetOpen(false);
+    } finally {
+      setSheetLoading(false);
+    }
+  };
+
+  // ── Handle image changes (track deleted existing images) ─────
+  const handleImageChange = (updated: ImageItem[]) => {
+    const currentExistingIds = updated.filter((img) => img.id).map((img) => img.id!);
+    const removedIds = images.filter((img) => img.id && !currentExistingIds.includes(img.id)).map((img) => img.id!);
+    if (removedIds.length > 0) {
+      setDeletedImageIds((prev) => [...prev, ...removedIds]);
+    }
+    setImages(updated);
+  };
+
+  // ── Create handler ───────────────────────────────────────────
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.make || !form.model) {
@@ -126,29 +246,90 @@ export default function CarsPage() {
         mileage: form.mileage ? parseInt(form.mileage) : 0,
         seats: form.seats ? parseInt(form.seats) : 5,
         dailyRate: form.dailyRate ? parseFloat(form.dailyRate) : null,
-        images: newImages.map((img) => img.url),
+        nextServiceMileage: form.nextServiceMileage ? parseInt(form.nextServiceMileage) : null,
+        registrationExpiry: form.registrationExpiry || null,
+        insuranceExpiry: form.insuranceExpiry || null,
+        lastServiceDate: form.lastServiceDate || null,
+        nextServiceDate: form.nextServiceDate || null,
+        repairParts: form.status === "needs_repair" ? form.repairParts : null,
+        images: images.map((img) => img.url),
       };
       await api.post("/cars", carData);
       toast.success(t("carsPage.toast.added"));
-      setForm({
-        make: "",
-        model: "",
-        year: "",
-        color: "",
-        licensePlate: "",
-        engine: "",
-        fuelType: "gasoline",
-        transmission: "automatic",
-        mileage: "",
-        seats: "5",
-        dailyRate: "",
-      });
+      setForm({ ...EMPTY_FORM });
       setModels([]);
-      setNewImages([]);
+      setImages([]);
       setSheetOpen(false);
       fetchCars();
     } catch {
       toast.error(t("carsPage.toast.failedAdd"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // ── Edit handler ─────────────────────────────────────────────
+  const handleEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.make || !form.model || !editCarId) {
+      toast.error(t("carsPage.validation.required"));
+      return;
+    }
+
+    setSaving(true);
+    try {
+      // 1. Delete removed images
+      for (const imgId of deletedImageIds) {
+        await api.delete(`/cars/images/${imgId}`);
+      }
+
+      // 2. Collect new images (ones without an id)
+      const newImageUrls = images.filter((img) => !img.id).map((img) => img.url);
+
+      // 3. Update car fields + new images
+      await api.put(`/cars/${editCarId}`, {
+        make: form.make,
+        model: form.model,
+        year: form.year ? parseInt(form.year) : null,
+        color: form.color || null,
+        licensePlate: form.licensePlate || null,
+        vin: form.vin || null,
+        engine: form.engine || null,
+        fuelType: form.fuelType,
+        transmission: form.transmission,
+        mileage: form.mileage ? parseInt(form.mileage) : 0,
+        seats: form.seats ? parseInt(form.seats) : 5,
+        dailyRate: form.dailyRate ? parseFloat(form.dailyRate) : null,
+        status: form.status,
+        notes: form.notes || null,
+        registrationExpiry: form.registrationExpiry || null,
+        insuranceProvider: form.insuranceProvider || null,
+        insurancePolicyNumber: form.insurancePolicyNumber || null,
+        insuranceExpiry: form.insuranceExpiry || null,
+        lastServiceDate: form.lastServiceDate || null,
+        nextServiceDate: form.nextServiceDate || null,
+        nextServiceMileage: form.nextServiceMileage ? parseInt(form.nextServiceMileage) : null,
+        repairParts: form.status === "needs_repair" ? form.repairParts : null,
+        images: newImageUrls.length > 0 ? newImageUrls : undefined,
+      });
+
+      // 4. Update primary image if changed
+      const primaryImg = images.find((img) => img.isPrimary && img.id);
+      if (primaryImg?.id) {
+        await api.put(`/cars/images/${primaryImg.id}/primary`, {});
+      }
+
+      // 5. Persist image sort order for existing images
+      const existingImageIds = images.filter((img) => img.id).map((img) => img.id!);
+      if (existingImageIds.length > 0) {
+        await api.put(`/cars/${editCarId}/images/reorder`, { imageIds: existingImageIds });
+      }
+
+      toast.success(t("carEdit.saved"));
+      setSheetOpen(false);
+      fetchCars();
+    } catch {
+      toast.error(t("carEdit.failedSave"));
     } finally {
       setSaving(false);
     }
@@ -180,14 +361,22 @@ export default function CarsPage() {
             {t("carsPage.subtitle", { count: String(cars.length) })}
           </p>
         </div>
-        <Sheet open={sheetOpen} onOpenChange={(open) => { setSheetOpen(open); if (open) loadMakes(); }}>
-          <SheetTrigger render={<Button />}>{t("carsPage.addCar")}</SheetTrigger>
-          <SheetContent side="right" className="w-full gap-0 sm:max-w-xl">
-            <SheetHeader className="border-b">
-              <SheetTitle>{t("carsPage.dialogTitle")}</SheetTitle>
-              <SheetDescription>{t("carsPage.dialogDescription")}</SheetDescription>
-            </SheetHeader>
-            <form onSubmit={handleCreate} className="flex flex-1 flex-col overflow-hidden">
+        <Button onClick={openCreateSheet}>{t("carsPage.addCar")}</Button>
+      </div>
+
+      {/* ── Shared Create / Edit Sheet ──────────────────────────── */}
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <SheetContent side="right" className="w-full gap-0 sm:max-w-xl">
+          <SheetHeader className="border-b">
+            <SheetTitle>{sheetMode === "edit" ? t("carEdit.title") : t("carsPage.dialogTitle")}</SheetTitle>
+            <SheetDescription>{sheetMode === "edit" ? `${form.make} ${form.model}${form.year ? ` (${form.year})` : ""}` : t("carsPage.dialogDescription")}</SheetDescription>
+          </SheetHeader>
+          {sheetLoading ? (
+            <div className="flex flex-1 items-center justify-center">
+              <div className="text-muted-foreground">{t("common.loading")}</div>
+            </div>
+          ) : (
+            <form onSubmit={sheetMode === "edit" ? handleEdit : handleCreate} className="flex flex-1 flex-col overflow-hidden">
               <div className="flex-1 space-y-4 overflow-y-auto p-4">
               {/* Make */}
               <div className="space-y-2">
@@ -281,20 +470,137 @@ export default function CarsPage() {
                 <Label>{t("carsPage.dailyRate")}</Label>
                 <Input type="number" step="0.01" value={form.dailyRate} onChange={(e) => setForm({ ...form, dailyRate: e.target.value })} placeholder="50" />
               </div>
+              {/* VIN & Engine */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>{t("carDetail.vin")}</Label>
+                  <Input value={form.vin} onChange={(e) => setForm({ ...form, vin: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t("carDetail.engine")}</Label>
+                  <Input value={form.engine} onChange={(e) => setForm({ ...form, engine: e.target.value })} />
+                </div>
+              </div>
+              {/* Seats & Mileage */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>{t("carDetail.seats")}</Label>
+                  <Input type="number" value={form.seats} onChange={(e) => setForm({ ...form, seats: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t("carDetail.mileage")}</Label>
+                  <Input type="number" value={form.mileage} onChange={(e) => setForm({ ...form, mileage: e.target.value })} placeholder="0" />
+                </div>
+              </div>
+              {/* Status (edit only) */}
+              {sheetMode === "edit" && (
+                <>
+                  <div className="space-y-2">
+                    <Label>{t("carDetail.status")}</Label>
+                    <Select value={form.status} onValueChange={(val) => setForm({ ...form, status: val ?? "available" })}>
+                      <SelectTrigger className="w-full"><SelectValue>{t(`carsPage.statuses.${form.status}`)}</SelectValue></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="available">{t("carsPage.statuses.available")}</SelectItem>
+                        <SelectItem value="rented">{t("carsPage.statuses.rented")}</SelectItem>
+                        <SelectItem value="maintenance">{t("carsPage.statuses.maintenance")}</SelectItem>
+                        <SelectItem value="out_of_service">{t("carsPage.statuses.out_of_service")}</SelectItem>
+                        <SelectItem value="needs_repair">{t("carsPage.statuses.needs_repair")}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {form.status === "needs_repair" && (
+                    <div className="space-y-2">
+                      <Label>{t("carsPage.repairParts")}</Label>
+                      <p className="text-xs text-muted-foreground">{t("carsPage.repairPartsHint")}</p>
+                      <div className="flex flex-wrap gap-2">
+                        {REPAIR_PARTS.map((part) => {
+                          const selected = form.repairParts.includes(part);
+                          return (
+                            <button
+                              key={part}
+                              type="button"
+                              onClick={() => {
+                                setForm((f) => ({
+                                  ...f,
+                                  repairParts: selected
+                                    ? f.repairParts.filter((p) => p !== part)
+                                    : [...f.repairParts, part],
+                                }));
+                              }}
+                              className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                                selected
+                                  ? "border-primary bg-primary/10 text-primary"
+                                  : "border-border bg-background text-muted-foreground hover:bg-muted"
+                              }`}
+                            >
+                              {t(`carsPage.repairPartsList.${part}`)}
+                              {selected && <X className="h-3 w-3" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+              {/* Registration & Insurance */}
+              <div className="space-y-2">
+                <Label>{t("carDetail.registrationExpiry")}</Label>
+                <DatePicker value={form.registrationExpiry} onChange={(val) => setForm({ ...form, registrationExpiry: val })} />
+              </div>
+              <div className="space-y-2">
+                <Label>{t("carDetail.insuranceProvider")}</Label>
+                <Input value={form.insuranceProvider} onChange={(e) => setForm({ ...form, insuranceProvider: e.target.value })} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>{t("carDetail.policyNumber")}</Label>
+                  <Input value={form.insurancePolicyNumber} onChange={(e) => setForm({ ...form, insurancePolicyNumber: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t("carDetail.insuranceExpiry")}</Label>
+                  <DatePicker value={form.insuranceExpiry} onChange={(val) => setForm({ ...form, insuranceExpiry: val })} />
+                </div>
+              </div>
+              {/* Service */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>{t("carDetail.lastService")}</Label>
+                  <DatePicker value={form.lastServiceDate} onChange={(val) => setForm({ ...form, lastServiceDate: val })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t("carDetail.nextService")}</Label>
+                  <DatePicker value={form.nextServiceDate} onChange={(val) => setForm({ ...form, nextServiceDate: val })} />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>{t("carDetail.nextServiceMileage")}</Label>
+                <Input type="number" value={form.nextServiceMileage} onChange={(e) => setForm({ ...form, nextServiceMileage: e.target.value })} />
+              </div>
+              {/* Notes */}
+              <div className="space-y-2">
+                <Label>{t("carDetail.notes")}</Label>
+                <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={3} placeholder={t("carEdit.notesPlaceholder")} />
+              </div>
               {/* Images */}
               <div className="space-y-2">
                 <Label>{t("carEdit.images")}</Label>
-                <ImageUpload images={newImages} onChange={setNewImages} max={10} />
+                <ImageUpload images={images} onChange={sheetMode === "edit" ? handleImageChange : setImages} max={10} />
               </div>
               </div>
               <SheetFooter className="border-t">
                 <Button type="button" variant="outline" onClick={() => setSheetOpen(false)}>{t("common.cancel")}</Button>
-                <Button type="submit" disabled={saving}>{saving ? t("carsPage.adding") : t("carsPage.addCarBtn")}</Button>
+                <Button type="submit" disabled={saving}>
+                  {saving
+                    ? (sheetMode === "edit" ? t("carEdit.saving") : t("carsPage.adding"))
+                    : (sheetMode === "edit" ? t("carEdit.saveChanges") : t("carsPage.addCarBtn"))
+                  }
+                </Button>
               </SheetFooter>
             </form>
-          </SheetContent>
-        </Sheet>
-      </div>
+          )}
+        </SheetContent>
+      </Sheet>
 
       <DataTable<Car>
         data={cars}
@@ -303,14 +609,20 @@ export default function CarsPage() {
             key: "car",
             header: t("carsPage.tableHeaders.car"),
             sortValue: (c) => `${c.make} ${c.model}`,
-            render: (c) => (
+            render: (c) => {
+              const colorKey = c.color ? c.color.toLowerCase() : "";
+              const colorTranslation = colorKey ? t(`carsPage.colors.${colorKey}`) : "";
+              const colorDisplay = colorTranslation.startsWith("carsPage.") ? c.color : colorTranslation;
+              return (
               <div>
                 <span className="font-medium">{c.make} {c.model}</span>
                 <span className="ml-1 text-muted-foreground">
                   {c.year ? `(${c.year})` : ""}
-                  {c.color ? ` · ${t(`carsPage.colors.${c.color.toLowerCase()}`).startsWith("carsPage.") ? c.color : t(`carsPage.colors.${c.color.toLowerCase()}`)}` : ""}
+                  {c.color ? ` · ${colorDisplay}` : ""}
                 </span>
               </div>
+              );
+            }
             ),
           },
           {
@@ -363,7 +675,7 @@ export default function CarsPage() {
           {
             label: t("common.edit"),
             icon: <Pencil className="h-4 w-4" />,
-            onClick: (c) => router.push(`/dashboard/cars/${c.id}/edit`),
+            onClick: (c) => openEditSheet(c),
           },
           {
             label: t("common.delete"),
@@ -383,6 +695,7 @@ export default function CarsPage() {
         ]}
         emptyMessage={t("carsPage.emptyState")}
         defaultSortKey="car"
+        onRowClick={(c) => router.push(`/dashboard/cars/${c.id}`)}
       />
     </div>
   );

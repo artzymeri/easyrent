@@ -10,13 +10,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+  SheetFooter,
+} from "@/components/ui/sheet";
 import {
   Select,
   SelectContent,
@@ -44,13 +45,19 @@ interface Car {
   images?: { id: number; isPrimary: boolean }[];
 }
 
+const COLOR_KEYS = [
+  "black", "white", "silver", "gray", "red", "blue",
+  "green", "yellow", "orange", "brown", "beige", "gold",
+  "maroon", "navy", "purple", "pink",
+] as const;
+
 export default function CarsPage() {
   const { t } = useTranslation();
   const { fc } = useCurrency();
   const router = useRouter();
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [makes, setMakes] = useState<string[]>([]);
   const [models, setModels] = useState<string[]>([]);
@@ -138,7 +145,7 @@ export default function CarsPage() {
       });
       setModels([]);
       setNewImages([]);
-      setDialogOpen(false);
+      setSheetOpen(false);
       fetchCars();
     } catch {
       toast.error(t("carsPage.toast.failedAdd"));
@@ -173,106 +180,120 @@ export default function CarsPage() {
             {t("carsPage.subtitle", { count: String(cars.length) })}
           </p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (open) loadMakes(); }}>
-          <DialogTrigger render={<Button />}>{t("carsPage.addCar")}</DialogTrigger>
-          <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{t("carsPage.dialogTitle")}</DialogTitle>
-              <DialogDescription>{t("carsPage.dialogDescription")}</DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleCreate} className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>{t("carsPage.make")} *</Label>
-                  <Select
-                    value={form.make}
-                    onValueChange={(val) => {
-                      setForm({ ...form, make: val ?? "", model: "" });
-                      if (val) loadModels(val);
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={t("carsPage.selectMake")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {makes.map((m) => (
-                        <SelectItem key={m} value={m}>{m}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>{t("carsPage.model")} *</Label>
-                  <Select
-                    value={form.model}
-                    onValueChange={(val) => setForm({ ...form, model: val ?? "" })}
-                    disabled={!form.make}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={form.make ? t("carsPage.selectModel") : t("carsPage.selectMakeFirst")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {models.map((m) => (
-                        <SelectItem key={m} value={m}>{m}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+        <Sheet open={sheetOpen} onOpenChange={(open) => { setSheetOpen(open); if (open) loadMakes(); }}>
+          <SheetTrigger render={<Button />}>{t("carsPage.addCar")}</SheetTrigger>
+          <SheetContent side="right" className="w-full gap-0 sm:max-w-xl">
+            <SheetHeader className="border-b">
+              <SheetTitle>{t("carsPage.dialogTitle")}</SheetTitle>
+              <SheetDescription>{t("carsPage.dialogDescription")}</SheetDescription>
+            </SheetHeader>
+            <form onSubmit={handleCreate} className="flex flex-1 flex-col overflow-hidden">
+              <div className="flex-1 space-y-4 overflow-y-auto p-4">
+              {/* Make */}
+              <div className="space-y-2">
+                <Label>{t("carsPage.make")} *</Label>
+                <Select
+                  value={form.make}
+                  onValueChange={(val) => {
+                    setForm({ ...form, make: val ?? "", model: "" });
+                    if (val) loadModels(val);
+                  }}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={t("carsPage.selectMake")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {makes.map((m) => (
+                      <SelectItem key={m} value={m}>{m}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              <div className="grid gap-4 sm:grid-cols-3">
+              {/* Model */}
+              <div className="space-y-2">
+                <Label>{t("carsPage.model")} *</Label>
+                <Select
+                  value={form.model}
+                  onValueChange={(val) => setForm({ ...form, model: val ?? "" })}
+                  disabled={!form.make}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={form.make ? t("carsPage.selectModel") : t("carsPage.selectMakeFirst")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {models.map((m) => (
+                      <SelectItem key={m} value={m}>{m}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {/* Year & License Plate */}
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>{t("carsPage.year")}</Label>
                   <Input type="number" value={form.year} onChange={(e) => setForm({ ...form, year: e.target.value })} placeholder="2024" />
-                </div>
-                <div className="space-y-2">
-                  <Label>{t("carsPage.color")}</Label>
-                  <Input value={form.color} onChange={(e) => setForm({ ...form, color: e.target.value })} placeholder={t("carsPage.colors.black")} />
                 </div>
                 <div className="space-y-2">
                   <Label>{t("carsPage.licensePlate")}</Label>
                   <Input value={form.licensePlate} onChange={(e) => setForm({ ...form, licensePlate: e.target.value })} placeholder="01-234-AB" />
                 </div>
               </div>
-              <div className="grid gap-4 sm:grid-cols-3">
-                <div className="space-y-2">
-                  <Label>{t("carsPage.fuelType")}</Label>
-                  <Select value={form.fuelType} onValueChange={(val) => setForm({ ...form, fuelType: val ?? "gasoline" })}>
-                    <SelectTrigger><SelectValue placeholder={t(`carsPage.fuelTypes.${form.fuelType}`)} /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="gasoline">{t("carsPage.fuelTypes.gasoline")}</SelectItem>
-                      <SelectItem value="diesel">{t("carsPage.fuelTypes.diesel")}</SelectItem>
-                      <SelectItem value="electric">{t("carsPage.fuelTypes.electric")}</SelectItem>
-                      <SelectItem value="hybrid">{t("carsPage.fuelTypes.hybrid")}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>{t("carsPage.transmission")}</Label>
-                  <Select value={form.transmission} onValueChange={(val) => setForm({ ...form, transmission: val ?? "automatic" })}>
-                    <SelectTrigger><SelectValue placeholder={t(`carsPage.transmissions.${form.transmission}`)} /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="automatic">{t("carsPage.transmissions.automatic")}</SelectItem>
-                      <SelectItem value="manual">{t("carsPage.transmissions.manual")}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>{t("carsPage.dailyRate")}</Label>
-                  <Input type="number" step="0.01" value={form.dailyRate} onChange={(e) => setForm({ ...form, dailyRate: e.target.value })} placeholder="50" />
-                </div>
+              {/* Color */}
+              <div className="space-y-2">
+                <Label>{t("carsPage.color")}</Label>
+                <Select value={form.color} onValueChange={(val) => setForm({ ...form, color: val ?? "" })}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={t("carsPage.selectColor")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {COLOR_KEYS.map((c) => (
+                      <SelectItem key={c} value={c}>{t(`carsPage.colors.${c}`)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {/* Fuel Type */}
+              <div className="space-y-2">
+                <Label>{t("carsPage.fuelType")}</Label>
+                <Select value={form.fuelType} onValueChange={(val) => setForm({ ...form, fuelType: val ?? "gasoline" })}>
+                  <SelectTrigger className="w-full"><SelectValue>{t(`carsPage.fuelTypes.${form.fuelType}`)}</SelectValue></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="gasoline">{t("carsPage.fuelTypes.gasoline")}</SelectItem>
+                    <SelectItem value="diesel">{t("carsPage.fuelTypes.diesel")}</SelectItem>
+                    <SelectItem value="electric">{t("carsPage.fuelTypes.electric")}</SelectItem>
+                    <SelectItem value="hybrid">{t("carsPage.fuelTypes.hybrid")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {/* Transmission */}
+              <div className="space-y-2">
+                <Label>{t("carsPage.transmission")}</Label>
+                <Select value={form.transmission} onValueChange={(val) => setForm({ ...form, transmission: val ?? "automatic" })}>
+                  <SelectTrigger className="w-full"><SelectValue>{t(`carsPage.transmissions.${form.transmission}`)}</SelectValue></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="automatic">{t("carsPage.transmissions.automatic")}</SelectItem>
+                    <SelectItem value="manual">{t("carsPage.transmissions.manual")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {/* Daily Rate */}
+              <div className="space-y-2">
+                <Label>{t("carsPage.dailyRate")}</Label>
+                <Input type="number" step="0.01" value={form.dailyRate} onChange={(e) => setForm({ ...form, dailyRate: e.target.value })} placeholder="50" />
               </div>
               {/* Images */}
               <div className="space-y-2">
                 <Label>{t("carEdit.images")}</Label>
                 <ImageUpload images={newImages} onChange={setNewImages} max={10} />
               </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>{t("common.cancel")}</Button>
-                <Button type="submit" disabled={saving}>{saving ? t("carsPage.adding") : t("carsPage.addCarBtn")}</Button>
               </div>
+              <SheetFooter className="border-t">
+                <Button type="button" variant="outline" onClick={() => setSheetOpen(false)}>{t("common.cancel")}</Button>
+                <Button type="submit" disabled={saving}>{saving ? t("carsPage.adding") : t("carsPage.addCarBtn")}</Button>
+              </SheetFooter>
             </form>
-          </DialogContent>
-        </Dialog>
+          </SheetContent>
+        </Sheet>
       </div>
 
       <DataTable<Car>

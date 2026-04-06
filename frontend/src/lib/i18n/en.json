@@ -171,6 +171,7 @@
     "selectMake": "Select make",
     "selectModel": "Select model",
     "selectMakeFirst": "Select make first",
+    "selectColor": "Select color",
     "adding": "Adding…",
     "addCarBtn": "Add Car",
     "emptyState": "No cars in fleet yet. Click \"+ Add Car\" to add one.",

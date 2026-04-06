@@ -78,6 +78,7 @@
     "title": "Dashboard",
     "subtitle": "Overview of your rental business",
     "loadingDashboard": "Loading dashboard…",
+    "failedLoad": "Failed to load dashboard data",
     "totalCars": "Total Cars",
     "customers": "Customers",
     "totalBookings": "Total Bookings",
@@ -85,13 +86,37 @@
     "available": "available",
     "rented": "rented",
     "maintenance": "maintenance",
+    "outOfService": "out of service",
+    "needsRepair": "needs repair",
     "registeredCustomers": "Registered customers",
     "activeBookings": "active",
     "pendingBookings": "pending",
     "carsCurrentlyRented": "Cars currently rented",
     "recentBookings": "Recent Bookings",
     "latestActivity": "Latest booking activity",
-    "noBookingsYet": "No bookings yet. Create your first booking!"
+    "noBookingsYet": "No bookings yet. Create your first booking!",
+    "viewAll": "View All",
+    "monthRevenue": "This Month",
+    "totalLabel": "Total",
+    "revenue": "Revenue",
+    "revenueChart": "Revenue",
+    "last6Months": "Last 6 months",
+    "fleetStatus": "Fleet Status",
+    "utilization": "utilization",
+    "car": "car",
+    "carPlural": "cars",
+    "overdueBookings": "Overdue Bookings",
+    "endedAt": "Ended",
+    "endingSoon": "Ending Soon (within 6 hours)",
+    "endsAt": "Ends",
+    "expiredAlerts": "Expired Documents",
+    "registrationExpired": "Registration expired",
+    "insuranceExpiredLabel": "Insurance expired",
+    "expiringAlerts": "Expiring Soon (within 30 days)",
+    "registrationExpiring": "Registration expiring",
+    "insuranceExpiring": "Insurance expiring",
+    "serviceDue": "Service due",
+    "carsNeedRepair": "Cars Need Repair"
   },
   "customersPage": {
     "title": "Customers",
@@ -182,7 +207,8 @@
       "available": "Available",
       "rented": "Rented",
       "maintenance": "Maintenance",
-      "out_of_service": "Out of Service"
+      "out_of_service": "Out of Service",
+      "needs_repair": "Needs Repair"
     },
     "tableHeaders": {
       "car": "Car",
@@ -200,6 +226,30 @@
       "failedLoad": "Failed to load cars",
       "failedLoadMakes": "Failed to load car makes",
       "failedAdd": "Failed to add car"
+    },
+    "repairParts": "Repair Parts",
+    "repairPartsHint": "Select the parts that need repair",
+    "repairPartsList": {
+      "door": "Door",
+      "engine": "Engine",
+      "windshield": "Windshield",
+      "tires": "Tires",
+      "brakes": "Brakes",
+      "suspension": "Suspension",
+      "exhaust": "Exhaust",
+      "lights": "Lights",
+      "mirrors": "Mirrors",
+      "bumper": "Bumper",
+      "hood": "Hood",
+      "trunk": "Trunk",
+      "interior": "Interior",
+      "electrical": "Electrical",
+      "ac": "A/C",
+      "battery": "Battery",
+      "radiator": "Radiator",
+      "clutch": "Clutch",
+      "steering": "Steering",
+      "wipers": "Wipers"
     }
   },
   "bookingsPage": {
@@ -298,7 +348,22 @@
     "sheetMileageIn": "Mileage In",
     "sheetNotes": "Notes",
     "sheetCreatedAt": "Created {date}",
-    "sheetCreatedBy": "by {name}"
+    "sheetCreatedBy": "by {name}",
+    "secondaryDriver": "Secondary Driver",
+    "secondaryDriverName": "Full Name",
+    "secondaryDriverPhone": "Phone",
+    "secondaryDriverIdNumber": "ID Number",
+    "secondaryDriverLicense": "Driver's License",
+    "secondaryDriverOptional": "(Optional) Secondary driver details",
+    "startBookingTitle": "Start Booking",
+    "startBookingDescription": "Upload pre-start photos of the car condition before handing over the keys.",
+    "preStartImages": "Pre-Start Photos",
+    "preStartImagesHint": "Take photos of the car condition before handing over",
+    "startingBooking": "Starting…",
+    "startBooking": "Start Booking",
+    "completeBookingTitle": "Complete Booking",
+    "completeBookingDescription": "Review the pre-start photos and confirm the car's return.",
+    "noPreStartImages": "No pre-start photos were taken"
   },
   "staffPage": {
     "title": "Staff",
@@ -369,7 +434,9 @@
     "lastService": "Last Service",
     "nextService": "Next Service",
     "nextServiceMileage": "Next Service (km)",
-    "addedOn": "Added on"
+    "addedOn": "Added on",
+    "qrCode": "QR Code",
+    "qrCodeHint": "Scan to view bookings for this car"
   },
   "carEdit": {
     "title": "Edit Car",
@@ -444,6 +511,12 @@
     "damageNotes": "Damage Notes",
     "renterSignature": "Renter / Driver",
     "companySignature": "Company Representative",
-    "generatedOn": "Generated on"
+    "generatedOn": "Generated on",
+    "secondaryDriverInfo": "Secondary Driver Information",
+    "secondaryDriverName": "Full Name",
+    "secondaryDriverPhone": "Phone",
+    "secondaryDriverIdNumber": "ID Number",
+    "secondaryDriverLicense": "Driver's License",
+    "secondaryDriverSignature": "Secondary Driver"
   }
 }

@@ -48,7 +48,7 @@ router.get("/", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     if (!req.user.companyId) return res.status(400).json({ error: "No company context" });
-    const { carId, customerId, startDate, endDate, dailyRate, discount, pickupLocation, returnLocation, notes, mileageOut } = req.body;
+    const { carId, customerId, startDate, endDate, dailyRate, discount, pickupLocation, returnLocation, notes, mileageOut, secondaryDriverName, secondaryDriverPhone, secondaryDriverIdNumber, secondaryDriverLicense } = req.body;
     const conflicting = await db.Booking.findOne({
       where: {
         carId,
@@ -74,6 +74,7 @@ router.post("/", async (req, res) => {
       startDate, endDate, dailyRate, totalDays, subtotal,
       discount: discountAmount, totalAmount,
       pickupLocation, returnLocation, notes, mileageOut,
+      secondaryDriverName, secondaryDriverPhone, secondaryDriverIdNumber, secondaryDriverLicense,
       status: "pending_start",
     });
     await db.Car.update({ status: "rented" }, { where: { id: carId } });
@@ -125,6 +126,7 @@ router.get("/:id", async (req, res) => {
         { model: db.Company, as: "company", attributes: ["id", "name", "email", "phone", "address", "city", "country", "currency"] },
         { model: db.Staff, as: "createdBy", attributes: ["id", "firstName", "lastName"] },
         { model: db.CarDamage, as: "damages" },
+        { model: db.BookingImage, as: "bookingImages", order: [["sortOrder", "ASC"]] },
       ],
     });
     if (!booking) return res.status(404).json({ error: "Booking not found" });
@@ -148,7 +150,7 @@ router.post(
   validate,
   async (req, res) => {
     try {
-      const { carId, customerId, startDate, endDate, dailyRate, discount, pickupLocation, returnLocation, notes, mileageOut } = req.body;
+      const { carId, customerId, startDate, endDate, dailyRate, discount, pickupLocation, returnLocation, notes, mileageOut, secondaryDriverName, secondaryDriverPhone, secondaryDriverIdNumber, secondaryDriverLicense } = req.body;
 
       // Check car availability for date range
       const conflicting = await db.Booking.findOne({
@@ -195,6 +197,10 @@ router.post(
         returnLocation,
         notes,
         mileageOut,
+        secondaryDriverName,
+        secondaryDriverPhone,
+        secondaryDriverIdNumber,
+        secondaryDriverLicense,
         status: "pending_start",
       });
 
@@ -222,12 +228,21 @@ router.put("/:id/status", async (req, res) => {
     const booking = await db.Booking.findByPk(req.params.id);
     if (!booking) return res.status(404).json({ error: "Booking not found" });
 
-    const { status, mileageIn, actualReturnDate, extraCharges, amountPaid } = req.body;
+    const { status, mileageIn, actualReturnDate, extraCharges, amountPaid, preStartImages } = req.body;
 
     const updateData = { status };
 
     if (status === "in_progress") {
-      // Booking started
+      // Save pre-start images if provided
+      if (preStartImages && Array.isArray(preStartImages) && preStartImages.length > 0) {
+        const imageRecords = preStartImages.map((url, i) => ({
+          bookingId: booking.id,
+          url,
+          type: "pre_start",
+          sortOrder: i,
+        }));
+        await db.BookingImage.bulkCreate(imageRecords);
+      }
     }
 
     if (status === "completed" || status === "pending_return") {
@@ -264,10 +279,12 @@ router.put("/:id/status", async (req, res) => {
       include: [
         { model: db.Car, as: "car" },
         { model: db.Customer, as: "customer" },
+        { model: db.BookingImage, as: "bookingImages" },
       ],
     });
     res.json(updated);
   } catch (err) {
+    console.error("Update booking status error:", err);
     res.status(500).json({ error: "Failed to update booking" });
   }
 });

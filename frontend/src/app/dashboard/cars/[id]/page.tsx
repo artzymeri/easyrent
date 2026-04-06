@@ -30,6 +30,7 @@ import {
   BadgeCheck,
   CircleDollarSign,
   AlertTriangle,
+  QrCode,
 } from "lucide-react";
 
 interface CarImage {
@@ -72,6 +73,8 @@ interface CarDetail {
   nextServiceDate: string;
   nextServiceMileage: number;
   createdAt: string;
+  qrCode: string | null;
+  repairParts: string[] | null;
   images: CarImage[];
   damages: CarDamage[];
 }
@@ -124,6 +127,8 @@ export default function CarDetailPage() {
         return { variant: "default" as const, className: "bg-amber-500/10 text-amber-600 border-amber-200 hover:bg-amber-500/10" };
       case "out_of_service":
         return { variant: "default" as const, className: "bg-red-500/10 text-red-600 border-red-200 hover:bg-red-500/10" };
+      case "needs_repair":
+        return { variant: "default" as const, className: "bg-orange-500/10 text-orange-600 border-orange-200 hover:bg-orange-500/10" };
       default:
         return { variant: "outline" as const, className: "" };
     }
@@ -466,6 +471,47 @@ export default function CarDetailPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Repair Parts (when needs_repair) */}
+          {car.status === "needs_repair" && car.repairParts && car.repairParts.length > 0 && (
+            <Card>
+              <CardContent className="p-5">
+                <h3 className="mb-3 flex items-center gap-2 text-base font-semibold">
+                  <Wrench className="h-4.5 w-4.5 text-orange-500" />
+                  {t("carsPage.repairParts")}
+                </h3>
+                <div className="flex flex-wrap gap-1.5">
+                  {car.repairParts.map((part) => (
+                    <Badge key={part} variant="outline" className="border-orange-200 bg-orange-50 text-orange-600">
+                      {t(`carsPage.repairPartsList.${part}`)}
+                    </Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* QR Code */}
+          {car.qrCode && (
+            <Card>
+              <CardContent className="p-5">
+                <h3 className="mb-3 flex items-center gap-2 text-base font-semibold">
+                  <QrCode className="h-4.5 w-4.5 text-primary" />
+                  {t("carDetail.qrCode")}
+                </h3>
+                <div className="flex flex-col items-center gap-2">
+                  <img
+                    src={car.qrCode}
+                    alt="QR Code"
+                    className="h-40 w-40 rounded-lg border p-1"
+                  />
+                  <p className="text-center text-xs text-muted-foreground">
+                    {t("carDetail.qrCodeHint")}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>

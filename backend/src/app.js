@@ -46,6 +46,8 @@ app.use("/api/cars",       require("./routes/cars"));
 app.use("/api/customers",  require("./routes/customers"));
 app.use("/api/bookings",   require("./routes/bookings"));
 app.use("/api/settings",   require("./routes/settings"));
+app.use("/api/dashboard",  require("./routes/dashboard"));
+app.use("/api/qr",         require("./routes/qr"));
 
 // ── Static data endpoints ─────────────────────────────────────
 const { carMakes, getModelsForMake } = require("./utils/carData");

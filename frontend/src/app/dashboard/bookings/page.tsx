@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n";
 import { useCurrency } from "@/lib/currency-context";
-import { CalendarDays, List, Play, CheckCircle2, XCircle, Car as CarIcon, User, MapPin, Clock, CreditCard, FileText, Hash, Download, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarDays, List, Play, CheckCircle2, XCircle, Car as CarIcon, User, MapPin, Clock, CreditCard, FileText, Hash, Download, ChevronLeft, ChevronRight, Camera, Image as ImageIcon } from "lucide-react";
 import { DateTimePicker } from "@/components/date-time-picker";
 import { Button } from "@/components/ui/button";
 import { generateRentalReport, type ReportBooking, type ReportCompany } from "@/lib/generate-rental-report";
@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { ImageUpload, type ImageItem } from "@/components/image-upload";
 import {
   Sheet,
   SheetContent,
@@ -56,6 +57,11 @@ interface Booking {
   mileageIn: number | null;
   notes: string | null;
   actualReturnDate: string | null;
+  secondaryDriverName?: string | null;
+  secondaryDriverPhone?: string | null;
+  secondaryDriverIdNumber?: string | null;
+  secondaryDriverLicense?: string | null;
+  bookingImages?: { id: number; url: string; type: string; caption?: string }[];
   customer: { id: number; firstName: string; lastName: string; phone: string; email?: string };
   car: { id: number; make: string; model: string; licensePlate: string; color: string };
   createdBy?: { id: number; firstName: string; lastName: string };
@@ -144,7 +150,22 @@ export default function BookingsPage() {
     dailyRate: "",
     pickupLocation: "",
     returnLocation: "",
+    secondaryDriverName: "",
+    secondaryDriverPhone: "",
+    secondaryDriverIdNumber: "",
+    secondaryDriverLicense: "",
   });
+
+  // Start booking dialog state
+  const [startDialogOpen, setStartDialogOpen] = useState(false);
+  const [startingBooking, setStartingBooking] = useState<Booking | null>(null);
+  const [preStartImages, setPreStartImages] = useState<ImageItem[]>([]);
+  const [startingSaving, setStartingSaving] = useState(false);
+
+  // Complete booking dialog state
+  const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
+  const [completingBooking, setCompletingBooking] = useState<Booking | null>(null);
+  const [completingBookingFull, setCompletingBookingFull] = useState<Booking | null>(null);
 
   const fetchAll = async () => {
     try {
@@ -185,9 +206,13 @@ export default function BookingsPage() {
         dailyRate: form.dailyRate ? parseFloat(form.dailyRate) : undefined,
         pickupLocation: form.pickupLocation,
         returnLocation: form.returnLocation,
+        secondaryDriverName: form.secondaryDriverName || undefined,
+        secondaryDriverPhone: form.secondaryDriverPhone || undefined,
+        secondaryDriverIdNumber: form.secondaryDriverIdNumber || undefined,
+        secondaryDriverLicense: form.secondaryDriverLicense || undefined,
       });
       toast.success(t("bookingsPage.toast.created"));
-      setForm({ carId: "", customerId: "", startDate: "", endDate: "", dailyRate: "", pickupLocation: "", returnLocation: "" });
+      setForm({ carId: "", customerId: "", startDate: "", endDate: "", dailyRate: "", pickupLocation: "", returnLocation: "", secondaryDriverName: "", secondaryDriverPhone: "", secondaryDriverIdNumber: "", secondaryDriverLicense: "" });
       setDialogOpen(false);
       fetchAll();
     } catch {
@@ -197,10 +222,65 @@ export default function BookingsPage() {
     }
   };
 
-  const updateStatus = async (bookingId: number, status: string) => {
+  const updateStatus = async (bookingId: number, status: string, extra?: Record<string, unknown>) => {
     try {
-      await api.put(`/bookings/${bookingId}/status`, { status });
+      await api.put(`/bookings/${bookingId}/status`, { status, ...extra });
       toast.success(t("bookingsPage.toast.statusUpdated"));
+      fetchAll();
+    } catch {
+      toast.error(t("bookingsPage.toast.failedUpdate"));
+    }
+  };
+
+  const handleStartBooking = (booking: Booking) => {
+    setStartingBooking(booking);
+    setPreStartImages([]);
+    setStartDialogOpen(true);
+  };
+
+  const handleConfirmStart = async () => {
+    if (!startingBooking) return;
+    setStartingSaving(true);
+    try {
+      const imageUrls = preStartImages.map((img) => img.url);
+      await api.put(`/bookings/${startingBooking.id}/status`, {
+        status: "in_progress",
+        preStartImages: imageUrls,
+      });
+      toast.success(t("bookingsPage.toast.statusUpdated"));
+      setStartDialogOpen(false);
+      setStartingBooking(null);
+      setPreStartImages([]);
+      setSheetOpen(false);
+      fetchAll();
+    } catch {
+      toast.error(t("bookingsPage.toast.failedUpdate"));
+    } finally {
+      setStartingSaving(false);
+    }
+  };
+
+  const handleCompleteBooking = async (booking: Booking) => {
+    setCompletingBooking(booking);
+    setCompleteDialogOpen(true);
+    // Fetch full booking with images
+    try {
+      const fullBooking = await api.get<Booking>(`/bookings/${booking.id}`);
+      setCompletingBookingFull(fullBooking);
+    } catch {
+      setCompletingBookingFull(null);
+    }
+  };
+
+  const handleConfirmComplete = async () => {
+    if (!completingBooking) return;
+    try {
+      await api.put(`/bookings/${completingBooking.id}/status`, { status: "completed" });
+      toast.success(t("bookingsPage.toast.statusUpdated"));
+      setCompleteDialogOpen(false);
+      setCompletingBooking(null);
+      setCompletingBookingFull(null);
+      setSheetOpen(false);
       fetchAll();
     } catch {
       toast.error(t("bookingsPage.toast.failedUpdate"));
@@ -463,7 +543,7 @@ export default function BookingsPage() {
           </div>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger render={<Button />}>{t("bookingsPage.newBooking")}</DialogTrigger>
-            <DialogContent className="max-w-lg">
+            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{t("bookingsPage.dialogTitle")}</DialogTitle>
                 <DialogDescription>{t("bookingsPage.dialogDescription")}</DialogDescription>
@@ -529,6 +609,33 @@ export default function BookingsPage() {
                     <Input value={form.returnLocation} onChange={(e) => setForm({ ...form, returnLocation: e.target.value })} />
                   </div>
                 </div>
+
+                {/* Secondary Driver */}
+                <Separator />
+                <div className="space-y-3">
+                  <p className="text-sm font-medium text-muted-foreground">{t("bookingsPage.secondaryDriverOptional")}</p>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>{t("bookingsPage.secondaryDriverName")}</Label>
+                      <Input value={form.secondaryDriverName} onChange={(e) => setForm({ ...form, secondaryDriverName: e.target.value })} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>{t("bookingsPage.secondaryDriverPhone")}</Label>
+                      <Input value={form.secondaryDriverPhone} onChange={(e) => setForm({ ...form, secondaryDriverPhone: e.target.value })} />
+                    </div>
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>{t("bookingsPage.secondaryDriverIdNumber")}</Label>
+                      <Input value={form.secondaryDriverIdNumber} onChange={(e) => setForm({ ...form, secondaryDriverIdNumber: e.target.value })} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>{t("bookingsPage.secondaryDriverLicense")}</Label>
+                      <Input value={form.secondaryDriverLicense} onChange={(e) => setForm({ ...form, secondaryDriverLicense: e.target.value })} />
+                    </div>
+                  </div>
+                </div>
+
                 <div className="flex justify-end gap-2 pt-2">
                   <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>{t("common.cancel")}</Button>
                   <Button type="submit" disabled={saving}>{saving ? t("bookingsPage.creating") : t("bookingsPage.createBooking")}</Button>
@@ -622,6 +729,42 @@ export default function BookingsPage() {
                       )}
                     </div>
                   </div>
+
+                  {/* Secondary Driver Info */}
+                  {(b.secondaryDriverName || b.secondaryDriverPhone || b.secondaryDriverIdNumber || b.secondaryDriverLicense) && (
+                    <div className="rounded-lg border p-4">
+                      <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+                        <User className="h-4 w-4 text-primary" />
+                        {t("bookingsPage.secondaryDriver")}
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        {b.secondaryDriverName && (
+                          <div>
+                            <p className="text-muted-foreground">{t("bookingsPage.secondaryDriverName")}</p>
+                            <p className="font-medium">{b.secondaryDriverName}</p>
+                          </div>
+                        )}
+                        {b.secondaryDriverPhone && (
+                          <div>
+                            <p className="text-muted-foreground">{t("bookingsPage.secondaryDriverPhone")}</p>
+                            <p className="font-medium">{b.secondaryDriverPhone}</p>
+                          </div>
+                        )}
+                        {b.secondaryDriverIdNumber && (
+                          <div>
+                            <p className="text-muted-foreground">{t("bookingsPage.secondaryDriverIdNumber")}</p>
+                            <p className="font-medium">{b.secondaryDriverIdNumber}</p>
+                          </div>
+                        )}
+                        {b.secondaryDriverLicense && (
+                          <div>
+                            <p className="text-muted-foreground">{t("bookingsPage.secondaryDriverLicense")}</p>
+                            <p className="font-medium">{b.secondaryDriverLicense}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Dates & Location */}
                   <div className="rounded-lg border p-4">
@@ -784,13 +927,13 @@ export default function BookingsPage() {
                   {b.status !== "completed" && b.status !== "cancelled" && (
                     <div className="flex gap-2">
                       {b.status === "pending_start" && (
-                        <Button className="flex-1" onClick={() => { updateStatus(b.id, "in_progress"); setSheetOpen(false); }}>
+                        <Button className="flex-1" onClick={() => handleStartBooking(b)}>
                           <Play className="mr-1.5 h-4 w-4" />
                           {t("bookingsPage.start")}
                         </Button>
                       )}
                       {b.status === "in_progress" && (
-                        <Button className="flex-1" onClick={() => { updateStatus(b.id, "completed"); setSheetOpen(false); }}>
+                        <Button className="flex-1" onClick={() => handleCompleteBooking(b)}>
                           <CheckCircle2 className="mr-1.5 h-4 w-4" />
                           {t("bookingsPage.complete")}
                         </Button>
@@ -809,6 +952,81 @@ export default function BookingsPage() {
           })()}
         </SheetContent>
       </Sheet>
+
+      {/* Start Booking Dialog — upload pre-start images */}
+      <Dialog open={startDialogOpen} onOpenChange={(open) => { if (!open) { setStartDialogOpen(false); setStartingBooking(null); setPreStartImages([]); } }}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t("bookingsPage.startBookingTitle")}</DialogTitle>
+            <DialogDescription>{t("bookingsPage.startBookingDescription")}</DialogDescription>
+          </DialogHeader>
+          {startingBooking && (
+            <div className="space-y-4">
+              <div className="rounded-lg border p-3 text-sm">
+                <p className="font-medium">{startingBooking.car?.make} {startingBooking.car?.model} — {startingBooking.customer?.firstName} {startingBooking.customer?.lastName}</p>
+                <p className="text-muted-foreground text-xs">{startingBooking.car?.licensePlate}</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Camera className="h-4 w-4" />
+                  {t("bookingsPage.preStartImages")}
+                </Label>
+                <p className="text-xs text-muted-foreground">{t("bookingsPage.preStartImagesHint")}</p>
+                <ImageUpload images={preStartImages} onChange={setPreStartImages} max={20} />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button type="button" variant="outline" onClick={() => { setStartDialogOpen(false); setStartingBooking(null); setPreStartImages([]); }}>{t("common.cancel")}</Button>
+                <Button onClick={handleConfirmStart} disabled={startingSaving}>
+                  <Play className="mr-1.5 h-4 w-4" />
+                  {startingSaving ? t("bookingsPage.startingBooking") : t("bookingsPage.startBooking")}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Complete Booking Dialog — review pre-start images */}
+      <Dialog open={completeDialogOpen} onOpenChange={(open) => { if (!open) { setCompleteDialogOpen(false); setCompletingBooking(null); setCompletingBookingFull(null); } }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t("bookingsPage.completeBookingTitle")}</DialogTitle>
+            <DialogDescription>{t("bookingsPage.completeBookingDescription")}</DialogDescription>
+          </DialogHeader>
+          {completingBooking && (
+            <div className="space-y-4">
+              <div className="rounded-lg border p-3 text-sm">
+                <p className="font-medium">{completingBooking.car?.make} {completingBooking.car?.model} — {completingBooking.customer?.firstName} {completingBooking.customer?.lastName}</p>
+                <p className="text-muted-foreground text-xs">{completingBooking.car?.licensePlate}</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <ImageIcon className="h-4 w-4" />
+                  {t("bookingsPage.preStartImages")}
+                </Label>
+                {completingBookingFull?.bookingImages && completingBookingFull.bookingImages.filter((img) => img.type === "pre_start").length > 0 ? (
+                  <div className="grid grid-cols-3 gap-2">
+                    {completingBookingFull.bookingImages.filter((img) => img.type === "pre_start").map((img) => (
+                      <div key={img.id} className="relative aspect-[4/3] overflow-hidden rounded-lg border">
+                        <img src={img.url} alt="Pre-start" className="h-full w-full object-cover" />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground py-4 text-center">{t("bookingsPage.noPreStartImages")}</p>
+                )}
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button type="button" variant="outline" onClick={() => { setCompleteDialogOpen(false); setCompletingBooking(null); setCompletingBookingFull(null); }}>{t("common.cancel")}</Button>
+                <Button onClick={handleConfirmComplete}>
+                  <CheckCircle2 className="mr-1.5 h-4 w-4" />
+                  {t("bookingsPage.complete")}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* List View */}
       {view === "list" && (
@@ -886,13 +1104,13 @@ export default function BookingsPage() {
             {
               label: t("bookingsPage.start"),
               icon: <Play className="h-4 w-4" />,
-              onClick: (b) => updateStatus(b.id, "in_progress"),
+              onClick: (b) => handleStartBooking(b),
               hidden: (b) => b.status !== "pending_start",
             },
             {
               label: t("bookingsPage.complete"),
               icon: <CheckCircle2 className="h-4 w-4" />,
-              onClick: (b) => updateStatus(b.id, "completed"),
+              onClick: (b) => handleCompleteBooking(b),
               hidden: (b) => b.status !== "in_progress",
             },
             {

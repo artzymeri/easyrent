@@ -78,6 +78,7 @@
     "title": "Paneli",
     "subtitle": "Pasqyrë e biznesit tuaj të qiradhënies",
     "loadingDashboard": "Duke ngarkuar panelin…",
+    "failedLoad": "Dështoi ngarkimi i panelit",
     "totalCars": "Totali i Veturave",
     "customers": "Klientët",
     "totalBookings": "Totali i Rezervimeve",
@@ -85,13 +86,37 @@
     "available": "të disponueshme",
     "rented": "të dhëna me qira",
     "maintenance": "mirëmbajtje",
+    "outOfService": "jashtë shërbimit",
+    "needsRepair": "ka nevojë për riparim",
     "registeredCustomers": "Klientë të regjistruar",
     "activeBookings": "aktive",
     "pendingBookings": "në pritje",
     "carsCurrentlyRented": "Vetura aktualisht me qira",
     "recentBookings": "Rezervimet e Fundit",
     "latestActivity": "Aktiviteti i fundit i rezervimeve",
-    "noBookingsYet": "Ende nuk ka rezervime. Krijoni rezervimin tuaj të parë!"
+    "noBookingsYet": "Ende nuk ka rezervime. Krijoni rezervimin tuaj të parë!",
+    "viewAll": "Shiko të Gjitha",
+    "monthRevenue": "Këtë Muaj",
+    "totalLabel": "Totali",
+    "revenue": "Të ardhurat",
+    "revenueChart": "Të Ardhurat",
+    "last6Months": "6 muajt e fundit",
+    "fleetStatus": "Statusi i Flotës",
+    "utilization": "shfrytëzim",
+    "car": "veturë",
+    "carPlural": "vetura",
+    "overdueBookings": "Rezervime të Vonuara",
+    "endedAt": "Përfundoi",
+    "endingSoon": "Përfundojnë Së Shpejti (brenda 6 orëve)",
+    "endsAt": "Përfundon",
+    "expiredAlerts": "Dokumente të Skaduara",
+    "registrationExpired": "Regjistrimi ka skaduar",
+    "insuranceExpiredLabel": "Sigurimi ka skaduar",
+    "expiringAlerts": "Skadojnë Së Shpejti (brenda 30 ditëve)",
+    "registrationExpiring": "Regjistrimi skadon",
+    "insuranceExpiring": "Sigurimi skadon",
+    "serviceDue": "Servisi i planifikuar",
+    "carsNeedRepair": "Vetura Kanë Nevojë për Riparim"
   },
   "customersPage": {
     "title": "Klientët",
@@ -182,7 +207,8 @@
       "available": "E disponueshme",
       "rented": "E dhënë me qira",
       "maintenance": "Mirëmbajtje",
-      "out_of_service": "Jashtë shërbimit"
+      "out_of_service": "Jashtë shërbimit",
+      "needs_repair": "Ka Nevojë për Riparim"
     },
     "tableHeaders": {
       "car": "Vetura",
@@ -200,6 +226,30 @@
       "failedLoad": "Dështoi ngarkimi i veturave",
       "failedLoadMakes": "Dështoi ngarkimi i markave",
       "failedAdd": "Dështoi shtimi i veturës"
+    },
+    "repairParts": "Pjesët për Riparim",
+    "repairPartsHint": "Zgjidhni pjesët që kanë nevojë për riparim",
+    "repairPartsList": {
+      "door": "Dera",
+      "engine": "Motori",
+      "windshield": "Xhami i përparmë",
+      "tires": "Gomat",
+      "brakes": "Frenat",
+      "suspension": "Suspenzioni",
+      "exhaust": "Shkarkimi",
+      "lights": "Dritat",
+      "mirrors": "Pasqyrat",
+      "bumper": "Parakolpi",
+      "hood": "Kapaku",
+      "trunk": "Bagazhi",
+      "interior": "Brendësia",
+      "electrical": "Elektrika",
+      "ac": "Kondicioneri",
+      "battery": "Bateria",
+      "radiator": "Radiatori",
+      "clutch": "Friksioni",
+      "steering": "Timon",
+      "wipers": "Fshirëset"
     }
   },
   "bookingsPage": {
@@ -298,7 +348,22 @@
     "sheetMileageIn": "Kilometrazhi në Kthim",
     "sheetNotes": "Shënime",
     "sheetCreatedAt": "Krijuar më {date}",
-    "sheetCreatedBy": "nga {name}"
+    "sheetCreatedBy": "nga {name}",
+    "secondaryDriver": "Shoferi Sekondar",
+    "secondaryDriverName": "Emri i Plotë",
+    "secondaryDriverPhone": "Telefoni",
+    "secondaryDriverIdNumber": "Numri i ID",
+    "secondaryDriverLicense": "Patenta e Shoferit",
+    "secondaryDriverOptional": "(Opsionale) Detajet e shoferit sekondar",
+    "startBookingTitle": "Fillo Rezervimin",
+    "startBookingDescription": "Ngarko fotot e gjendjes së veturës para se t'ia dorëzoni çelësat klientit.",
+    "preStartImages": "Fotot Para-Fillimit",
+    "preStartImagesHint": "Bëni foto të gjendjes së veturës para dorëzimit",
+    "startingBooking": "Duke filluar…",
+    "startBooking": "Fillo Rezervimin",
+    "completeBookingTitle": "Përfundo Rezervimin",
+    "completeBookingDescription": "Shikoni fotot para-fillimit dhe konfirmoni kthimin e veturës.",
+    "noPreStartImages": "Nuk janë bërë foto para-fillimit"
   },
   "staffPage": {
     "title": "Stafi",
@@ -369,7 +434,9 @@
     "lastService": "Servisi i fundit",
     "nextService": "Servisi i radhës",
     "nextServiceMileage": "Servisi i radhës (km)",
-    "addedOn": "Shtuar më"
+    "addedOn": "Shtuar më",
+    "qrCode": "Kodi QR",
+    "qrCodeHint": "Skanoni për të parë rezervimet e kësaj veture"
   },
   "carEdit": {
     "title": "Ndrysho Veturën",
@@ -444,6 +511,12 @@
     "damageNotes": "Shënimet e Dëmtimeve",
     "renterSignature": "Huazimuesi / Shoferi",
     "companySignature": "Përfaqësuesi i Kompanisë",
-    "generatedOn": "Gjeneruar më"
+    "generatedOn": "Gjeneruar më",
+    "secondaryDriverInfo": "Informacionet e Shoferit Sekondar",
+    "secondaryDriverName": "Emri i Plotë",
+    "secondaryDriverPhone": "Telefoni",
+    "secondaryDriverIdNumber": "Numri i ID",
+    "secondaryDriverLicense": "Patenta e Shoferit",
+    "secondaryDriverSignature": "Shoferi Sekondar"
   }
 }

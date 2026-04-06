@@ -89,10 +89,18 @@ module.exports = (sequelize, DataTypes) => {
         field: "next_service_mileage",
       },
       status: {
-        type: DataTypes.ENUM("available", "rented", "maintenance", "out_of_service"),
+        type: DataTypes.ENUM("available", "rented", "maintenance", "out_of_service", "needs_repair"),
         defaultValue: "available",
       },
       notes: DataTypes.TEXT,
+      qrCode: {
+        type: DataTypes.TEXT("long"),
+        field: "qr_code",
+      },
+      repairParts: {
+        type: DataTypes.JSON,
+        field: "repair_parts",
+      },
     },
     {
       sequelize,

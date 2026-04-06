@@ -20,6 +20,10 @@ export interface ReportBooking {
   mileageOut: number | null;
   mileageIn: number | null;
   notes: string | null;
+  secondaryDriverName?: string | null;
+  secondaryDriverPhone?: string | null;
+  secondaryDriverIdNumber?: string | null;
+  secondaryDriverLicense?: string | null;
   customer: {
     firstName: string;
     lastName: string;
@@ -200,6 +204,20 @@ export async function generateRentalReport(
 
   y = drawKeyValueGrid(doc, customerRows, marginL, y, contentW);
   y += 6;
+
+  // ── SECTION: Secondary Driver Information ──────────────────
+  if (booking.secondaryDriverName || booking.secondaryDriverPhone || booking.secondaryDriverIdNumber || booking.secondaryDriverLicense) {
+    y = drawSectionHeader(doc, t("report.secondaryDriverInfo"), marginL, y, contentW);
+
+    const secDriverRows: [string, string][] = [];
+    if (booking.secondaryDriverName) secDriverRows.push([t("report.secondaryDriverName"), booking.secondaryDriverName]);
+    if (booking.secondaryDriverPhone) secDriverRows.push([t("report.secondaryDriverPhone"), booking.secondaryDriverPhone]);
+    if (booking.secondaryDriverIdNumber) secDriverRows.push([t("report.secondaryDriverIdNumber"), booking.secondaryDriverIdNumber]);
+    if (booking.secondaryDriverLicense) secDriverRows.push([t("report.secondaryDriverLicense"), booking.secondaryDriverLicense]);
+
+    y = drawKeyValueGrid(doc, secDriverRows, marginL, y, contentW);
+    y += 6;
+  }
 
   // ── SECTION: Vehicle Information ───────────────────────────
   y = drawSectionHeader(doc, t("report.vehicleInfo"), marginL, y, contentW);
@@ -430,6 +448,27 @@ export async function generateRentalReport(
   doc.text(company.name, colMid, y + 25);
 
   y += 35;
+
+  // Secondary driver signature (if applicable)
+  if (booking.secondaryDriverName) {
+    if (y > 250) {
+      doc.addPage();
+      y = 20;
+    }
+    doc.setTextColor(...DARK);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text(t("report.secondaryDriverSignature"), marginL, y);
+    y += 3;
+    doc.setDrawColor(...BORDER);
+    doc.setLineWidth(0.3);
+    doc.line(marginL, y + 20, marginL + sigBoxW, y + 20);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(...MEDIUM);
+    doc.text(booking.secondaryDriverName, marginL, y + 25);
+    y += 35;
+  }
 
   // ── FOOTER (all pages) ─────────────────────────────────────
   const totalPages = doc.getNumberOfPages();

@@ -19,7 +19,7 @@ import {
 import { ImageUpload, type ImageItem } from "@/components/image-upload";
 import { DatePicker } from "@/components/date-picker";
 import { toast } from "sonner";
-import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Loader2, X } from "lucide-react";
 
 interface CarImage {
   id: number;
@@ -51,6 +51,7 @@ interface CarDetail {
   lastServiceDate: string;
   nextServiceDate: string;
   nextServiceMileage: number | null;
+  repairParts: string[] | null;
   images: CarImage[];
 }
 
@@ -62,6 +63,13 @@ export default function CarEditPage() {
   const [saving, setSaving] = useState(false);
   const [makes, setMakes] = useState<string[]>([]);
   const [models, setModels] = useState<string[]>([]);
+
+  const REPAIR_PARTS = [
+    "door", "engine", "windshield", "tires", "brakes", "suspension",
+    "exhaust", "lights", "mirrors", "bumper", "hood", "trunk",
+    "interior", "electrical", "ac", "battery", "radiator", "clutch",
+    "steering", "wipers",
+  ];
 
   // Track which existing images were deleted
   const [deletedImageIds, setDeletedImageIds] = useState<number[]>([]);
@@ -88,6 +96,7 @@ export default function CarEditPage() {
     lastServiceDate: "",
     nextServiceDate: "",
     nextServiceMileage: "",
+    repairParts: [] as string[],
   });
 
   const [images, setImages] = useState<ImageItem[]>([]);
@@ -138,6 +147,7 @@ export default function CarEditPage() {
           nextServiceMileage: car.nextServiceMileage
             ? String(car.nextServiceMileage)
             : "",
+          repairParts: car.repairParts || [],
         });
 
         // Map existing images
@@ -232,6 +242,7 @@ export default function CarEditPage() {
         nextServiceMileage: form.nextServiceMileage
           ? parseInt(form.nextServiceMileage)
           : null,
+        repairParts: form.status === "needs_repair" ? form.repairParts : null,
         images: newImageUrls.length > 0 ? newImageUrls : undefined,
       });
 
@@ -521,10 +532,46 @@ export default function CarEditPage() {
                         <SelectItem value="out_of_service">
                           {t("carsPage.statuses.out_of_service")}
                         </SelectItem>
+                        <SelectItem value="needs_repair">
+                          {t("carsPage.statuses.needs_repair")}
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
+                {form.status === "needs_repair" && (
+                  <div className="mt-4 space-y-2">
+                    <Label>{t("carsPage.repairParts")}</Label>
+                    <p className="text-xs text-muted-foreground">{t("carsPage.repairPartsHint")}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {REPAIR_PARTS.map((part) => {
+                        const selected = form.repairParts.includes(part);
+                        return (
+                          <button
+                            key={part}
+                            type="button"
+                            onClick={() => {
+                              setForm((f) => ({
+                                ...f,
+                                repairParts: selected
+                                  ? f.repairParts.filter((p) => p !== part)
+                                  : [...f.repairParts, part],
+                              }));
+                            }}
+                            className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                              selected
+                                ? "border-primary bg-primary/10 text-primary"
+                                : "border-border bg-background text-muted-foreground hover:bg-muted"
+                            }`}
+                          >
+                            {t(`carsPage.repairPartsList.${part}`)}
+                            {selected && <X className="h-3 w-3" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 

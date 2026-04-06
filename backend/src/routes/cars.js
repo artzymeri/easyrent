@@ -2,6 +2,7 @@ const router = require("express").Router();
 const { body } = require("express-validator");
 const { validate } = require("../middleware/validate");
 const { authenticate } = require("../middleware/auth");
+const QRCode = require("qrcode");
 const db = require("../db");
 
 router.use(authenticate);
@@ -42,6 +43,11 @@ router.post("/", async (req, res) => {
       companyId: req.user.companyId,
       ...carFields,
     });
+    // Generate QR code
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:4345";
+    const qrUrl = `${frontendUrl}/qr/${car.id}`;
+    const qrBase64 = await QRCode.toDataURL(qrUrl, { width: 300, margin: 2 });
+    await car.update({ qrCode: qrBase64 });
     if (images && Array.isArray(images)) {
       for (let i = 0; i < images.length; i++) {
         await db.CarImage.create({
@@ -112,6 +118,11 @@ router.post(
         companyId: req.params.companyId,
         ...carFields,
       });
+      // Generate QR code
+      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:4345";
+      const qrUrl = `${frontendUrl}/qr/${car.id}`;
+      const qrBase64 = await QRCode.toDataURL(qrUrl, { width: 300, margin: 2 });
+      await car.update({ qrCode: qrBase64 });
 
       // Handle images if provided
       if (images && Array.isArray(images)) {

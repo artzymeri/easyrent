@@ -9,6 +9,7 @@ module.exports = (sequelize, DataTypes) => {
       Booking.belongsTo(models.Customer, { foreignKey: "customerId", as: "customer" });
       Booking.belongsTo(models.Staff, { foreignKey: "createdByStaffId", as: "createdBy" });
       Booking.hasMany(models.CarDamage, { foreignKey: "bookingId", as: "damages" });
+      Booking.hasMany(models.BookingImage, { foreignKey: "bookingId", as: "bookingImages" });
     }
   }
 
@@ -118,6 +119,22 @@ module.exports = (sequelize, DataTypes) => {
         field: "return_location",
       },
       notes: DataTypes.TEXT,
+      secondaryDriverName: {
+        type: DataTypes.STRING(200),
+        field: "secondary_driver_name",
+      },
+      secondaryDriverPhone: {
+        type: DataTypes.STRING(50),
+        field: "secondary_driver_phone",
+      },
+      secondaryDriverIdNumber: {
+        type: DataTypes.STRING(100),
+        field: "secondary_driver_id_number",
+      },
+      secondaryDriverLicense: {
+        type: DataTypes.STRING(100),
+        field: "secondary_driver_license",
+      },
     },
     {
       sequelize,

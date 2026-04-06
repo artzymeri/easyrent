@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n";
@@ -29,7 +29,7 @@ import { DatePicker } from "@/components/date-picker";
 import { toast } from "sonner";
 import { DataTable, Eye, Pencil, Trash2, type Column, type DataTableAction } from "@/components/data-table";
 import { ImageUpload, type ImageItem } from "@/components/image-upload";
-import { X } from "lucide-react";
+import { X, FileText, Upload } from "lucide-react";
 
 interface Car {
   id: number;
@@ -45,6 +45,16 @@ interface Car {
   transmission: string;
   seats: number;
   images?: { id: number; isPrimary: boolean }[];
+}
+
+interface DocumentItem {
+  /** DB id for existing documents */
+  id?: number;
+  /** Client-side id for new documents */
+  tempId?: string;
+  name: string;
+  url: string;
+  type: string;
 }
 
 const COLOR_KEYS = [
@@ -103,6 +113,9 @@ export default function CarsPage() {
   const [models, setModels] = useState<string[]>([]);
   const [images, setImages] = useState<ImageItem[]>([]);
   const [deletedImageIds, setDeletedImageIds] = useState<number[]>([]);
+  const [documents, setDocuments] = useState<DocumentItem[]>([]);
+  const [deletedDocumentIds, setDeletedDocumentIds] = useState<number[]>([]);
+  const docInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({ ...EMPTY_FORM });
 
   const fetchCars = async () => {
@@ -147,6 +160,8 @@ export default function CarsPage() {
     setForm({ ...EMPTY_FORM });
     setImages([]);
     setDeletedImageIds([]);
+    setDocuments([]);
+    setDeletedDocumentIds([]);
     setModels([]);
     setSheetOpen(true);
     loadMakes();
@@ -158,6 +173,8 @@ export default function CarsPage() {
     setEditCarId(car.id);
     setImages([]);
     setDeletedImageIds([]);
+    setDocuments([]);
+    setDeletedDocumentIds([]);
     setSheetOpen(true);
     setSheetLoading(true);
     loadMakes();
@@ -173,6 +190,7 @@ export default function CarsPage() {
         lastServiceDate: string; nextServiceDate: string;
         nextServiceMileage: number | null; repairParts: string[] | null;
         images: { id: number; url: string; isPrimary: boolean; sortOrder: number }[];
+        documents?: { id: number; name: string; url: string; type: string; sortOrder: number }[];
       }>(`/cars/${car.id}`);
 
       if (detail.make) {
@@ -212,6 +230,12 @@ export default function CarsPage() {
           .sort((a, b) => a.sortOrder - b.sortOrder)
           .map((img) => ({ id: img.id, url: img.url, isPrimary: img.isPrimary })),
       );
+
+      setDocuments(
+        (detail.documents || [])
+          .sort((a, b) => a.sortOrder - b.sortOrder)
+          .map((doc) => ({ id: doc.id, name: doc.name, url: doc.url, type: doc.type })),
+      );
     } catch {
       toast.error(t("carDetail.failedLoad"));
       setSheetOpen(false);
@@ -228,6 +252,33 @@ export default function CarsPage() {
       setDeletedImageIds((prev) => [...prev, ...removedIds]);
     }
     setImages(updated);
+  };
+
+  // ── Handle document file selection ───────────────────────────
+  const handleDocumentFiles = async (files: FileList | File[]) => {
+    const fileArray = Array.from(files);
+    for (const file of fileArray) {
+      const url = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      setDocuments((prev) => [...prev, {
+        tempId: `doc-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        name: file.name,
+        url,
+        type: file.type || "application/octet-stream",
+      }]);
+    }
+  };
+
+  const handleRemoveDocument = (index: number) => {
+    const doc = documents[index];
+    if (doc.id) {
+      setDeletedDocumentIds((prev) => [...prev, doc.id!]);
+    }
+    setDocuments((prev) => prev.filter((_, i) => i !== index));
   };
 
   // ── Create handler ───────────────────────────────────────────
@@ -253,12 +304,14 @@ export default function CarsPage() {
         nextServiceDate: form.nextServiceDate || null,
         repairParts: form.status === "needs_repair" ? form.repairParts : null,
         images: images.map((img) => img.url),
+        documents: documents.map((doc) => ({ name: doc.name, url: doc.url, type: doc.type })),
       };
       await api.post("/cars", carData);
       toast.success(t("carsPage.toast.added"));
       setForm({ ...EMPTY_FORM });
       setModels([]);
       setImages([]);
+      setDocuments([]);
       setSheetOpen(false);
       fetchCars();
     } catch {
@@ -283,10 +336,18 @@ export default function CarsPage() {
         await api.delete(`/cars/images/${imgId}`);
       }
 
-      // 2. Collect new images (ones without an id)
+      // 2. Delete removed documents
+      for (const docId of deletedDocumentIds) {
+        await api.delete(`/cars/documents/${docId}`);
+      }
+
+      // 3. Collect new images (ones without an id)
       const newImageUrls = images.filter((img) => !img.id).map((img) => img.url);
 
-      // 3. Update car fields + new images
+      // 4. Collect new documents (ones without an id)
+      const newDocs = documents.filter((doc) => !doc.id).map((doc) => ({ name: doc.name, url: doc.url, type: doc.type }));
+
+      // 5. Update car fields + new images + new documents
       await api.put(`/cars/${editCarId}`, {
         make: form.make,
         model: form.model,
@@ -311,15 +372,16 @@ export default function CarsPage() {
         nextServiceMileage: form.nextServiceMileage ? parseInt(form.nextServiceMileage) : null,
         repairParts: form.status === "needs_repair" ? form.repairParts : null,
         images: newImageUrls.length > 0 ? newImageUrls : undefined,
+        documents: newDocs.length > 0 ? newDocs : undefined,
       });
 
-      // 4. Update primary image if changed
+      // 6. Update primary image if changed
       const primaryImg = images.find((img) => img.isPrimary && img.id);
       if (primaryImg?.id) {
         await api.put(`/cars/images/${primaryImg.id}/primary`, {});
       }
 
-      // 5. Persist image sort order for existing images
+      // 7. Persist image sort order for existing images
       const existingImageIds = images.filter((img) => img.id).map((img) => img.id!);
       if (existingImageIds.length > 0) {
         await api.put(`/cars/${editCarId}/images/reorder`, { imageIds: existingImageIds });
@@ -587,6 +649,45 @@ export default function CarsPage() {
                 <Label>{t("carEdit.images")}</Label>
                 <ImageUpload images={images} onChange={sheetMode === "edit" ? handleImageChange : setImages} max={10} />
               </div>
+              {/* Documents */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  {t("carDocuments.title")}
+                </Label>
+                <p className="text-xs text-muted-foreground">{t("carDocuments.uploadHint")}</p>
+                {documents.length > 0 && (
+                  <div className="space-y-2">
+                    {documents.map((doc, i) => (
+                      <div key={doc.id ?? doc.tempId ?? i} className="flex items-center gap-2 rounded-lg border p-2">
+                        <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        <span className="flex-1 truncate text-sm">{doc.name}</span>
+                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => handleRemoveDocument(i)}>
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => docInputRef.current?.click()}
+                >
+                  <Upload className="mr-1.5 h-4 w-4" />
+                  {t("carDocuments.upload")}
+                </Button>
+                <input
+                  ref={docInputRef}
+                  type="file"
+                  multiple
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp"
+                  className="hidden"
+                  onChange={(e) => { if (e.target.files) { handleDocumentFiles(e.target.files); e.target.value = ""; } }}
+                />
+              </div>
               </div>
               <SheetFooter className="border-t">
                 <Button type="button" variant="outline" onClick={() => setSheetOpen(false)}>{t("common.cancel")}</Button>
@@ -622,8 +723,7 @@ export default function CarsPage() {
                 </span>
               </div>
               );
-            }
-            ),
+            },
           },
           {
             key: "license",

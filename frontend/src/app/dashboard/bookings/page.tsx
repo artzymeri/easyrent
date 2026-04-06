@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n";
 import { useCurrency } from "@/lib/currency-context";
-import { CalendarDays, List, Play, CheckCircle2, XCircle, Car as CarIcon, User, MapPin, Clock, CreditCard, FileText, Hash, Download, ChevronLeft, ChevronRight, Camera, Image as ImageIcon } from "lucide-react";
+import { CalendarDays, List, Play, CheckCircle2, XCircle, Car as CarIcon, User, MapPin, Clock, CreditCard, FileText, Hash, Download, ChevronLeft, ChevronRight, Camera, Image as ImageIcon, Mail, Plus } from "lucide-react";
 import { DateTimePicker } from "@/components/date-time-picker";
 import { Button } from "@/components/ui/button";
 import { generateRentalReport, type ReportBooking, type ReportCompany } from "@/lib/generate-rental-report";
@@ -162,10 +162,22 @@ export default function BookingsPage() {
   const [preStartImages, setPreStartImages] = useState<ImageItem[]>([]);
   const [startingSaving, setStartingSaving] = useState(false);
 
+  // Quick customer creation
+  const [quickCustomerOpen, setQuickCustomerOpen] = useState(false);
+  const [quickCustomerSaving, setQuickCustomerSaving] = useState(false);
+  const [quickCustomerForm, setQuickCustomerForm] = useState({
+    firstName: "", lastName: "", email: "", phone: "", idNumber: "", driversLicense: "",
+  });
+
   // Complete booking dialog state
   const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
   const [completingBooking, setCompletingBooking] = useState<Booking | null>(null);
   const [completingBookingFull, setCompletingBookingFull] = useState<Booking | null>(null);
+  const [settlementStep, setSettlementStep] = useState<"review" | "payment">("review");
+  const [settleMileageIn, setSettleMileageIn] = useState("");
+  const [settleExtraCharges, setSettleExtraCharges] = useState("");
+  const [settlePaymentAmount, setSettlePaymentAmount] = useState("");
+  const [completeSaving, setCompleteSaving] = useState(false);
 
   const fetchAll = async () => {
     try {
@@ -222,6 +234,28 @@ export default function BookingsPage() {
     }
   };
 
+  const handleQuickCustomerCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickCustomerForm.firstName || !quickCustomerForm.lastName) {
+      toast.error(t("customersPage.validation.required"));
+      return;
+    }
+    setQuickCustomerSaving(true);
+    try {
+      const created = await api.post<Customer & { id: number }>("/customers", quickCustomerForm);
+      // Add to local customers list and auto-select
+      setCustomers((prev) => [...prev, created]);
+      setForm((prev) => ({ ...prev, customerId: String(created.id) }));
+      setQuickCustomerOpen(false);
+      setQuickCustomerForm({ firstName: "", lastName: "", email: "", phone: "", idNumber: "", driversLicense: "" });
+      toast.success(t("customersPage.toast.added"));
+    } catch {
+      toast.error(t("customersPage.toast.failedAdd"));
+    } finally {
+      setQuickCustomerSaving(false);
+    }
+  };
+
   const updateStatus = async (bookingId: number, status: string, extra?: Record<string, unknown>) => {
     try {
       await api.put(`/bookings/${bookingId}/status`, { status, ...extra });
@@ -263,6 +297,10 @@ export default function BookingsPage() {
   const handleCompleteBooking = async (booking: Booking) => {
     setCompletingBooking(booking);
     setCompleteDialogOpen(true);
+    setSettlementStep("review");
+    setSettleMileageIn("");
+    setSettleExtraCharges("");
+    setSettlePaymentAmount("");
     // Fetch full booking with images
     try {
       const fullBooking = await api.get<Booking>(`/bookings/${booking.id}`);
@@ -274,8 +312,13 @@ export default function BookingsPage() {
 
   const handleConfirmComplete = async () => {
     if (!completingBooking) return;
+    setCompleteSaving(true);
     try {
-      await api.put(`/bookings/${completingBooking.id}/status`, { status: "completed" });
+      const body: Record<string, unknown> = { status: "completed" };
+      if (settleMileageIn) body.mileageIn = parseInt(settleMileageIn);
+      if (settleExtraCharges) body.extraCharges = parseFloat(settleExtraCharges);
+      if (settlePaymentAmount) body.amountPaid = parseFloat(settlePaymentAmount);
+      await api.put(`/bookings/${completingBooking.id}/status`, body);
       toast.success(t("bookingsPage.toast.statusUpdated"));
       setCompleteDialogOpen(false);
       setCompletingBooking(null);
@@ -284,6 +327,8 @@ export default function BookingsPage() {
       fetchAll();
     } catch {
       toast.error(t("bookingsPage.toast.failedUpdate"));
+    } finally {
+      setCompleteSaving(false);
     }
   };
 
@@ -301,6 +346,30 @@ export default function BookingsPage() {
       toast.error(t("bookingsPage.toast.failedLoad"));
     } finally {
       setGeneratingReport(false);
+    }
+  };
+
+  const [sendingEmail, setSendingEmail] = useState(false);
+
+  const handleSendEmail = async (booking: Booking) => {
+    if (!booking.customer?.email) {
+      toast.error(t("email.noEmail"));
+      return;
+    }
+    setSendingEmail(true);
+    try {
+      const fullBooking = await api.get<ReportBooking & { company?: ReportCompany }>(`/bookings/${booking.id}`);
+      const company: ReportCompany = fullBooking.company || { name: "Company" };
+      const { generateRentalReportDoc } = await import("@/lib/generate-rental-report");
+      const doc = await generateRentalReportDoc(fullBooking, company, currency.code, t);
+      const pdfBase64 = doc.output("datauristring").split(",")[1];
+      const fileName = `Rental_Agreement_${booking.id}.pdf`;
+      await api.post(`/bookings/${booking.id}/send-email`, { pdfBase64, fileName });
+      toast.success(t("email.sent"));
+    } catch {
+      toast.error(t("email.failed"));
+    } finally {
+      setSendingEmail(false);
     }
   };
 
@@ -551,16 +620,21 @@ export default function BookingsPage() {
               <form onSubmit={handleCreate} className="space-y-4">
                 <div className="space-y-2">
                   <Label>{t("bookingsPage.customer")} *</Label>
-                  <Select value={form.customerId} onValueChange={(val) => setForm({ ...form, customerId: val ?? "" })}>
-                    <SelectTrigger><SelectValue placeholder={t("bookingsPage.selectCustomer")} /></SelectTrigger>
-                    <SelectContent>
-                      {customers.map((c) => (
-                        <SelectItem key={c.id} value={String(c.id)}>
-                          {c.firstName} {c.lastName} ({c.phone})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex gap-2">
+                    <Select value={form.customerId} onValueChange={(val) => setForm({ ...form, customerId: val ?? "" })}>
+                      <SelectTrigger className="w-full"><SelectValue placeholder={t("bookingsPage.selectCustomer")} /></SelectTrigger>
+                      <SelectContent>
+                        {customers.map((c) => (
+                          <SelectItem key={c.id} value={String(c.id)}>
+                            {c.firstName} {c.lastName} ({c.phone})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button type="button" variant="outline" size="icon" className="shrink-0" onClick={() => setQuickCustomerOpen(true)}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label>{t("bookingsPage.car")} *</Label>
@@ -924,6 +998,17 @@ export default function BookingsPage() {
                     <Download className="mr-1.5 h-4 w-4" />
                     {generatingReport ? t("report.generating") : t("report.generateReport")}
                   </Button>
+                  {b.customer?.email && (
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      disabled={sendingEmail}
+                      onClick={() => handleSendEmail(b)}
+                    >
+                      <Mail className="mr-1.5 h-4 w-4" />
+                      {sendingEmail ? t("email.sending") : t("email.sendToClient")}
+                    </Button>
+                  )}
                   {b.status !== "completed" && b.status !== "cancelled" && (
                     <div className="flex gap-2">
                       {b.status === "pending_start" && (
@@ -972,7 +1057,7 @@ export default function BookingsPage() {
                   {t("bookingsPage.preStartImages")}
                 </Label>
                 <p className="text-xs text-muted-foreground">{t("bookingsPage.preStartImagesHint")}</p>
-                <ImageUpload images={preStartImages} onChange={setPreStartImages} max={20} />
+                <ImageUpload images={preStartImages} onChange={setPreStartImages} max={20} allowVideo />
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <Button type="button" variant="outline" onClick={() => { setStartDialogOpen(false); setStartingBooking(null); setPreStartImages([]); }}>{t("common.cancel")}</Button>
@@ -986,12 +1071,12 @@ export default function BookingsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Complete Booking Dialog — review pre-start images */}
+      {/* Complete Booking Dialog — review pre-start images + payment settlement */}
       <Dialog open={completeDialogOpen} onOpenChange={(open) => { if (!open) { setCompleteDialogOpen(false); setCompletingBooking(null); setCompletingBookingFull(null); } }}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{t("bookingsPage.completeBookingTitle")}</DialogTitle>
-            <DialogDescription>{t("bookingsPage.completeBookingDescription")}</DialogDescription>
+            <DialogTitle>{settlementStep === "review" ? t("bookingsPage.completeBookingTitle") : t("payment.settlementTitle")}</DialogTitle>
+            <DialogDescription>{settlementStep === "review" ? t("bookingsPage.completeBookingDescription") : t("payment.settlementDescription")}</DialogDescription>
           </DialogHeader>
           {completingBooking && (
             <div className="space-y-4">
@@ -999,34 +1084,174 @@ export default function BookingsPage() {
                 <p className="font-medium">{completingBooking.car?.make} {completingBooking.car?.model} — {completingBooking.customer?.firstName} {completingBooking.customer?.lastName}</p>
                 <p className="text-muted-foreground text-xs">{completingBooking.car?.licensePlate}</p>
               </div>
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <ImageIcon className="h-4 w-4" />
-                  {t("bookingsPage.preStartImages")}
-                </Label>
-                {completingBookingFull?.bookingImages && completingBookingFull.bookingImages.filter((img) => img.type === "pre_start").length > 0 ? (
-                  <div className="grid grid-cols-3 gap-2">
-                    {completingBookingFull.bookingImages.filter((img) => img.type === "pre_start").map((img) => (
-                      <div key={img.id} className="relative aspect-[4/3] overflow-hidden rounded-lg border">
-                        <img src={img.url} alt="Pre-start" className="h-full w-full object-cover" />
+
+              {settlementStep === "review" ? (
+                <>
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <ImageIcon className="h-4 w-4" />
+                      {t("bookingsPage.preStartImages")}
+                    </Label>
+                    {completingBookingFull?.bookingImages && completingBookingFull.bookingImages.filter((img) => img.type === "pre_start").length > 0 ? (
+                      <div className="grid grid-cols-3 gap-2">
+                        {completingBookingFull.bookingImages.filter((img) => img.type === "pre_start").map((img) => (
+                          <div key={img.id} className="relative aspect-[4/3] overflow-hidden rounded-lg border">
+                            {img.url.startsWith("data:video/") ? (
+                              <video src={img.url} className="h-full w-full object-cover" controls muted playsInline preload="metadata" />
+                            ) : (
+                              <img src={img.url} alt="Pre-start" className="h-full w-full object-cover" />
+                            )}
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    ) : (
+                      <p className="text-sm text-muted-foreground py-4 text-center">{t("bookingsPage.noPreStartImages")}</p>
+                    )}
                   </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground py-4 text-center">{t("bookingsPage.noPreStartImages")}</p>
-                )}
-              </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <Button type="button" variant="outline" onClick={() => { setCompleteDialogOpen(false); setCompletingBooking(null); setCompletingBookingFull(null); }}>{t("common.cancel")}</Button>
-                <Button onClick={handleConfirmComplete}>
-                  <CheckCircle2 className="mr-1.5 h-4 w-4" />
-                  {t("bookingsPage.complete")}
-                </Button>
-              </div>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button type="button" variant="outline" onClick={() => { setCompleteDialogOpen(false); setCompletingBooking(null); setCompletingBookingFull(null); }}>{t("common.cancel")}</Button>
+                    <Button onClick={() => setSettlementStep("payment")}>
+                      {t("common.next")}
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Payment settlement */}
+                  {(() => {
+                    const total = parseFloat(String(completingBookingFull?.totalAmount ?? completingBooking.totalAmount ?? 0));
+                    const alreadyPaid = parseFloat(String(completingBookingFull?.amountPaid ?? completingBooking.amountPaid ?? 0));
+                    const extra = settleExtraCharges ? parseFloat(settleExtraCharges) : 0;
+                    const adjustedTotal = total + extra;
+                    const paymentEntered = settlePaymentAmount ? parseFloat(settlePaymentAmount) : alreadyPaid;
+                    const remaining = adjustedTotal - paymentEntered;
+
+                    return (
+                      <div className="space-y-4">
+                        {/* Financial summary */}
+                        <div className="rounded-lg border p-4 space-y-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">{t("payment.totalAmount")}</span>
+                            <span className="font-medium">{fc(total)}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">{t("bookingsPage.amountPaid")}</span>
+                            <span className="font-medium">{fc(alreadyPaid)}</span>
+                          </div>
+                          {extra > 0 && (
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground">{t("payment.extraCharges")}</span>
+                              <span className="font-medium text-amber-600">+{fc(extra)}</span>
+                            </div>
+                          )}
+                          <Separator />
+                          <div className="flex items-center justify-between text-sm font-semibold">
+                            <span>{t("payment.remainingBalance")}</span>
+                            <span className={remaining > 0 ? "text-red-600" : remaining < 0 ? "text-amber-600" : "text-emerald-600"}>
+                              {remaining > 0 ? fc(remaining) : remaining < 0 ? `${t("payment.exceeded")} ${fc(Math.abs(remaining))}` : t("payment.fullyPaid")}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Mileage in */}
+                        <div className="space-y-2">
+                          <Label>{t("payment.mileageIn")}</Label>
+                          <Input
+                            type="number"
+                            value={settleMileageIn}
+                            onChange={(e) => setSettleMileageIn(e.target.value)}
+                            placeholder={completingBooking.mileageOut ? String(completingBooking.mileageOut) : "0"}
+                          />
+                        </div>
+
+                        {/* Extra charges */}
+                        <div className="space-y-2">
+                          <Label>{t("payment.extraCharges")}</Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={settleExtraCharges}
+                            onChange={(e) => setSettleExtraCharges(e.target.value)}
+                            placeholder="0"
+                          />
+                        </div>
+
+                        {/* Payment amount */}
+                        <div className="space-y-2">
+                          <Label>{t("payment.enterPayment")}</Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={settlePaymentAmount}
+                            onChange={(e) => setSettlePaymentAmount(e.target.value)}
+                            placeholder={String(adjustedTotal)}
+                          />
+                        </div>
+
+                        <div className="flex justify-end gap-2 pt-2">
+                          <Button type="button" variant="outline" onClick={() => setSettlementStep("review")}>
+                            {t("common.back")}
+                          </Button>
+                          <Button onClick={handleConfirmComplete} disabled={completeSaving}>
+                            <CheckCircle2 className="mr-1.5 h-4 w-4" />
+                            {completeSaving ? t("common.saving") : t("bookingsPage.complete")}
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </>
+              )}
             </div>
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Quick Customer Creation Sheet */}
+      <Sheet open={quickCustomerOpen} onOpenChange={setQuickCustomerOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-md">
+          <SheetHeader>
+            <SheetTitle>{t("quickCustomer.title")}</SheetTitle>
+            <SheetDescription>{t("quickCustomer.description")}</SheetDescription>
+          </SheetHeader>
+          <form onSubmit={handleQuickCustomerCreate} className="flex flex-1 flex-col overflow-hidden">
+            <div className="flex-1 space-y-4 overflow-y-auto p-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>{t("customersPage.firstName")} *</Label>
+                  <Input value={quickCustomerForm.firstName} onChange={(e) => setQuickCustomerForm({ ...quickCustomerForm, firstName: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t("customersPage.lastName")} *</Label>
+                  <Input value={quickCustomerForm.lastName} onChange={(e) => setQuickCustomerForm({ ...quickCustomerForm, lastName: e.target.value })} />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>{t("customersPage.email")}</Label>
+                <Input type="email" value={quickCustomerForm.email} onChange={(e) => setQuickCustomerForm({ ...quickCustomerForm, email: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>{t("customersPage.phone")}</Label>
+                <Input value={quickCustomerForm.phone} onChange={(e) => setQuickCustomerForm({ ...quickCustomerForm, phone: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>{t("customersPage.idNumber")}</Label>
+                <Input value={quickCustomerForm.idNumber} onChange={(e) => setQuickCustomerForm({ ...quickCustomerForm, idNumber: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>{t("customersPage.driversLicense")}</Label>
+                <Input value={quickCustomerForm.driversLicense} onChange={(e) => setQuickCustomerForm({ ...quickCustomerForm, driversLicense: e.target.value })} />
+              </div>
+            </div>
+            <div className="flex gap-2 border-t p-4">
+              <Button type="button" variant="outline" className="flex-1" onClick={() => setQuickCustomerOpen(false)}>{t("common.cancel")}</Button>
+              <Button type="submit" className="flex-1" disabled={quickCustomerSaving}>
+                {quickCustomerSaving ? t("common.saving") : t("common.save")}
+              </Button>
+            </div>
+          </form>
+        </SheetContent>
+      </Sheet>
 
       {/* List View */}
       {view === "list" && (

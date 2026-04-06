@@ -3,6 +3,7 @@ const { body } = require("express-validator");
 const { validate } = require("../middleware/validate");
 const { authenticate } = require("../middleware/auth");
 const { Op } = require("sequelize");
+const nodemailer = require("nodemailer");
 const db = require("../db");
 
 router.use(authenticate);
@@ -286,6 +287,79 @@ router.put("/:id/status", async (req, res) => {
   } catch (err) {
     console.error("Update booking status error:", err);
     res.status(500).json({ error: "Failed to update booking" });
+  }
+});
+
+// ── Send booking PDF via email ────────────────────────────────
+router.post("/:id/send-email", async (req, res) => {
+  try {
+    const booking = await db.Booking.findByPk(req.params.id, {
+      include: [
+        { model: db.Customer, as: "customer" },
+        { model: db.Company, as: "company" },
+      ],
+    });
+    if (!booking) return res.status(404).json({ error: "Booking not found" });
+
+    const customerEmail = booking.customer?.email;
+    if (!customerEmail) {
+      return res.status(400).json({ error: "Customer does not have an email address" });
+    }
+
+    const { pdfBase64, fileName } = req.body;
+    if (!pdfBase64) {
+      return res.status(400).json({ error: "PDF data is required" });
+    }
+
+    // Configure transporter — use env vars or fallback to ethereal for dev
+    let transporter;
+    if (process.env.SMTP_HOST) {
+      transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port: parseInt(process.env.SMTP_PORT || "587"),
+        secure: process.env.SMTP_SECURE === "true",
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS,
+        },
+      });
+    } else {
+      // For development: create a test account
+      const testAccount = await nodemailer.createTestAccount();
+      transporter = nodemailer.createTransport({
+        host: "smtp.ethereal.email",
+        port: 587,
+        secure: false,
+        auth: { user: testAccount.user, pass: testAccount.pass },
+      });
+    }
+
+    const companyName = booking.company?.name || "EasyRent";
+    const companyEmail = process.env.SMTP_FROM || booking.company?.email || "noreply@easyrent.com";
+
+    const info = await transporter.sendMail({
+      from: `"${companyName}" <${companyEmail}>`,
+      to: customerEmail,
+      subject: `Rental Agreement #${booking.id} — ${companyName}`,
+      text: `Dear ${booking.customer.firstName} ${booking.customer.lastName},\n\nPlease find attached your rental agreement.\n\nThank you,\n${companyName}`,
+      html: `<p>Dear ${booking.customer.firstName} ${booking.customer.lastName},</p><p>Please find attached your rental agreement.</p><p>Thank you,<br/>${companyName}</p>`,
+      attachments: [
+        {
+          filename: fileName || `rental-agreement-${booking.id}.pdf`,
+          content: pdfBase64,
+          encoding: "base64",
+        },
+      ],
+    });
+
+    // For dev: log the preview URL
+    const previewUrl = nodemailer.getTestMessageUrl(info);
+    if (previewUrl) console.log("Email preview URL:", previewUrl);
+
+    res.json({ message: "Email sent successfully", previewUrl: previewUrl || null });
+  } catch (err) {
+    console.error("Send email error:", err);
+    res.status(500).json({ error: "Failed to send email" });
   }
 });
 

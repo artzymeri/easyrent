@@ -27,7 +27,9 @@
     "rowsPerPage": "Rreshta për faqe",
     "confirmDelete": "A jeni i sigurt që dëshironi ta fshini këtë artikull?",
     "deleted": "U fshi me sukses",
-    "failedDelete": "Fshirja dështoi"
+    "failedDelete": "Fshirja dështoi",
+    "close": "Mbyll",
+    "saving": "Duke ruajtur…"
   },
   "nav": {
     "dashboard": "Paneli",
@@ -125,6 +127,8 @@
     "newCustomer": "+ Klient i Ri",
     "dialogTitle": "Klient i Ri",
     "dialogDescription": "Regjistroni një klient të ri për kompaninë tuaj",
+    "editTitle": "Ndrysho Klientin",
+    "viewTitle": "Detajet e Klientit",
     "firstName": "Emri",
     "lastName": "Mbiemri",
     "email": "Email",
@@ -133,6 +137,8 @@
     "driversLicense": "Patenta e Shoferit",
     "dateOfBirth": "Datëlindja",
     "address": "Adresa",
+    "city": "Qyteti",
+    "country": "Shteti",
     "creating": "Duke krijuar…",
     "createCustomer": "Krijo Klientin",
     "emptyState": "Ende nuk ka klientë. Klikoni \"+ Klient i Ri\" për të shtuar një.",
@@ -148,8 +154,10 @@
     },
     "toast": {
       "created": "Klienti u krijua!",
+      "updated": "Klienti u përditësua!",
       "failedLoad": "Dështoi ngarkimi i klientëve",
       "failedCreate": "Dështoi krijimi i klientit",
+      "failedUpdate": "Dështoi përditësimi i klientit",
       "alreadyExists": "Një klient me këtë numër telefoni ekziston tashmë"
     }
   },
@@ -519,5 +527,50 @@
     "secondaryDriverIdNumber": "Numri i ID",
     "secondaryDriverLicense": "Patenta e Shoferit",
     "secondaryDriverSignature": "Shoferi Sekondar"
+  },
+  "mediaUpload": {
+    "dropOrClick": "Vendosni skedarët këtu ose klikoni për të shfletuar",
+    "formats": "Foto & Video",
+    "videoTooLarge": "Video duhet të jetë nën {max}MB",
+    "remaining": "{count} të mbetura",
+    "compressing": "Duke procesuar..."
+  },
+  "carDocuments": {
+    "title": "Dokumentet",
+    "upload": "Ngarko Dokumente",
+    "noDocuments": "Nuk ka dokumente të ngarkuara",
+    "fileName": "Emri i Skedarit",
+    "download": "Shkarko",
+    "delete": "Fshij",
+    "uploadHint": "Ngarkoni regjistrimin, sigurimin, ose dokumente tjera të veturës (PDF, foto)",
+    "failedDelete": "Dështoi fshirja e dokumentit",
+    "deleted": "Dokumenti u fshi"
+  },
+  "payment": {
+    "settlementTitle": "Shlyerja e Pagesës",
+    "settlementDescription": "Rishikoni dhe shlyeni pagesën para përfundimit",
+    "totalAmount": "Shuma Totale",
+    "amountPaid": "Shuma e Paguar",
+    "remainingBalance": "Bilanci i Mbetur",
+    "exceeded": "Mbipagesë",
+    "enterPayment": "Vendosni shumën finale të pagesës",
+    "markPaid": "Shëno si të Paguar & Përfundo",
+    "completePartial": "Përfundo me Pagesë Parciale",
+    "fullyPaid": "Plotësisht e Paguar",
+    "extraCharges": "Tarifa Shtesë",
+    "addExtra": "Shtoni tarifa shtesë (dëmtime, vonesa, etj.)",
+    "mileageIn": "Kilometrazhi në Kthim"
+  },
+  "email": {
+    "sendToClient": "Dërgo me Email Klientit",
+    "sending": "Duke dërguar…",
+    "sent": "Emaili u dërgua me sukses!",
+    "failed": "Dështoi dërgimi i emailit",
+    "noEmail": "Klienti nuk ka adresë emaili"
+  },
+  "quickCustomer": {
+    "addNew": "I Ri",
+    "title": "Shto Klient Shpejt",
+    "description": "Krijoni një klient të ri dhe zgjidheni për rezervimin"
   }
 }

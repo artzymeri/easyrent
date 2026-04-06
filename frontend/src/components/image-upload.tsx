@@ -10,7 +10,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { ImagePlus, X, Star, GripVertical } from "lucide-react";
+import { ImagePlus, X, Star, GripVertical, Play } from "lucide-react";
 import { toast } from "sonner";
 
 export interface ImageItem {
@@ -21,6 +21,8 @@ export interface ImageItem {
   /** Base64 data URI */
   url: string;
   isPrimary: boolean;
+  /** Whether this is a video file */
+  isVideo?: boolean;
 }
 
 interface ImageUploadProps {
@@ -29,6 +31,10 @@ interface ImageUploadProps {
   /** Max number of images allowed */
   max?: number;
   disabled?: boolean;
+  /** Allow video uploads as well */
+  allowVideo?: boolean;
+  /** Max video size in MB (default 50) */
+  maxVideoSizeMB?: number;
 }
 
 export function ImageUpload({
@@ -36,6 +42,8 @@ export function ImageUpload({
   onChange,
   max = 10,
   disabled = false,
+  allowVideo = false,
+  maxVideoSizeMB = 50,
 }: ImageUploadProps) {
   const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -46,11 +54,22 @@ export function ImageUpload({
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [overIdx, setOverIdx] = useState<number | null>(null);
 
+  /** Read a video file as a base64 data URI (no compression) */
+  const readFileAsDataURL = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
   const processFiles = useCallback(
     async (files: FileList | File[]) => {
-      const fileArray = Array.from(files).filter((f) =>
-        f.type.startsWith("image/"),
-      );
+      const acceptedTypes = allowVideo
+        ? (f: File) => f.type.startsWith("image/") || f.type.startsWith("video/")
+        : (f: File) => f.type.startsWith("image/");
+
+      const fileArray = Array.from(files).filter(acceptedTypes);
       if (fileArray.length === 0) return;
 
       const remaining = max - images.length;
@@ -63,24 +82,46 @@ export function ImageUpload({
       setCompressing(true);
 
       try {
-        const compressed = await Promise.all(
-          toProcess.map((f) => compressImage(f)),
-        );
+        const newImages: ImageItem[] = [];
 
-        const newImages: ImageItem[] = compressed.map((url, i) => ({
-          tempId: `new-${Date.now()}-${i}`,
-          url,
-          isPrimary: images.length === 0 && i === 0,
-        }));
+        for (let i = 0; i < toProcess.length; i++) {
+          const file = toProcess[i];
+          const isVideo = file.type.startsWith("video/");
 
-        onChange([...images, ...newImages]);
+          if (isVideo) {
+            // Check video size
+            const sizeMB = file.size / (1024 * 1024);
+            if (sizeMB > maxVideoSizeMB) {
+              toast.error(t("mediaUpload.videoTooLarge", { max: String(maxVideoSizeMB) }));
+              continue;
+            }
+            const url = await readFileAsDataURL(file);
+            newImages.push({
+              tempId: `new-${Date.now()}-${i}`,
+              url,
+              isPrimary: images.length === 0 && newImages.length === 0,
+              isVideo: true,
+            });
+          } else {
+            const url = await compressImage(file);
+            newImages.push({
+              tempId: `new-${Date.now()}-${i}`,
+              url,
+              isPrimary: images.length === 0 && newImages.length === 0,
+            });
+          }
+        }
+
+        if (newImages.length > 0) {
+          onChange([...images, ...newImages]);
+        }
       } catch {
         toast.error(t("imageUpload.compressFailed"));
       } finally {
         setCompressing(false);
       }
     },
-    [images, max, onChange, t],
+    [images, max, onChange, t, allowVideo, maxVideoSizeMB],
   );
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -179,11 +220,28 @@ export function ImageUpload({
                     : ""
               } ${!disabled ? "cursor-grab active:cursor-grabbing" : ""}`}
             >
-              <img
-                src={img.url}
-                alt=""
-                className="h-full w-full object-cover pointer-events-none"
-              />
+              {img.isVideo ? (
+                <div className="relative h-full w-full">
+                  <video
+                    src={img.url}
+                    className="h-full w-full object-cover pointer-events-none"
+                    muted
+                    playsInline
+                    preload="metadata"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="rounded-full bg-black/60 p-2">
+                      <Play className="h-5 w-5 text-white fill-white" />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <img
+                  src={img.url}
+                  alt=""
+                  className="h-full w-full object-cover pointer-events-none"
+                />
+              )}
               {/* Primary badge */}
               {img.isPrimary && (
                 <span className="absolute left-1.5 top-1.5 flex items-center gap-0.5 rounded-md bg-primary px-1.5 py-0.5 text-[10px] font-medium text-primary-foreground shadow-sm">
@@ -278,10 +336,12 @@ export function ImageUpload({
             <p className="text-sm font-medium">
               {compressing
                 ? t("imageUpload.compressing")
-                : t("imageUpload.dropOrClick")}
+                : allowVideo
+                  ? t("mediaUpload.dropOrClick")
+                  : t("imageUpload.dropOrClick")}
             </p>
             <p className="text-xs text-muted-foreground">
-              {t("imageUpload.formats")} &middot;{" "}
+              {allowVideo ? t("mediaUpload.formats") : t("imageUpload.formats")} &middot;{" "}
               {t("imageUpload.remaining", {
                 count: String(max - images.length),
               })}
@@ -290,7 +350,7 @@ export function ImageUpload({
           <input
             ref={inputRef}
             type="file"
-            accept="image/*"
+            accept={allowVideo ? "image/*,video/*" : "image/*"}
             multiple
             className="hidden"
             onChange={handleFileChange}

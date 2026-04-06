@@ -31,6 +31,7 @@ import {
   Info,
   FileText,
   Clock,
+  Download,
 } from "lucide-react";
 
 interface CarImage {
@@ -77,6 +78,7 @@ interface CarDetail {
   repairParts: string[] | null;
   images: CarImage[];
   damages: CarDamage[];
+  documents?: { id: number; name: string; url: string; type: string; sortOrder: number }[];
 }
 
 export default function CarDetailPage() {
@@ -437,6 +439,40 @@ export default function CarDetailPage() {
                 <Badge key={part} variant="outline" className="border-orange-300 bg-white text-orange-700">
                   {t(`carsPage.repairPartsList.${part}`)}
                 </Badge>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ── Documents ─────────────────────────────────────────── */}
+      {car.documents && car.documents.length > 0 && (
+        <Card>
+          <CardContent className="p-5">
+            <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              <FileText className="h-4 w-4 text-primary" />
+              {t("carDocuments.title")}
+              <Badge variant="secondary" className="ml-1 text-xs">
+                {car.documents.length}
+              </Badge>
+            </h3>
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {car.documents.sort((a, b) => a.sortOrder - b.sortOrder).map((doc) => (
+                <a
+                  key={doc.id}
+                  href={doc.url}
+                  download={doc.name}
+                  className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50"
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{doc.name}</p>
+                    <p className="text-[11px] text-muted-foreground uppercase">{doc.type.split("/").pop()}</p>
+                  </div>
+                  <Download className="h-4 w-4 shrink-0 text-muted-foreground" />
+                </a>
               ))}
             </div>
           </CardContent>

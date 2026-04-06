@@ -24,7 +24,8 @@ export default function SettingsPage() {
   const { t, locale, setLocale } = useTranslation();
   const { currency, setCurrencyCode } = useCurrency();
 
-  const handleCurrencyChange = async (code: string) => {
+  const handleCurrencyChange = async (code: string | null) => {
+    if (!code) return;
     try {
       await api.put("/settings", { currency: code });
       setCurrencyCode(code);

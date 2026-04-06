@@ -129,6 +129,7 @@ export async function generateRentalReport(
   company: ReportCompany,
   currencyCode: string,
   t: TranslationFn,
+  options?: { skipSave?: boolean },
 ) {
   const doc = new jsPDF("p", "mm", "a4");
   const pageW = 210;
@@ -496,7 +497,24 @@ export async function generateRentalReport(
   const carName = `${car.make}_${car.model}`.replace(/\s+/g, "_");
   const fileName = `${customerName}_${carName}_${startDateFormatted}.pdf`;
 
-  doc.save(fileName);
+  if (!options?.skipSave) {
+    doc.save(fileName);
+  }
+
+  return doc;
+}
+
+/**
+ * Generate the rental report PDF and return the jsPDF document
+ * without saving/downloading it. Useful for email attachment.
+ */
+export async function generateRentalReportDoc(
+  booking: ReportBooking,
+  company: ReportCompany,
+  currencyCode: string,
+  t: TranslationFn,
+): Promise<jsPDF> {
+  return generateRentalReport(booking, company, currencyCode, t, { skipSave: true });
 }
 
 // ─── Drawing Helpers ──────────────────────────────────────────

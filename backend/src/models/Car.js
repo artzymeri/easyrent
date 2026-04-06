@@ -7,6 +7,7 @@ module.exports = (sequelize, DataTypes) => {
       Car.belongsTo(models.Company, { foreignKey: "companyId", as: "company" });
       Car.hasMany(models.CarImage, { foreignKey: "carId", as: "images" });
       Car.hasMany(models.CarDamage, { foreignKey: "carId", as: "damages" });
+      Car.hasMany(models.CarDocument, { foreignKey: "carId", as: "documents" });
       Car.hasMany(models.Booking, { foreignKey: "carId", as: "bookings" });
     }
   }

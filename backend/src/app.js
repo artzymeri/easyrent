@@ -11,9 +11,26 @@ const app = express();
 app.use(helmet());
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN
-      ? process.env.CORS_ORIGIN.split(",")
-      : ["http://localhost:3000", "http://localhost:3001"],
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, curl, etc.)
+      if (!origin) return callback(null, true);
+
+      const allowedOrigins = process.env.CORS_ORIGIN
+        ? process.env.CORS_ORIGIN.split(",")
+        : ["http://localhost:3000", "http://localhost:3001"];
+
+      // Check exact match
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+
+      // Check wildcard subdomain patterns (e.g., *.kindura.app)
+      const wildcardOrigins = allowedOrigins.filter((o) => o.startsWith("*"));
+      for (const wo of wildcardOrigins) {
+        const domain = wo.replace("*", "");
+        if (origin.endsWith(domain)) return callback(null, true);
+      }
+
+      callback(null, false);
+    },
     credentials: true,
   })
 );
@@ -48,6 +65,7 @@ app.use("/api/bookings",   require("./routes/bookings"));
 app.use("/api/settings",   require("./routes/settings"));
 app.use("/api/dashboard",  require("./routes/dashboard"));
 app.use("/api/qr",         require("./routes/qr"));
+app.use("/api/public",     require("./routes/public"));
 
 // ── Static data endpoints ─────────────────────────────────────
 const { carMakes, getModelsForMake } = require("./utils/carData");

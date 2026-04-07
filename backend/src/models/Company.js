@@ -41,6 +41,17 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: "EUR",
       },
+      websiteTemplate: {
+        type: DataTypes.STRING(50),
+        allowNull: false,
+        defaultValue: "classic",
+        field: "website_template",
+      },
+      websitePublished: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+        field: "website_published",
+      },
       isActive: {
         type: DataTypes.BOOLEAN,
         defaultValue: true,

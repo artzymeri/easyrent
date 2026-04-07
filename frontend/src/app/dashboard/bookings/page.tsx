@@ -19,6 +19,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
+  SheetFooter,
 } from "@/components/ui/sheet";
 import {
   Dialog,
@@ -26,8 +27,8 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -150,6 +151,9 @@ export default function BookingsPage() {
     dailyRate: "",
     pickupLocation: "",
     returnLocation: "",
+    discount: "",
+    mileageOut: "",
+    notes: "",
     secondaryDriverName: "",
     secondaryDriverPhone: "",
     secondaryDriverIdNumber: "",
@@ -218,13 +222,16 @@ export default function BookingsPage() {
         dailyRate: form.dailyRate ? parseFloat(form.dailyRate) : undefined,
         pickupLocation: form.pickupLocation,
         returnLocation: form.returnLocation,
+        discount: form.discount ? parseFloat(form.discount) : undefined,
+        mileageOut: form.mileageOut ? parseInt(form.mileageOut) : undefined,
+        notes: form.notes || undefined,
         secondaryDriverName: form.secondaryDriverName || undefined,
         secondaryDriverPhone: form.secondaryDriverPhone || undefined,
         secondaryDriverIdNumber: form.secondaryDriverIdNumber || undefined,
         secondaryDriverLicense: form.secondaryDriverLicense || undefined,
       });
       toast.success(t("bookingsPage.toast.created"));
-      setForm({ carId: "", customerId: "", startDate: "", endDate: "", dailyRate: "", pickupLocation: "", returnLocation: "", secondaryDriverName: "", secondaryDriverPhone: "", secondaryDriverIdNumber: "", secondaryDriverLicense: "" });
+      setForm({ carId: "", customerId: "", startDate: "", endDate: "", dailyRate: "", pickupLocation: "", returnLocation: "", discount: "", mileageOut: "", notes: "", secondaryDriverName: "", secondaryDriverPhone: "", secondaryDriverIdNumber: "", secondaryDriverLicense: "" });
       setDialogOpen(false);
       fetchAll();
     } catch {
@@ -610,113 +617,7 @@ export default function BookingsPage() {
               {t("bookingsPage.listView")}
             </Button>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger render={<Button />}>{t("bookingsPage.newBooking")}</DialogTrigger>
-            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>{t("bookingsPage.dialogTitle")}</DialogTitle>
-                <DialogDescription>{t("bookingsPage.dialogDescription")}</DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleCreate} className="space-y-4">
-                <div className="space-y-2">
-                  <Label>{t("bookingsPage.customer")} *</Label>
-                  <div className="flex gap-2">
-                    <Select value={form.customerId} onValueChange={(val) => setForm({ ...form, customerId: val ?? "" })}>
-                      <SelectTrigger className="w-full"><SelectValue placeholder={t("bookingsPage.selectCustomer")} /></SelectTrigger>
-                      <SelectContent>
-                        {customers.map((c) => (
-                          <SelectItem key={c.id} value={String(c.id)}>
-                            {c.firstName} {c.lastName} ({c.phone})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Button type="button" variant="outline" size="icon" className="shrink-0" onClick={() => setQuickCustomerOpen(true)}>
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>{t("bookingsPage.car")} *</Label>
-                  <Select
-                    value={form.carId}
-                    onValueChange={(val) => {
-                      const car = cars.find((c) => String(c.id) === val);
-                      setForm({
-                        ...form,
-                        carId: val ?? "",
-                        dailyRate: car?.dailyRate ? String(car.dailyRate) : form.dailyRate,
-                      });
-                    }}
-                  >
-                    <SelectTrigger><SelectValue placeholder={t("bookingsPage.selectCar")} /></SelectTrigger>
-                    <SelectContent>
-                      {cars.filter((c) => c.status === "available").map((c) => (
-                        <SelectItem key={c.id} value={String(c.id)}>
-                          {c.make} {c.model} ({c.licensePlate}) — {fc(c.dailyRate)}/{t("bookingsPage.perDay")}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>{t("bookingsPage.startDate")} *</Label>
-                    <DateTimePicker value={form.startDate} onChange={(val) => setForm({ ...form, startDate: val })} minDate={new Date()} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>{t("bookingsPage.endDate")} *</Label>
-                    <DateTimePicker value={form.endDate} onChange={(val) => setForm({ ...form, endDate: val })} minDate={new Date()} />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>{t("bookingsPage.dailyRate")}</Label>
-                  <Input type="number" step="0.01" value={form.dailyRate} onChange={(e) => setForm({ ...form, dailyRate: e.target.value })} />
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>{t("bookingsPage.pickupLocation")}</Label>
-                    <Input value={form.pickupLocation} onChange={(e) => setForm({ ...form, pickupLocation: e.target.value })} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>{t("bookingsPage.returnLocation")}</Label>
-                    <Input value={form.returnLocation} onChange={(e) => setForm({ ...form, returnLocation: e.target.value })} />
-                  </div>
-                </div>
-
-                {/* Secondary Driver */}
-                <Separator />
-                <div className="space-y-3">
-                  <p className="text-sm font-medium text-muted-foreground">{t("bookingsPage.secondaryDriverOptional")}</p>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label>{t("bookingsPage.secondaryDriverName")}</Label>
-                      <Input value={form.secondaryDriverName} onChange={(e) => setForm({ ...form, secondaryDriverName: e.target.value })} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>{t("bookingsPage.secondaryDriverPhone")}</Label>
-                      <Input value={form.secondaryDriverPhone} onChange={(e) => setForm({ ...form, secondaryDriverPhone: e.target.value })} />
-                    </div>
-                  </div>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label>{t("bookingsPage.secondaryDriverIdNumber")}</Label>
-                      <Input value={form.secondaryDriverIdNumber} onChange={(e) => setForm({ ...form, secondaryDriverIdNumber: e.target.value })} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>{t("bookingsPage.secondaryDriverLicense")}</Label>
-                      <Input value={form.secondaryDriverLicense} onChange={(e) => setForm({ ...form, secondaryDriverLicense: e.target.value })} />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-2 pt-2">
-                  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>{t("common.cancel")}</Button>
-                  <Button type="submit" disabled={saving}>{saving ? t("bookingsPage.creating") : t("bookingsPage.createBooking")}</Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <Button onClick={() => setDialogOpen(true)}>{t("bookingsPage.newBooking")}</Button>
         </div>
       </div>
 
@@ -1351,6 +1252,142 @@ export default function BookingsPage() {
           defaultSortDir="desc"
         />
       )}
+
+      {/* New Booking Sheet */}
+      <Sheet open={dialogOpen} onOpenChange={setDialogOpen}>
+        <SheetContent side="right" className="w-full gap-0 sm:max-w-xl">
+          <SheetHeader className="border-b">
+            <SheetTitle>{t("bookingsPage.dialogTitle")}</SheetTitle>
+            <SheetDescription>{t("bookingsPage.dialogDescription")}</SheetDescription>
+          </SheetHeader>
+          <form onSubmit={handleCreate} className="flex flex-1 flex-col overflow-hidden">
+            <div className="flex-1 space-y-4 overflow-y-auto p-4">
+              {/* Customer */}
+              <div className="space-y-2">
+                <Label>{t("bookingsPage.customer")} *</Label>
+                <div className="flex gap-2">
+                  <Select value={form.customerId} onValueChange={(val) => setForm({ ...form, customerId: val ?? "" })}>
+                    <SelectTrigger className="w-full"><SelectValue placeholder={t("bookingsPage.selectCustomer")} /></SelectTrigger>
+                    <SelectContent>
+                      {customers.map((c) => (
+                        <SelectItem key={c.id} value={String(c.id)}>
+                          {c.firstName} {c.lastName} ({c.phone})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button type="button" variant="outline" size="icon" className="shrink-0" onClick={() => setQuickCustomerOpen(true)}>
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Car */}
+              <div className="space-y-2">
+                <Label>{t("bookingsPage.car")} *</Label>
+                <Select
+                  value={form.carId}
+                  onValueChange={(val) => {
+                    const car = cars.find((c) => String(c.id) === val);
+                    setForm({
+                      ...form,
+                      carId: val ?? "",
+                      dailyRate: car?.dailyRate ? String(car.dailyRate) : form.dailyRate,
+                    });
+                  }}
+                >
+                  <SelectTrigger className="w-full"><SelectValue placeholder={t("bookingsPage.selectCar")} /></SelectTrigger>
+                  <SelectContent>
+                    {cars.filter((c) => c.status === "available").map((c) => (
+                      <SelectItem key={c.id} value={String(c.id)}>
+                        {c.make} {c.model} ({c.licensePlate}) — {fc(c.dailyRate)}/{t("bookingsPage.perDay")}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Start & End dates */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>{t("bookingsPage.startDate")} *</Label>
+                  <DateTimePicker value={form.startDate} onChange={(val) => setForm({ ...form, startDate: val })} minDate={new Date()} />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t("bookingsPage.endDate")} *</Label>
+                  <DateTimePicker value={form.endDate} onChange={(val) => setForm({ ...form, endDate: val })} minDate={new Date()} />
+                </div>
+              </div>
+
+              {/* Daily Rate & Discount */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>{t("bookingsPage.dailyRate")}</Label>
+                  <Input type="number" step="0.01" value={form.dailyRate} onChange={(e) => setForm({ ...form, dailyRate: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t("bookingsPage.sheetDiscount")}</Label>
+                  <Input type="number" step="0.01" value={form.discount} onChange={(e) => setForm({ ...form, discount: e.target.value })} />
+                </div>
+              </div>
+
+              {/* Pickup & Return locations */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>{t("bookingsPage.pickupLocation")}</Label>
+                  <Input value={form.pickupLocation} onChange={(e) => setForm({ ...form, pickupLocation: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t("bookingsPage.returnLocation")}</Label>
+                  <Input value={form.returnLocation} onChange={(e) => setForm({ ...form, returnLocation: e.target.value })} />
+                </div>
+              </div>
+
+              {/* Mileage Out */}
+              <div className="space-y-2">
+                <Label>{t("bookingsPage.sheetMileageOut")}</Label>
+                <Input type="number" value={form.mileageOut} onChange={(e) => setForm({ ...form, mileageOut: e.target.value })} placeholder="km" />
+              </div>
+
+              {/* Notes */}
+              <div className="space-y-2">
+                <Label>{t("bookingsPage.sheetNotes")}</Label>
+                <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={3} />
+              </div>
+
+              {/* Secondary Driver */}
+              <Separator />
+              <div className="space-y-3">
+                <p className="text-sm font-medium text-muted-foreground">{t("bookingsPage.secondaryDriverOptional")}</p>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>{t("bookingsPage.secondaryDriverName")}</Label>
+                    <Input value={form.secondaryDriverName} onChange={(e) => setForm({ ...form, secondaryDriverName: e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{t("bookingsPage.secondaryDriverPhone")}</Label>
+                    <Input value={form.secondaryDriverPhone} onChange={(e) => setForm({ ...form, secondaryDriverPhone: e.target.value })} />
+                  </div>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>{t("bookingsPage.secondaryDriverIdNumber")}</Label>
+                    <Input value={form.secondaryDriverIdNumber} onChange={(e) => setForm({ ...form, secondaryDriverIdNumber: e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{t("bookingsPage.secondaryDriverLicense")}</Label>
+                    <Input value={form.secondaryDriverLicense} onChange={(e) => setForm({ ...form, secondaryDriverLicense: e.target.value })} />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <SheetFooter className="border-t">
+              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>{t("common.cancel")}</Button>
+              <Button type="submit" disabled={saving}>{saving ? t("bookingsPage.creating") : t("bookingsPage.createBooking")}</Button>
+            </SheetFooter>
+          </form>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

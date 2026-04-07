@@ -85,9 +85,11 @@ router.put("/:id", async (req, res) => {
     const company = await db.Company.findByPk(req.params.id);
     if (!company) return res.status(404).json({ error: "Company not found" });
 
-    const { name, email, phone, address, city, country, isActive, logoUrl } = req.body;
+    const { name, email, phone, address, city, country, isActive, logoUrl, websiteTemplate, websitePublished } = req.body;
     const updateData = { name, email, phone, address, city, country, isActive };
     if (logoUrl !== undefined) updateData.logoUrl = logoUrl;
+    if (websiteTemplate !== undefined) updateData.websiteTemplate = websiteTemplate;
+    if (websitePublished !== undefined) updateData.websitePublished = websitePublished;
     await company.update(updateData);
 
     res.json(company);

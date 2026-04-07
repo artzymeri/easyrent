@@ -1,0 +1,47 @@
+// ── Shared Types ─────────────────────────────────────────────
+
+export interface CompanyData {
+  name: string;
+  subdomain: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  country: string;
+}
+
+export interface StaffData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  role: "manager" | "regular";
+  phone: string;
+}
+
+export interface CarData {
+  make: string;
+  model: string;
+  year: string;
+  color: string;
+  licensePlate: string;
+  engine: string;
+  fuelType: string;
+  transmission: string;
+  mileage: string;
+  seats: string;
+  dailyRate: string;
+  registrationExpiry: string;
+  insuranceProvider: string;
+  insurancePolicyNumber: string;
+  insuranceExpiry: string;
+}
+
+export type SubdomainStatus = "idle" | "checking" | "available" | "taken" | "reserved" | "invalid";
+
+export const STEPS = [
+  { label: "Company", description: "Basic details" },
+  { label: "Staff", description: "Team members" },
+  { label: "Cars", description: "Optional" },
+  { label: "Review", description: "Complete setup" },
+] as const;

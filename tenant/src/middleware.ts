@@ -19,8 +19,9 @@ export function middleware(request: NextRequest) {
   }
 
   if (!subdomain || subdomain === "www") {
-    // No subdomain — show a landing/404
-    return NextResponse.next();
+    // Root domain — redirect to the frontend app
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://app.kindura.app";
+    return NextResponse.redirect(appUrl);
   }
 
   // Pass subdomain to the app via header

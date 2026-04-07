@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { formatCurrency } from "@/lib/currency";
@@ -26,6 +26,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { DatePicker } from "@/components/date-picker";
 import { toast } from "sonner";
+import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -118,6 +119,49 @@ export default function OnboardingPage() {
 
   const [makes, setMakes] = useState<string[]>([]);
   const [models, setModels] = useState<string[]>([]);
+
+  // Subdomain validation
+  const [subdomainStatus, setSubdomainStatus] = useState<
+    "idle" | "checking" | "available" | "taken" | "reserved" | "invalid"
+  >("idle");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const checkSubdomain = useCallback(async (value: string) => {
+    if (!value || value.length < 2) {
+      setSubdomainStatus("idle");
+      return;
+    }
+    if (!/^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(value) && value.length > 1) {
+      setSubdomainStatus("invalid");
+      return;
+    }
+    setSubdomainStatus("checking");
+    try {
+      const res = await api.get<{ available: boolean; reason?: string }>(
+        `/companies/check-subdomain/${encodeURIComponent(value)}`
+      );
+      if (res.available) {
+        setSubdomainStatus("available");
+      } else {
+        setSubdomainStatus(res.reason === "reserved" ? "reserved" : "taken");
+      }
+    } catch {
+      setSubdomainStatus("idle");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    const value = company.subdomain;
+    if (!value) {
+      setSubdomainStatus("idle");
+      return;
+    }
+    debounceRef.current = setTimeout(() => checkSubdomain(value), 500);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [company.subdomain, checkSubdomain]);
 
   // Load car makes on step 3
   const loadMakes = async () => {
@@ -306,19 +350,49 @@ export default function OnboardingPage() {
               <div className="space-y-2">
                 <Label htmlFor="subdomain">Subdomain *</Label>
                 <div className="flex items-center gap-1">
-                  <Input
-                    id="subdomain"
-                    value={company.subdomain}
-                    onChange={(e) =>
-                      setCompany({
-                        ...company,
-                        subdomain: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""),
-                      })
-                    }
-                    placeholder="kosova-rent"
-                  />
-                  <span className="whitespace-nowrap text-sm text-muted-foreground">.easyrent.com</span>
+                  <div className="relative flex-1">
+                    <Input
+                      id="subdomain"
+                      value={company.subdomain}
+                      onChange={(e) =>
+                        setCompany({
+                          ...company,
+                          subdomain: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""),
+                        })
+                      }
+                      placeholder="kosova-rent"
+                      className={`pr-9 ${
+                        subdomainStatus === "available"
+                          ? "border-green-500 focus-visible:ring-green-500"
+                          : subdomainStatus === "taken" || subdomainStatus === "reserved" || subdomainStatus === "invalid"
+                            ? "border-red-500 focus-visible:ring-red-500"
+                            : ""
+                      }`}
+                    />
+                    {subdomainStatus === "checking" && (
+                      <Loader2 className="absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+                    )}
+                    {subdomainStatus === "available" && (
+                      <CheckCircle2 className="absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-green-500" />
+                    )}
+                    {(subdomainStatus === "taken" || subdomainStatus === "reserved" || subdomainStatus === "invalid") && (
+                      <XCircle className="absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-red-500" />
+                    )}
+                  </div>
+                  <span className="whitespace-nowrap text-sm text-muted-foreground">.kindura.app</span>
                 </div>
+                {subdomainStatus === "available" && (
+                  <p className="text-xs text-green-600">This subdomain is available!</p>
+                )}
+                {subdomainStatus === "taken" && (
+                  <p className="text-xs text-red-600">This subdomain is already taken.</p>
+                )}
+                {subdomainStatus === "reserved" && (
+                  <p className="text-xs text-red-600">This subdomain is reserved and cannot be used.</p>
+                )}
+                {subdomainStatus === "invalid" && (
+                  <p className="text-xs text-red-600">Must start and end with a letter or number.</p>
+                )}
               </div>
             </div>
 
@@ -377,7 +451,10 @@ export default function OnboardingPage() {
             </div>
 
             <div className="flex justify-end pt-4">
-              <Button onClick={handleCreateCompany} disabled={loading}>
+              <Button
+                onClick={handleCreateCompany}
+                disabled={loading || (!!company.subdomain && subdomainStatus !== "available")}
+              >
                 {loading ? "Creating…" : "Next: Add Staff →"}
               </Button>
             </div>

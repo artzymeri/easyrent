@@ -8,6 +8,21 @@ const db = require("../db");
 // All routes require super_admin
 router.use(authenticate, authorize("super_admin"));
 
+// ── Check subdomain availability ──────────────────────────────
+router.get("/check-subdomain/:subdomain", async (req, res) => {
+  try {
+    const { subdomain } = req.params;
+    const reserved = ["app", "admin", "www", "api", "mail", "ftp", "dashboard", "tenant"];
+    if (reserved.includes(subdomain)) {
+      return res.json({ available: false, reason: "reserved" });
+    }
+    const existing = await db.Company.findOne({ where: { subdomain } });
+    res.json({ available: !existing });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to check subdomain" });
+  }
+});
+
 // ── List all companies ────────────────────────────────────────
 router.get("/", async (req, res) => {
   try {

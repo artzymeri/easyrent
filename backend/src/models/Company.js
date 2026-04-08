@@ -31,6 +31,28 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.TEXT("long"),
         field: "logo_url",
       },
+      slogan: {
+        type: DataTypes.STRING(500),
+      },
+      signature: {
+        type: DataTypes.TEXT("long"),
+      },
+      stampUrl: {
+        type: DataTypes.TEXT("long"),
+        field: "stamp_url",
+      },
+      businessNumber: {
+        type: DataTypes.STRING(100),
+        field: "business_number",
+      },
+      businessFaxNumber: {
+        type: DataTypes.STRING(100),
+        field: "business_fax_number",
+      },
+      companyIdNumber: {
+        type: DataTypes.STRING(100),
+        field: "company_id_number",
+      },
       email: DataTypes.STRING(255),
       phone: DataTypes.STRING(50),
       address: DataTypes.TEXT,

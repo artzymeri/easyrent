@@ -14,6 +14,15 @@ import {
   AlertCircle,
   ChevronDown,
   Check,
+  Pen,
+  Quote,
+  Hash,
+  Printer,
+  Camera,
+  Stamp,
+  Upload,
+  Trash2,
+  IdCard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +42,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { LogoCropper } from "@/components/logo-cropper";
+import { SignaturePad } from "@/components/signature-pad";
 
 import type { CompanyData, SubdomainStatus } from "./types";
 import { COUNTRIES, PHONE_CODES } from "./country-data";
@@ -91,6 +102,9 @@ export function StepCompany({ company, setCompany, subdomainStatus, loading, onS
   const [countryOpen, setCountryOpen] = useState(false);
   const [cityOpen, setCityOpen] = useState(false);
   const [phoneCodeOpen, setPhoneCodeOpen] = useState(false);
+  const [logoCropperOpen, setLogoCropperOpen] = useState(false);
+  const [signaturePadOpen, setSignaturePadOpen] = useState(false);
+  const [stampCropperOpen, setStampCropperOpen] = useState(false);
 
   const selectedCountry = useMemo(
     () => COUNTRIES.find((c) => c.name === company.country),
@@ -378,6 +392,225 @@ export function StepCompany({ company, setCompany, subdomainStatus, loading, onS
           </div>
         </CardContent>
       </Card>
+
+      {/* Branding */}
+      <Card>
+        <CardContent className="pt-6 space-y-5">
+          <p className="text-sm font-medium text-muted-foreground">Branding</p>
+          <Separator />
+
+          {/* Slogan */}
+          <div className="space-y-2">
+            <Label htmlFor="company-slogan">Slogan</Label>
+            <div className="relative">
+              <Quote className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="company-slogan"
+                placeholder="Your trusted car rental partner"
+                className="pl-10"
+                value={company.slogan}
+                onChange={(e) => update("slogan", e.target.value)}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">Appears on the company&apos;s public website</p>
+          </div>
+
+          {/* Logo & Stamp side by side */}
+          <div className="grid gap-5 sm:grid-cols-2">
+            {/* Logo */}
+            <div className="space-y-2">
+              <Label>Company Logo</Label>
+              <div className="flex items-center gap-4">
+                <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-muted-foreground/25 bg-muted/50">
+                  {company.logoUrl ? (
+                    <img src={company.logoUrl} alt="Logo" className="h-full w-full object-cover" />
+                  ) : (
+                    <Camera className="h-6 w-6 text-muted-foreground/50" />
+                  )}
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setLogoCropperOpen(true)}
+                  >
+                    <Upload className="mr-2 h-3.5 w-3.5" />
+                    {company.logoUrl ? "Change" : "Upload"}
+                  </Button>
+                  {company.logoUrl && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive hover:text-destructive"
+                      onClick={() => update("logoUrl", "")}
+                    >
+                      <Trash2 className="mr-2 h-3.5 w-3.5" />
+                      Remove
+                    </Button>
+                  )}
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">Square ratio, auto-cropped</p>
+            </div>
+
+            {/* Stamp */}
+            <div className="space-y-2">
+              <Label>Company Stamp</Label>
+              <div className="flex items-center gap-4">
+                <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-muted-foreground/25 bg-muted/50">
+                  {company.stampUrl ? (
+                    <img src={company.stampUrl} alt="Stamp" className="h-full w-full object-cover" />
+                  ) : (
+                    <Stamp className="h-6 w-6 text-muted-foreground/50" />
+                  )}
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setStampCropperOpen(true)}
+                  >
+                    <Upload className="mr-2 h-3.5 w-3.5" />
+                    {company.stampUrl ? "Change" : "Upload"}
+                  </Button>
+                  {company.stampUrl && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive hover:text-destructive"
+                      onClick={() => update("stampUrl", "")}
+                    >
+                      <Trash2 className="mr-2 h-3.5 w-3.5" />
+                      Remove
+                    </Button>
+                  )}
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">Square ratio, auto-cropped</p>
+            </div>
+          </div>
+
+          {/* Signature */}
+          <div className="space-y-2">
+            <Label>Signature</Label>
+            <div className="flex items-center gap-4">
+              <div className="flex h-16 w-48 shrink-0 items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-muted-foreground/25 bg-white">
+                {company.signature ? (
+                  <img src={company.signature} alt="Signature" className="h-full w-auto object-contain p-1" />
+                ) : (
+                  <div className="flex items-center gap-2 text-muted-foreground/50">
+                    <Pen className="h-4 w-4" />
+                    <span className="text-xs">No signature</span>
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-col gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSignaturePadOpen(true)}
+                >
+                  <Pen className="mr-2 h-3.5 w-3.5" />
+                  {company.signature ? "Redraw" : "Draw"}
+                </Button>
+                {company.signature && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive hover:text-destructive"
+                    onClick={() => update("signature", "")}
+                  >
+                    <Trash2 className="mr-2 h-3.5 w-3.5" />
+                    Remove
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Business Information */}
+      <Card>
+        <CardContent className="pt-6 space-y-5">
+          <p className="text-sm font-medium text-muted-foreground">Business Information</p>
+          <Separator />
+
+          <div className="grid gap-5 sm:grid-cols-3">
+            <div className="space-y-2">
+              <Label htmlFor="business-number">Business Number</Label>
+              <div className="relative">
+                <Hash className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="business-number"
+                  placeholder="BN-12345678"
+                  className="pl-10"
+                  value={company.businessNumber}
+                  onChange={(e) => update("businessNumber", e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="business-fax">Business Fax Number</Label>
+              <div className="relative">
+                <Printer className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="business-fax"
+                  placeholder="+383 38 123 456"
+                  className="pl-10"
+                  value={company.businessFaxNumber}
+                  onChange={(e) => update("businessFaxNumber", e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="company-id">Company ID</Label>
+              <div className="relative">
+                <IdCard className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="company-id"
+                  placeholder="ID-0001234"
+                  className="pl-10"
+                  value={company.companyIdNumber}
+                  onChange={(e) => update("companyIdNumber", e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Dialogs */}
+      <LogoCropper
+        open={logoCropperOpen}
+        onOpenChange={setLogoCropperOpen}
+        onSave={(base64) => {
+          update("logoUrl", base64);
+          setLogoCropperOpen(false);
+        }}
+      />
+      <LogoCropper
+        open={stampCropperOpen}
+        onOpenChange={setStampCropperOpen}
+        onSave={(base64) => {
+          update("stampUrl", base64);
+          setStampCropperOpen(false);
+        }}
+      />
+      <SignaturePad
+        open={signaturePadOpen}
+        onOpenChange={setSignaturePadOpen}
+        onSave={(base64) => update("signature", base64)}
+        existingSignature={company.signature || null}
+      />
 
       {/* Submit */}
       <div className="flex justify-end">

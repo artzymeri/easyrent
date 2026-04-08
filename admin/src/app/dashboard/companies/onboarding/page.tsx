@@ -30,6 +30,13 @@ export default function OnboardingPage() {
     address: "",
     city: "",
     country: "",
+    slogan: "",
+    logoUrl: "",
+    signature: "",
+    stampUrl: "",
+    businessNumber: "",
+    businessFaxNumber: "",
+    companyIdNumber: "",
   });
 
   const [subdomainStatus, setSubdomainStatus] = useState<SubdomainStatus>("idle");

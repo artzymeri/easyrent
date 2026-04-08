@@ -11,6 +11,10 @@ import {
   Phone,
   MapPin,
   Globe,
+  Hash,
+  Printer,
+  IdCard,
+  Quote,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -50,11 +54,20 @@ export function StepReview({
         <CardContent className="pt-6 space-y-4">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <Building2 className="h-4 w-4" />
+              {company.logoUrl ? (
+                <img src={company.logoUrl} alt="" className="h-9 w-9 rounded-lg object-cover" />
+              ) : (
+                <Building2 className="h-4 w-4" />
+              )}
             </div>
             <div>
               <p className="text-sm font-semibold">{company.name}</p>
-              <p className="text-xs text-muted-foreground">Company</p>
+              {company.slogan && (
+                <p className="text-xs text-muted-foreground italic">&ldquo;{company.slogan}&rdquo;</p>
+              )}
+              {!company.slogan && (
+                <p className="text-xs text-muted-foreground">Company</p>
+              )}
             </div>
           </div>
 
@@ -94,7 +107,50 @@ export function StepReview({
                 <span>{company.address}</span>
               </div>
             )}
+            {company.businessNumber && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Hash className="h-3.5 w-3.5" />
+                <span>BN: {company.businessNumber}</span>
+              </div>
+            )}
+            {company.businessFaxNumber && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Printer className="h-3.5 w-3.5" />
+                <span>Fax: {company.businessFaxNumber}</span>
+              </div>
+            )}
+            {company.companyIdNumber && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <IdCard className="h-3.5 w-3.5" />
+                <span>ID: {company.companyIdNumber}</span>
+              </div>
+            )}
           </div>
+
+          {/* Show signature & stamp thumbnails */}
+          {(company.signature || company.stampUrl) && (
+            <>
+              <Separator />
+              <div className="flex gap-6">
+                {company.signature && (
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">Signature</p>
+                    <div className="h-10 w-24 overflow-hidden rounded border bg-white">
+                      <img src={company.signature} alt="Signature" className="h-full w-auto object-contain p-0.5" />
+                    </div>
+                  </div>
+                )}
+                {company.stampUrl && (
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">Stamp</p>
+                    <div className="h-10 w-10 overflow-hidden rounded border bg-muted">
+                      <img src={company.stampUrl} alt="Stamp" className="h-full w-full object-cover" />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
 

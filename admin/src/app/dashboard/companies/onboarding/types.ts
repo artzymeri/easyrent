@@ -9,6 +9,13 @@ export interface CompanyData {
   address: string;
   city: string;
   country: string;
+  slogan: string;
+  logoUrl: string;
+  signature: string;
+  stampUrl: string;
+  businessNumber: string;
+  businessFaxNumber: string;
+  companyIdNumber: string;
 }
 
 export interface StaffData {

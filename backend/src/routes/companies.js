@@ -69,7 +69,7 @@ router.post(
   validate,
   async (req, res) => {
     try {
-      const { name, subdomain, email, phone, address, city, country } = req.body;
+      const { name, subdomain, email, phone, address, city, country, slogan, signature, stampUrl, logoUrl, businessNumber, businessFaxNumber, companyIdNumber } = req.body;
 
       // Check subdomain uniqueness
       const existing = await db.Company.findOne({ where: { subdomain } });
@@ -85,6 +85,13 @@ router.post(
         address,
         city,
         country,
+        slogan,
+        signature,
+        stampUrl,
+        logoUrl,
+        businessNumber,
+        businessFaxNumber,
+        companyIdNumber,
       });
 
       res.status(201).json(company);
@@ -101,11 +108,17 @@ router.put("/:id", async (req, res) => {
     const company = await db.Company.findByPk(req.params.id);
     if (!company) return res.status(404).json({ error: "Company not found" });
 
-    const { name, email, phone, address, city, country, isActive, logoUrl, websiteTemplate, websitePublished } = req.body;
+    const { name, email, phone, address, city, country, isActive, logoUrl, websiteTemplate, websitePublished, slogan, signature, stampUrl, businessNumber, businessFaxNumber, companyIdNumber } = req.body;
     const updateData = { name, email, phone, address, city, country, isActive };
     if (logoUrl !== undefined) updateData.logoUrl = logoUrl;
     if (websiteTemplate !== undefined) updateData.websiteTemplate = websiteTemplate;
     if (websitePublished !== undefined) updateData.websitePublished = websitePublished;
+    if (slogan !== undefined) updateData.slogan = slogan;
+    if (signature !== undefined) updateData.signature = signature;
+    if (stampUrl !== undefined) updateData.stampUrl = stampUrl;
+    if (businessNumber !== undefined) updateData.businessNumber = businessNumber;
+    if (businessFaxNumber !== undefined) updateData.businessFaxNumber = businessFaxNumber;
+    if (companyIdNumber !== undefined) updateData.companyIdNumber = companyIdNumber;
     await company.update(updateData);
 
     res.json(company);

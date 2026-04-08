@@ -294,12 +294,10 @@ export function StepCompany({ company, setCompany, subdomainStatus, loading, onS
                             onSelect={() => {
                               update("country", c.name);
                               update("city", "");
-                              update("phoneCode", c.phoneCode);
                               setCountryOpen(false);
                             }}
                           >
                             <span className="flex-1">{c.name}</span>
-                            <span className="text-xs text-muted-foreground">{c.phoneCode}</span>
                             {company.country === c.name && (
                               <Check className="ml-2 h-3.5 w-3.5 text-primary" />
                             )}

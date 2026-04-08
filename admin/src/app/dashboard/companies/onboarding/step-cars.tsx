@@ -63,6 +63,20 @@ const STATUS_OPTIONS = [
   { value: "needs_repair", label: "Needs Repair" },
 ];
 
+const FUEL_LABELS: Record<string, string> = {
+  gasoline: "Gasoline",
+  diesel: "Diesel",
+  electric: "Electric",
+  hybrid: "Hybrid",
+  plugin_hybrid: "Plugin Hybrid",
+  lpg: "LPG",
+};
+
+const TRANSMISSION_LABELS: Record<string, string> = {
+  automatic: "Automatic",
+  manual: "Manual",
+};
+
 interface StepCarsProps {
   carsList: CarData[];
   currentCar: CarData;
@@ -268,7 +282,11 @@ export function StepCars({
                 <SelectTrigger>
                   <div className="flex items-center gap-2">
                     <Palette className="h-4 w-4 text-muted-foreground" />
-                    <SelectValue placeholder="Select color" />
+                    <SelectValue placeholder="Select color">
+                      {currentCar.color
+                        ? currentCar.color.charAt(0).toUpperCase() + currentCar.color.slice(1)
+                        : "Select color"}
+                    </SelectValue>
                   </div>
                 </SelectTrigger>
                 <SelectContent>
@@ -285,7 +303,9 @@ export function StepCars({
                 <SelectTrigger>
                   <div className="flex items-center gap-2">
                     <Settings2 className="h-4 w-4 text-muted-foreground" />
-                    <SelectValue placeholder="Status" />
+                    <SelectValue placeholder="Status">
+                      {STATUS_OPTIONS.find((s) => s.value === currentCar.status)?.label ?? "Status"}
+                    </SelectValue>
                   </div>
                 </SelectTrigger>
                 <SelectContent>
@@ -339,7 +359,9 @@ export function StepCars({
                 <SelectTrigger>
                   <div className="flex items-center gap-2">
                     <Fuel className="h-4 w-4 text-muted-foreground" />
-                    <SelectValue />
+                    <SelectValue>
+                      {FUEL_LABELS[currentCar.fuelType] ?? "Gasoline"}
+                    </SelectValue>
                   </div>
                 </SelectTrigger>
                 <SelectContent>
@@ -359,7 +381,9 @@ export function StepCars({
                 <SelectTrigger>
                   <div className="flex items-center gap-2">
                     <Settings2 className="h-4 w-4 text-muted-foreground" />
-                    <SelectValue />
+                    <SelectValue>
+                      {TRANSMISSION_LABELS[currentCar.transmission] ?? "Automatic"}
+                    </SelectValue>
                   </div>
                 </SelectTrigger>
                 <SelectContent>

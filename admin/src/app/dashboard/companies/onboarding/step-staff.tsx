@@ -200,7 +200,9 @@ export function StepStaff({
                 <SelectTrigger>
                   <div className="flex items-center gap-2">
                     <ShieldCheck className="h-4 w-4 text-muted-foreground" />
-                    <SelectValue placeholder="Select Role" />
+                    <SelectValue placeholder="Select Role">
+                      {currentStaff.role === "manager" ? "Manager" : "Regular"}
+                    </SelectValue>
                   </div>
                 </SelectTrigger>
                 <SelectContent>

@@ -4,6 +4,7 @@ export interface CompanyData {
   name: string;
   subdomain: string;
   email: string;
+  phoneCode: string;
   phone: string;
   address: string;
   city: string;
@@ -16,6 +17,7 @@ export interface StaffData {
   email: string;
   password: string;
   role: "manager" | "regular";
+  phoneCode: string;
   phone: string;
 }
 
@@ -25,16 +27,22 @@ export interface CarData {
   year: string;
   color: string;
   licensePlate: string;
+  vin: string;
   engine: string;
   fuelType: string;
   transmission: string;
   mileage: string;
   seats: string;
   dailyRate: string;
+  status: string;
+  notes: string;
   registrationExpiry: string;
   insuranceProvider: string;
   insurancePolicyNumber: string;
   insuranceExpiry: string;
+  lastServiceDate: string;
+  nextServiceDate: string;
+  nextServiceMileage: string;
 }
 
 export type SubdomainStatus = "idle" | "checking" | "available" | "taken" | "reserved" | "invalid";

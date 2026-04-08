@@ -25,6 +25,7 @@ export default function OnboardingPage() {
     name: "",
     subdomain: "",
     email: "",
+    phoneCode: "+383",
     phone: "",
     address: "",
     city: "",
@@ -80,6 +81,7 @@ export default function OnboardingPage() {
     email: "",
     password: "",
     role: "manager",
+    phoneCode: "+383",
     phone: "",
   });
 
@@ -92,16 +94,22 @@ export default function OnboardingPage() {
     year: "",
     color: "",
     licensePlate: "",
+    vin: "",
     engine: "",
     fuelType: "gasoline",
     transmission: "automatic",
     mileage: "",
     seats: "5",
     dailyRate: "",
+    status: "available",
+    notes: "",
     registrationExpiry: "",
     insuranceProvider: "",
     insurancePolicyNumber: "",
     insuranceExpiry: "",
+    lastServiceDate: "",
+    nextServiceDate: "",
+    nextServiceMileage: "",
   });
 
   const [makes, setMakes] = useState<string[]>([]);
@@ -129,13 +137,29 @@ export default function OnboardingPage() {
   };
 
   const handleCreateCompany = async () => {
-    if (!company.name || !company.subdomain) {
-      toast.error("Company name and subdomain are required");
+    if (!company.name.trim()) {
+      toast.error("Company name is required");
+      return;
+    }
+    if (!company.subdomain.trim()) {
+      toast.error("Subdomain is required");
+      return;
+    }
+    if (subdomainStatus !== "available") {
+      toast.error("Please choose an available subdomain");
+      return;
+    }
+    if (!company.country) {
+      toast.error("Country is required");
       return;
     }
     setLoading(true);
     try {
-      const created = await api.post<{ id: number }>("/companies", company);
+      const payload = {
+        ...company,
+        phone: company.phone ? `${company.phoneCode} ${company.phone}` : "",
+      };
+      const created = await api.post<{ id: number }>("/companies", payload);
       setCompanyId(created.id);
       toast.success("Company created!");
       setStep(1);
@@ -147,13 +171,37 @@ export default function OnboardingPage() {
   };
 
   const handleAddStaff = async () => {
-    if (!currentStaff.firstName || !currentStaff.lastName || !currentStaff.email || !currentStaff.password) {
-      toast.error("First name, last name, email, and password are required");
+    if (!currentStaff.firstName.trim()) {
+      toast.error("First name is required");
+      return;
+    }
+    if (!currentStaff.lastName.trim()) {
+      toast.error("Last name is required");
+      return;
+    }
+    if (!currentStaff.email.trim()) {
+      toast.error("Email address is required");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(currentStaff.email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+    if (!currentStaff.password) {
+      toast.error("Password is required");
+      return;
+    }
+    if (currentStaff.password.length < 6) {
+      toast.error("Password must be at least 6 characters");
       return;
     }
     setLoading(true);
     try {
-      await api.post(`/companies/${companyId}/staff`, currentStaff);
+      const payload = {
+        ...currentStaff,
+        phone: currentStaff.phone ? `${currentStaff.phoneCode} ${currentStaff.phone}` : "",
+      };
+      await api.post(`/companies/${companyId}/staff`, payload);
       setStaffList([...staffList, { ...currentStaff }]);
       setCurrentStaff({
         firstName: "",
@@ -161,6 +209,7 @@ export default function OnboardingPage() {
         email: "",
         password: "",
         role: "regular",
+        phoneCode: currentStaff.phoneCode,
         phone: "",
       });
       toast.success("Staff member added!");
@@ -172,8 +221,12 @@ export default function OnboardingPage() {
   };
 
   const handleAddCar = async () => {
-    if (!currentCar.make || !currentCar.model) {
-      toast.error("Make and model are required");
+    if (!currentCar.make) {
+      toast.error("Car make is required");
+      return;
+    }
+    if (!currentCar.model) {
+      toast.error("Car model is required");
       return;
     }
     setLoading(true);
@@ -184,6 +237,7 @@ export default function OnboardingPage() {
         mileage: currentCar.mileage ? parseInt(currentCar.mileage) : 0,
         seats: currentCar.seats ? parseInt(currentCar.seats) : 5,
         dailyRate: currentCar.dailyRate ? parseFloat(currentCar.dailyRate) : null,
+        nextServiceMileage: currentCar.nextServiceMileage ? parseInt(currentCar.nextServiceMileage) : null,
       });
       setCarsList([...carsList, { ...currentCar }]);
       setCurrentCar({
@@ -192,16 +246,22 @@ export default function OnboardingPage() {
         year: "",
         color: "",
         licensePlate: "",
+        vin: "",
         engine: "",
         fuelType: "gasoline",
         transmission: "automatic",
         mileage: "",
         seats: "5",
         dailyRate: "",
+        status: "available",
+        notes: "",
         registrationExpiry: "",
         insuranceProvider: "",
         insurancePolicyNumber: "",
         insuranceExpiry: "",
+        lastServiceDate: "",
+        nextServiceDate: "",
+        nextServiceMileage: "",
       });
       setModels([]);
       toast.success("Car added!");

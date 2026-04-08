@@ -1,20 +1,22 @@
 "use client";
 
-import { formatCurrency } from "@/lib/currency";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
-  Loader2,
-  CheckCircle2,
   Building2,
   Users,
   Car,
+  CheckCircle2,
+  Loader2,
+  ArrowLeft,
   Mail,
   Phone,
   MapPin,
-  ArrowLeft,
+  Globe,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+
 import type { CompanyData, StaffData, CarData } from "./types";
 
 interface StepReviewProps {
@@ -39,69 +41,95 @@ export function StepReview({
       <div>
         <h2 className="text-lg font-semibold">Review & Complete</h2>
         <p className="text-sm text-muted-foreground">
-          Everything looks good? Hit complete to finish the setup.
+          Review the setup details and finalize onboarding
         </p>
       </div>
 
-      {/* Company Summary */}
+      {/* Company summary */}
       <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <Building2 className="h-5 w-5" />
+        <CardContent className="pt-6 space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Building2 className="h-4 w-4" />
             </div>
             <div>
-              <h3 className="font-semibold">{company.name}</h3>
-              <p className="text-sm text-muted-foreground">
-                <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">
-                  {company.subdomain}
-                </span>
-                <span className="text-xs">.kindura.app</span>
-              </p>
+              <p className="text-sm font-semibold">{company.name}</p>
+              <p className="text-xs text-muted-foreground">Company</p>
             </div>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2 text-sm">
+
+          <Separator />
+
+          <div className="grid gap-3 text-sm sm:grid-cols-2">
+            {company.subdomain && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Globe className="h-3.5 w-3.5" />
+                <span>{company.subdomain}.kindura.app</span>
+              </div>
+            )}
             {company.email && (
               <div className="flex items-center gap-2 text-muted-foreground">
-                <Mail className="h-3.5 w-3.5" /> {company.email}
+                <Mail className="h-3.5 w-3.5" />
+                <span>{company.email}</span>
               </div>
             )}
             {company.phone && (
               <div className="flex items-center gap-2 text-muted-foreground">
-                <Phone className="h-3.5 w-3.5" /> {company.phone}
+                <Phone className="h-3.5 w-3.5" />
+                <span>{company.phoneCode} {company.phone}</span>
               </div>
             )}
-            {(company.city || company.country) && (
+            {company.country && (
               <div className="flex items-center gap-2 text-muted-foreground">
                 <MapPin className="h-3.5 w-3.5" />
-                {[company.city, company.country].filter(Boolean).join(", ")}
+                <span>
+                  {company.city ? `${company.city}, ` : ""}
+                  {company.country}
+                </span>
+              </div>
+            )}
+            {company.address && (
+              <div className="flex items-center gap-2 text-muted-foreground sm:col-span-2">
+                <MapPin className="h-3.5 w-3.5" />
+                <span>{company.address}</span>
               </div>
             )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Staff Summary */}
+      {/* Staff summary */}
       <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-muted-foreground" />
-              <h3 className="text-sm font-semibold">Staff Members</h3>
+        <CardContent className="pt-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <Users className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold">Staff Members</p>
+                <p className="text-xs text-muted-foreground">
+                  {staffList.length} member{staffList.length !== 1 ? "s" : ""}
+                </p>
+              </div>
             </div>
-            <Badge variant="secondary">{staffList.length}</Badge>
           </div>
+
+          <Separator />
+
           <div className="space-y-2">
             {staffList.map((s, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-semibold">
-                  {s.firstName[0]}{s.lastName[0]}
+              <div
+                key={i}
+                className="flex items-center justify-between rounded-lg border p-3"
+              >
+                <div>
+                  <p className="text-sm font-medium">
+                    {s.firstName} {s.lastName}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{s.email}</p>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <span className="text-sm font-medium">{s.firstName} {s.lastName}</span>
-                  <span className="ml-2 text-xs text-muted-foreground">{s.email}</span>
-                </div>
-                <Badge variant={s.role === "manager" ? "default" : "outline"} className="capitalize text-xs">
+                <Badge variant="secondary" className="capitalize">
                   {s.role}
                 </Badge>
               </div>
@@ -110,60 +138,65 @@ export function StepReview({
         </CardContent>
       </Card>
 
-      {/* Cars Summary */}
+      {/* Cars summary */}
       <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Car className="h-4 w-4 text-muted-foreground" />
-              <h3 className="text-sm font-semibold">Vehicles</h3>
+        <CardContent className="pt-6 space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Car className="h-4 w-4" />
             </div>
-            <Badge variant="secondary">{carsList.length}</Badge>
+            <div>
+              <p className="text-sm font-semibold">Fleet</p>
+              <p className="text-xs text-muted-foreground">
+                {carsList.length} car{carsList.length !== 1 ? "s" : ""}
+                {carsList.length === 0 && " — can be added later"}
+              </p>
+            </div>
           </div>
-          {carsList.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No cars added — can be added later from the dashboard.
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {carsList.map((c, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
-                    <Car className="h-3.5 w-3.5 text-muted-foreground" />
+
+          {carsList.length > 0 && (
+            <>
+              <Separator />
+              <div className="space-y-2">
+                {carsList.map((c, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center justify-between rounded-lg border p-3"
+                  >
+                    <div>
+                      <p className="text-sm font-medium">
+                        {c.make} {c.model} {c.year && `(${c.year})`}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {[c.color, c.licensePlate, c.fuelType, c.transmission]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    </div>
+                    {c.dailyRate && (
+                      <Badge variant="secondary">${c.dailyRate}/day</Badge>
+                    )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="text-sm font-medium">
-                      {c.make} {c.model}
-                    </span>
-                    {c.year && <span className="ml-1 text-xs text-muted-foreground">({c.year})</span>}
-                  </div>
-                  {c.dailyRate && (
-                    <span className="text-xs font-medium text-muted-foreground">
-                      {formatCurrency(c.dailyRate)}/day
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
 
       {/* Navigation */}
       <div className="flex items-center justify-between">
-        <Button variant="ghost" onClick={onBack} className="gap-2">
-          <ArrowLeft className="h-4 w-4" /> Back
+        <Button variant="ghost" onClick={onBack}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
         </Button>
         <Button onClick={onComplete} disabled={loading} size="lg" className="gap-2">
           {loading ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" /> Completing…
-            </>
+            <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            <>
-              <CheckCircle2 className="h-4 w-4" /> Complete Onboarding
-            </>
+            <CheckCircle2 className="h-4 w-4" />
           )}
+          Complete Onboarding
         </Button>
       </div>
     </div>

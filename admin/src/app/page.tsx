@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -218,6 +219,12 @@ export default function LoginPage() {
                       </span>
                     )}
                   </Button>
+
+                  <div className="text-center">
+                    <Link href="/reset-password" className="text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                      Forgot your password?
+                    </Link>
+                  </div>
                 </form>
               </CardContent>
             </Card>

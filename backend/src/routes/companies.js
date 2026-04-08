@@ -4,6 +4,7 @@ const { body, param } = require("express-validator");
 const { validate } = require("../middleware/validate");
 const { authenticate, authorize } = require("../middleware/auth");
 const db = require("../db");
+const { sendEmail, staffWelcomeEmail } = require("../services/emailService");
 
 // All routes require super_admin
 router.use(authenticate, authorize("super_admin"));
@@ -159,6 +160,21 @@ router.post(
         role: req.body.role,
         phone: req.body.phone,
       });
+
+      // Send welcome email (non-blocking)
+      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:4345";
+      const loginUrl = `${frontendUrl}/login`;
+      const emailContent = staffWelcomeEmail(
+        req.body.firstName,
+        req.body.email,
+        req.body.password,
+        company.name,
+        company.subdomain,
+        loginUrl
+      );
+      sendEmail({ to: req.body.email, ...emailContent }).catch((err) =>
+        console.error("Welcome email failed:", err)
+      );
 
       const { password, ...staffData } = staff.toJSON();
       res.status(201).json(staffData);

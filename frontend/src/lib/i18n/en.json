@@ -572,5 +572,30 @@
     "addNew": "New",
     "title": "Quick Add Customer",
     "description": "Create a new customer and select them for the booking"
+  },
+  "resetPassword": {
+    "forgotLink": "Forgot your password?",
+    "recovery": "Password Recovery",
+    "forgotTitle": "Forgot Password",
+    "forgotDescription": "Enter your details and we'll send you a reset link",
+    "sendLink": "Send Reset Link",
+    "sending": "Sending…",
+    "linkSent": "If the email exists, a reset link has been sent.",
+    "sendFailed": "Failed to send reset link",
+    "checkEmail": "Check Your Email",
+    "checkEmailDesc": "If an account exists for {email}, we've sent a password reset link. Please check your inbox and spam folder.",
+    "backToLogin": "Back to Sign In",
+    "newPasswordTitle": "Set New Password",
+    "newPasswordDesc": "Choose a strong password for your account",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "resetButton": "Reset Password",
+    "resetting": "Resetting…",
+    "noMatch": "Passwords do not match",
+    "minLength": "Password must be at least 6 characters",
+    "success": "Password has been reset successfully!",
+    "failed": "Failed to reset password",
+    "completeTitle": "Password Reset Complete",
+    "completeDesc": "Your password has been reset successfully. You can now sign in with your new password."
   }
 }

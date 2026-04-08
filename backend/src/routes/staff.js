@@ -4,6 +4,7 @@ const { body } = require("express-validator");
 const { validate } = require("../middleware/validate");
 const { authenticate } = require("../middleware/auth");
 const db = require("../db");
+const { sendEmail, staffWelcomeEmail } = require("../services/emailService");
 
 router.use(authenticate);
 
@@ -61,6 +62,25 @@ router.post("/", async (req, res) => {
       role: req.body.role,
       phone: req.body.phone,
     });
+
+    // Send welcome email (non-blocking)
+    const company = await db.Company.findByPk(req.user.companyId);
+    if (company) {
+      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:4345";
+      const loginUrl = `${frontendUrl}/login`;
+      const emailContent = staffWelcomeEmail(
+        req.body.firstName,
+        req.body.email,
+        req.body.password,
+        company.name,
+        company.subdomain,
+        loginUrl
+      );
+      sendEmail({ to: req.body.email, ...emailContent }).catch((err) =>
+        console.error("Welcome email failed:", err)
+      );
+    }
+
     const { password, ...data } = staff.toJSON();
     res.status(201).json(data);
   } catch (err) {
@@ -124,6 +144,24 @@ router.post(
         role: req.body.role,
         phone: req.body.phone,
       });
+
+      // Send welcome email (non-blocking)
+      const company = await db.Company.findByPk(req.params.companyId);
+      if (company) {
+        const frontendUrl = process.env.FRONTEND_URL || "http://localhost:4345";
+        const loginUrl = `${frontendUrl}/login`;
+        const emailContent = staffWelcomeEmail(
+          req.body.firstName,
+          req.body.email,
+          req.body.password,
+          company.name,
+          company.subdomain,
+          loginUrl
+        );
+        sendEmail({ to: req.body.email, ...emailContent }).catch((err) =>
+          console.error("Welcome email failed:", err)
+        );
+      }
 
       const { password, ...data } = staff.toJSON();
       res.status(201).json(data);

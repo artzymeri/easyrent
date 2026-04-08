@@ -572,5 +572,30 @@
     "addNew": "I Ri",
     "title": "Shto Klient Shpejt",
     "description": "Krijoni një klient të ri dhe zgjidheni për rezervimin"
+  },
+  "resetPassword": {
+    "forgotLink": "Keni harruar fjalëkalimin?",
+    "recovery": "Rikuperimi i Fjalëkalimit",
+    "forgotTitle": "Keni Harruar Fjalëkalimin",
+    "forgotDescription": "Vendosni të dhënat tuaja dhe do t'ju dërgojmë një link për rivendosje",
+    "sendLink": "Dërgo Linkun e Rivendosjes",
+    "sending": "Duke dërguar…",
+    "linkSent": "Nëse emaili ekziston, një link rivendosjeje është dërguar.",
+    "sendFailed": "Dështoi dërgimi i linkut të rivendosjes",
+    "checkEmail": "Kontrolloni Emailin Tuaj",
+    "checkEmailDesc": "Nëse ekziston një llogari për {email}, kemi dërguar një link për rivendosjen e fjalëkalimit. Kontrolloni inbox-in dhe dosjen spam.",
+    "backToLogin": "Kthehu te Identifikimi",
+    "newPasswordTitle": "Vendosni Fjalëkalim të Ri",
+    "newPasswordDesc": "Zgjidhni një fjalëkalim të fortë për llogarinë tuaj",
+    "newPassword": "Fjalëkalimi i Ri",
+    "confirmPassword": "Konfirmoni Fjalëkalimin",
+    "resetButton": "Rivendos Fjalëkalimin",
+    "resetting": "Duke rivendosur…",
+    "noMatch": "Fjalëkalimet nuk përputhen",
+    "minLength": "Fjalëkalimi duhet të ketë të paktën 6 karaktere",
+    "success": "Fjalëkalimi u rivendos me sukses!",
+    "failed": "Dështoi rivendosja e fjalëkalimit",
+    "completeTitle": "Rivendosja e Fjalëkalimit Përfundoi",
+    "completeDesc": "Fjalëkalimi juaj u rivendos me sukses. Tani mund të identifikoheni me fjalëkalimin e ri."
   }
 }

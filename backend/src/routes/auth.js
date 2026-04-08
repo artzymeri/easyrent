@@ -1,9 +1,16 @@
 const router = require("express").Router();
 const bcrypt = require("bcrypt");
+const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const { body } = require("express-validator");
 const { validate } = require("../middleware/validate");
 const db = require("../db");
+const { Op } = require("sequelize");
+const {
+  sendEmail,
+  adminPasswordResetEmail,
+  staffPasswordResetEmail,
+} = require("../services/emailService");
 
 // ── Admin (super_admin) Login ─────────────────────────────────
 router.post(
@@ -124,6 +131,166 @@ router.post(
     } catch (err) {
       console.error("Staff login error:", err);
       res.status(500).json({ error: "Login failed" });
+    }
+  }
+);
+
+// ── Admin Forgot Password ─────────────────────────────────────
+router.post(
+  "/admin/forgot-password",
+  [body("email").isEmail().withMessage("Valid email required")],
+  validate,
+  async (req, res) => {
+    try {
+      const { email } = req.body;
+      const user = await db.User.findOne({ where: { email } });
+
+      // Always return success to prevent email enumeration
+      if (!user || !user.isActive) {
+        return res.json({ message: "If the email exists, a reset link has been sent." });
+      }
+
+      const token = crypto.randomBytes(32).toString("hex");
+      const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+      await user.update({
+        passwordResetToken: token,
+        passwordResetExpires: expires,
+      });
+
+      const adminUrl = process.env.ADMIN_URL || "http://localhost:4346";
+      const resetUrl = `${adminUrl}/reset-password?token=${token}`;
+
+      const emailContent = adminPasswordResetEmail(user.firstName || "Admin", resetUrl);
+      await sendEmail({ to: user.email, ...emailContent });
+
+      res.json({ message: "If the email exists, a reset link has been sent." });
+    } catch (err) {
+      console.error("Admin forgot password error:", err);
+      res.status(500).json({ error: "Failed to process request" });
+    }
+  }
+);
+
+// ── Admin Reset Password ──────────────────────────────────────
+router.post(
+  "/admin/reset-password",
+  [
+    body("token").notEmpty().withMessage("Token required"),
+    body("password").isLength({ min: 6 }).withMessage("Password must be at least 6 characters"),
+  ],
+  validate,
+  async (req, res) => {
+    try {
+      const { token, password } = req.body;
+
+      const user = await db.User.findOne({
+        where: {
+          passwordResetToken: token,
+          passwordResetExpires: { [Op.gt]: new Date() },
+        },
+      });
+
+      if (!user) {
+        return res.status(400).json({ error: "Invalid or expired reset token" });
+      }
+
+      const hash = await bcrypt.hash(password, 12);
+      await user.update({
+        password: hash,
+        passwordResetToken: null,
+        passwordResetExpires: null,
+      });
+
+      res.json({ message: "Password has been reset successfully" });
+    } catch (err) {
+      console.error("Admin reset password error:", err);
+      res.status(500).json({ error: "Failed to reset password" });
+    }
+  }
+);
+
+// ── Staff Forgot Password ─────────────────────────────────────
+router.post(
+  "/staff/forgot-password",
+  [
+    body("email").isEmail().withMessage("Valid email required"),
+    body("subdomain").notEmpty().withMessage("Company subdomain required"),
+  ],
+  validate,
+  async (req, res) => {
+    try {
+      const { email, subdomain } = req.body;
+
+      const company = await db.Company.findOne({ where: { subdomain } });
+      if (!company || !company.isActive) {
+        return res.json({ message: "If the email exists, a reset link has been sent." });
+      }
+
+      const staff = await db.Staff.findOne({
+        where: { email, companyId: company.id },
+      });
+
+      if (!staff || !staff.isActive) {
+        return res.json({ message: "If the email exists, a reset link has been sent." });
+      }
+
+      const token = crypto.randomBytes(32).toString("hex");
+      const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+      await staff.update({
+        passwordResetToken: token,
+        passwordResetExpires: expires,
+      });
+
+      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:4345";
+      const resetUrl = `${frontendUrl}/reset-password?token=${token}&subdomain=${subdomain}`;
+
+      const emailContent = staffPasswordResetEmail(staff.firstName, resetUrl, company.name);
+      await sendEmail({ to: staff.email, ...emailContent });
+
+      res.json({ message: "If the email exists, a reset link has been sent." });
+    } catch (err) {
+      console.error("Staff forgot password error:", err);
+      res.status(500).json({ error: "Failed to process request" });
+    }
+  }
+);
+
+// ── Staff Reset Password ──────────────────────────────────────
+router.post(
+  "/staff/reset-password",
+  [
+    body("token").notEmpty().withMessage("Token required"),
+    body("password").isLength({ min: 6 }).withMessage("Password must be at least 6 characters"),
+  ],
+  validate,
+  async (req, res) => {
+    try {
+      const { token, password } = req.body;
+
+      const staff = await db.Staff.findOne({
+        where: {
+          passwordResetToken: token,
+          passwordResetExpires: { [Op.gt]: new Date() },
+        },
+      });
+
+      if (!staff) {
+        return res.status(400).json({ error: "Invalid or expired reset token" });
+      }
+
+      const hash = await bcrypt.hash(password, 12);
+      await staff.update({
+        password: hash,
+        passwordResetToken: null,
+        passwordResetExpires: null,
+      });
+
+      res.json({ message: "Password has been reset successfully" });
+    } catch (err) {
+      console.error("Staff reset password error:", err);
+      res.status(500).json({ error: "Failed to reset password" });
     }
   }
 );

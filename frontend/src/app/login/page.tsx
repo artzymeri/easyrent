@@ -244,6 +244,12 @@ export default function LoginPage() {
                       </span>
                     )}
                   </Button>
+
+                  <div className="text-center">
+                    <Link href="/reset-password" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                      {t("resetPassword.forgotLink")}
+                    </Link>
+                  </div>
                 </form>
               </CardContent>
             </Card>

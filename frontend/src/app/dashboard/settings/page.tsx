@@ -1,12 +1,16 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { useTranslation, Locale } from "@/lib/i18n";
 import { useCurrency, CURRENCIES } from "@/lib/currency-context";
-import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
 import { LogoCropper } from "@/components/logo-cropper";
-import { SignaturePad } from "@/components/signature-pad";
+
+const SignaturePad = dynamic(
+  () => import("@/components/signature-pad").then((m) => m.SignaturePad),
+  { ssr: false }
+);
 import {
   Globe,
   DollarSign,
@@ -65,11 +69,16 @@ interface CompanySettings {
   companyIdNumber: string | null;
 }
 
+interface StaffUser {
+  id: number;
+  role: "manager" | "regular";
+}
+
 export default function SettingsPage() {
   const { t, locale, setLocale } = useTranslation();
   const { currency, setCurrencyCode } = useCurrency();
-  const { user } = useAuth();
 
+  const [user, setUser] = useState<StaffUser | null>(null);
   const isManager = user?.role === "manager";
 
   const [loading, setLoading] = useState(true);
@@ -99,7 +108,11 @@ export default function SettingsPage() {
 
   const fetchSettings = useCallback(async () => {
     try {
-      const data = await api.get<CompanySettings>("/settings");
+      const [data, meData] = await Promise.all([
+        api.get<CompanySettings>("/settings"),
+        api.get<{ user: StaffUser }>("/auth/me"),
+      ]);
+      setUser(meData.user);
       setCompany(data);
       setForm({
         email: data.email || "",

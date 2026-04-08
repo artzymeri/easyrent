@@ -24,6 +24,75 @@ function ensureCompanyAccess(req, res, next) {
   next();
 }
 
+// ── Update own profile ────────────────────────────────────────
+router.put(
+  "/me",
+  [
+    body("email").optional().isEmail().withMessage("Valid email required"),
+    body("firstName").optional().notEmpty().withMessage("First name required"),
+    body("lastName").optional().notEmpty().withMessage("Last name required"),
+    body("phone").optional({ values: "null" }),
+  ],
+  validate,
+  async (req, res) => {
+    try {
+      if (!req.user.companyId) return res.status(400).json({ error: "No company context" });
+
+      const staff = await db.Staff.findByPk(req.user.id);
+      if (!staff) return res.status(404).json({ error: "Staff not found" });
+
+      const { firstName, lastName, email, phone } = req.body;
+      const updates = {};
+      if (firstName !== undefined) updates.firstName = firstName;
+      if (lastName !== undefined) updates.lastName = lastName;
+      if (phone !== undefined) updates.phone = phone;
+
+      // If email is being changed, check uniqueness
+      if (email !== undefined && email !== staff.email) {
+        const existing = await db.Staff.findOne({ where: { email } });
+        if (existing) return res.status(409).json({ error: "Email already in use" });
+        updates.email = email;
+      }
+
+      await staff.update(updates);
+      const { password, ...data } = staff.toJSON();
+      res.json(data);
+    } catch (err) {
+      console.error("Update own profile error:", err);
+      res.status(500).json({ error: "Failed to update profile" });
+    }
+  }
+);
+
+// ── Change own password ───────────────────────────────────────
+router.put(
+  "/me/password",
+  [
+    body("currentPassword").notEmpty().withMessage("Current password required"),
+    body("newPassword").isLength({ min: 6 }).withMessage("New password must be at least 6 characters"),
+  ],
+  validate,
+  async (req, res) => {
+    try {
+      if (!req.user.companyId) return res.status(400).json({ error: "No company context" });
+
+      const staff = await db.Staff.findByPk(req.user.id);
+      if (!staff) return res.status(404).json({ error: "Staff not found" });
+
+      const valid = await bcrypt.compare(req.body.currentPassword, staff.password);
+      if (!valid) return res.status(401).json({ error: "Current password is incorrect" });
+
+      const hash = await bcrypt.hash(req.body.newPassword, 12);
+      await staff.update({ password: hash });
+
+      res.json({ message: "Password updated" });
+    } catch (err) {
+      console.error("Change own password error:", err);
+      res.status(500).json({ error: "Failed to update password" });
+    }
+  }
+);
+
 // ── List staff for authenticated user's company (shortcut) ───
 router.get("/", async (req, res) => {
   try {

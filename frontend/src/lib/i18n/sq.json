@@ -477,7 +477,28 @@
       "description": "Përdorni miun ose gishtin për të vizatuar nënshkrimin më poshtë",
       "clear": "Pastro",
       "save": "Ruaj Nënshkrimin"
-    }
+    },
+    "tabs": {
+      "preferences": "Preferencat",
+      "account": "Llogaria",
+      "company": "Kompania"
+    },
+    "profile": "Profili",
+    "profileDescription": "Përditësoni informacionin tuaj personal",
+    "firstName": "Emri",
+    "lastName": "Mbiemri",
+    "saveProfile": "Ruaj Profilin",
+    "changePassword": "Ndrysho Fjalëkalimin",
+    "changePasswordDescription": "Përditësoni fjalëkalimin e llogarisë suaj",
+    "currentPassword": "Fjalëkalimi Aktual",
+    "newPassword": "Fjalëkalimi i Ri",
+    "confirmPassword": "Konfirmo Fjalëkalimin e Ri",
+    "updatePassword": "Përditëso Fjalëkalimin",
+    "passwordChanged": "Fjalëkalimi u përditësua me sukses!",
+    "passwordMismatch": "Fjalëkalimet e reja nuk përputhen",
+    "passwordTooShort": "Fjalëkalimi duhet të jetë së paku 6 karaktere",
+    "companyEmail": "Email i Kompanisë",
+    "companyPhone": "Telefoni i Kompanisë"
   },
   "carDetail": {
     "failedLoad": "Dështoi ngarkimi i detajeve të veturës",

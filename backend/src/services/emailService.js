@@ -2,7 +2,7 @@ const { Resend } = require("resend");
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const FROM_EMAIL = process.env.FROM_EMAIL || "EasyRent <onboarding@resend.dev>";
+const FROM_EMAIL = process.env.FROM_EMAIL || "Kindura <noreply@kindura.app>";
 
 /**
  * Send an email via Resend.

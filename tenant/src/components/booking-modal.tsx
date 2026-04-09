@@ -6,7 +6,7 @@ import { eachDayOfInterval, isWithinInterval, parseISO, format, isBefore, startO
 import { getBookedDates, submitBookingRequest } from "@/lib/api";
 import { formatCurrency } from "@/lib/currency";
 import type { Car } from "@/lib/types";
-import { X, Loader2, CheckCircle, Calendar, User, Phone, Mail } from "lucide-react";
+import { X, Loader2, CheckCircle, Calendar, User, Phone, Mail, Clock } from "lucide-react";
 
 interface BookingModalProps {
   car: Car;
@@ -31,6 +31,8 @@ export function BookingModal({ car, currency, subdomain, onClose, accentColor = 
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [pickupTime, setPickupTime] = useState("10:00");
+  const [returnTime, setReturnTime] = useState("10:00");
 
   const isDark = theme === "dark";
   const textColor = isDark ? "text-white" : "text-gray-900";
@@ -85,8 +87,8 @@ export function BookingModal({ car, currency, subdomain, onClose, accentColor = 
 
     const result = await submitBookingRequest(subdomain, {
       carId: car.id,
-      startDate: format(range.from, "yyyy-MM-dd"),
-      endDate: format(range.to, "yyyy-MM-dd"),
+      startDate: `${format(range.from, "yyyy-MM-dd")}T${pickupTime}`,
+      endDate: `${format(range.to, "yyyy-MM-dd")}T${returnTime}`,
       firstName,
       lastName,
       email: email || undefined,
@@ -159,6 +161,7 @@ export function BookingModal({ car, currency, subdomain, onClose, accentColor = 
                     selected={range}
                     onSelect={setRange}
                     disabled={isDisabledDay}
+                    excludeDisabled
                     modifiers={{
                       booked: bookedDates,
                     }}
@@ -170,6 +173,40 @@ export function BookingModal({ car, currency, subdomain, onClose, accentColor = 
                   />
                 </div>
 
+                {/* Time selection */}
+                {range?.from && range?.to && (
+                  <div className={`grid grid-cols-2 gap-3 mb-4`}>
+                    <div>
+                      <label className={`mb-1 block text-xs font-medium ${subtextColor}`}>
+                        Pickup Time
+                      </label>
+                      <div className="relative">
+                        <Clock className={`absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${subtextColor}`} />
+                        <input
+                          type="time"
+                          value={pickupTime}
+                          onChange={(e) => setPickupTime(e.target.value)}
+                          className={`w-full rounded-lg border py-2.5 pl-9 pr-3 text-sm ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className={`mb-1 block text-xs font-medium ${subtextColor}`}>
+                        Return Time
+                      </label>
+                      <div className="relative">
+                        <Clock className={`absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${subtextColor}`} />
+                        <input
+                          type="time"
+                          value={returnTime}
+                          onChange={(e) => setReturnTime(e.target.value)}
+                          className={`w-full rounded-lg border py-2.5 pl-9 pr-3 text-sm ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Date summary */}
                 {range?.from && range?.to && (
                   <div className={`rounded-xl border ${borderColor} p-4 mb-4`}>
@@ -177,7 +214,7 @@ export function BookingModal({ car, currency, subdomain, onClose, accentColor = 
                       <div className="flex items-center gap-2">
                         <Calendar className={`h-4 w-4 ${subtextColor}`} />
                         <span className={`text-sm ${textColor}`}>
-                          {format(range.from, "MMM d")} — {format(range.to, "MMM d, yyyy")}
+                          {format(range.from, "MMM d")} {pickupTime} — {format(range.to, "MMM d, yyyy")} {returnTime}
                         </span>
                       </div>
                       <span className={`text-sm ${subtextColor}`}>{totalDays} {totalDays === 1 ? "day" : "days"}</span>

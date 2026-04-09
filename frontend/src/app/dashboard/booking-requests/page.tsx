@@ -165,11 +165,18 @@ export default function BookingRequestsPage() {
 
   // ── Helpers ───────────────────────────────────────────────
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString(undefined, {
+    const d = new Date(dateStr);
+    const datePart = d.toLocaleDateString(undefined, {
       year: "numeric",
       month: "short",
       day: "numeric",
     });
+    // Show time if it's not midnight (00:00)
+    const hours = d.getHours();
+    const minutes = d.getMinutes();
+    if (hours === 0 && minutes === 0) return datePart;
+    const timePart = d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+    return `${datePart} ${timePart}`;
   };
 
   const formatDateTime = (dateStr: string) => {

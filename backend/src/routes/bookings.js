@@ -2,7 +2,7 @@ const router = require("express").Router();
 const { body } = require("express-validator");
 const { validate } = require("../middleware/validate");
 const { authenticate } = require("../middleware/auth");
-const { Op } = require("sequelize");
+const { Op, fn, col } = require("sequelize");
 const db = require("../db");
 const { sendEmail, bookingReportEmail } = require("../services/emailService");
 
@@ -59,14 +59,15 @@ router.post("/", async (req, res) => {
   try {
     if (!req.user.companyId) return res.status(400).json({ error: "No company context" });
     const { carId, customerId, startDate, endDate, dailyRate, discount, pickupLocation, returnLocation, notes, mileageOut, secondaryDriverName, secondaryDriverPhone, secondaryDriverIdNumber, secondaryDriverLicense } = req.body;
+    const startDateOnly = startDate.substring(0, 10);
+    const endDateOnly = endDate.substring(0, 10);
     const conflicting = await db.Booking.findOne({
       where: {
         carId,
         status: { [Op.notIn]: ["completed", "cancelled"] },
-        [Op.or]: [
-          { startDate: { [Op.between]: [startDate, endDate] } },
-          { endDate: { [Op.between]: [startDate, endDate] } },
-          { [Op.and]: [{ startDate: { [Op.lte]: startDate } }, { endDate: { [Op.gte]: endDate } }] },
+        [Op.and]: [
+          db.sequelize.where(fn("DATE", col("start_date")), { [Op.lte]: endDateOnly }),
+          db.sequelize.where(fn("DATE", col("end_date")), { [Op.gte]: startDateOnly }),
         ],
       },
     });
@@ -163,19 +164,15 @@ router.post(
       const { carId, customerId, startDate, endDate, dailyRate, discount, pickupLocation, returnLocation, notes, mileageOut, secondaryDriverName, secondaryDriverPhone, secondaryDriverIdNumber, secondaryDriverLicense } = req.body;
 
       // Check car availability for date range
+      const startDateOnly = startDate.substring(0, 10);
+      const endDateOnly = endDate.substring(0, 10);
       const conflicting = await db.Booking.findOne({
         where: {
           carId,
           status: { [Op.notIn]: ["completed", "cancelled"] },
-          [Op.or]: [
-            { startDate: { [Op.between]: [startDate, endDate] } },
-            { endDate: { [Op.between]: [startDate, endDate] } },
-            {
-              [Op.and]: [
-                { startDate: { [Op.lte]: startDate } },
-                { endDate: { [Op.gte]: endDate } },
-              ],
-            },
+          [Op.and]: [
+            db.sequelize.where(fn("DATE", col("start_date")), { [Op.lte]: endDateOnly }),
+            db.sequelize.where(fn("DATE", col("end_date")), { [Op.gte]: startDateOnly }),
           ],
         },
       });

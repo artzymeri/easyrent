@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { Op } = require("sequelize");
+const { Op, fn, col } = require("sequelize");
 const db = require("../db");
 const { getIO } = require("../socket");
 
@@ -70,10 +70,14 @@ router.get("/:subdomain/cars/:carId/booked-dates", async (req, res) => {
       attributes: ["startDate", "endDate"],
     });
 
-    // Combine into booked date ranges
+    // Combine into booked date ranges (normalize to date-only for client calendar)
+    const toDateOnly = (d) => {
+      const dt = new Date(d);
+      return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
+    };
     const bookedRanges = [
-      ...bookings.map((b) => ({ start: b.startDate, end: b.endDate })),
-      ...requests.map((r) => ({ start: r.startDate, end: r.endDate })),
+      ...bookings.map((b) => ({ start: toDateOnly(b.startDate), end: toDateOnly(b.endDate) })),
+      ...requests.map((r) => ({ start: toDateOnly(r.startDate), end: toDateOnly(r.endDate) })),
     ];
 
     res.json({ bookedRanges, dailyRate: car.dailyRate });
@@ -102,15 +106,19 @@ router.post("/:subdomain/booking-requests", async (req, res) => {
     });
     if (!car) return res.status(404).json({ error: "Car not found" });
 
-    // Check for conflicting bookings
+    // Normalize to date-only for overlap comparison (strip time component)
+    const startDateOnly = startDate.substring(0, 10);
+    const endDateOnly = endDate.substring(0, 10);
+
+    // Check for conflicting bookings using the correct overlap formula:
+    // Two ranges [A.start, A.end] and [B.start, B.end] overlap iff A.start <= B.end AND A.end >= B.start
     const conflicting = await db.Booking.findOne({
       where: {
         carId,
         status: { [Op.notIn]: ["completed", "cancelled"] },
-        [Op.or]: [
-          { startDate: { [Op.between]: [startDate, endDate] } },
-          { endDate: { [Op.between]: [startDate, endDate] } },
-          { [Op.and]: [{ startDate: { [Op.lte]: startDate } }, { endDate: { [Op.gte]: endDate } }] },
+        [Op.and]: [
+          db.sequelize.where(fn("DATE", col("start_date")), { [Op.lte]: endDateOnly }),
+          db.sequelize.where(fn("DATE", col("end_date")), { [Op.gte]: startDateOnly }),
         ],
       },
     });
@@ -123,10 +131,9 @@ router.post("/:subdomain/booking-requests", async (req, res) => {
       where: {
         carId,
         status: "pending",
-        [Op.or]: [
-          { startDate: { [Op.between]: [startDate, endDate] } },
-          { endDate: { [Op.between]: [startDate, endDate] } },
-          { [Op.and]: [{ startDate: { [Op.lte]: startDate } }, { endDate: { [Op.gte]: endDate } }] },
+        [Op.and]: [
+          db.sequelize.where(fn("DATE", col("start_date")), { [Op.lte]: endDateOnly }),
+          db.sequelize.where(fn("DATE", col("end_date")), { [Op.gte]: startDateOnly }),
         ],
       },
     });
@@ -134,8 +141,8 @@ router.post("/:subdomain/booking-requests", async (req, res) => {
       return res.status(409).json({ error: "These dates are already requested by someone else" });
     }
 
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    const start = new Date(startDateOnly);
+    const end = new Date(endDateOnly);
     const totalDays = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
     const dailyRate = parseFloat(car.dailyRate);
     const totalAmount = totalDays * dailyRate;

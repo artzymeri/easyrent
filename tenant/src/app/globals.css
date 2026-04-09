@@ -108,3 +108,9 @@ body {
 .rdp-dark .rdp-button_next {
   color: #a1a1aa;
 }
+
+/* Dark mode time input */
+.rdp-dark ~ * input[type="time"],
+[class*="bg-zinc"] input[type="time"] {
+  color-scheme: dark;
+}

@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { Op } = require("sequelize");
+const { Op, fn, col } = require("sequelize");
 const { authenticate } = require("../middleware/auth");
 const db = require("../db");
 const { getIO } = require("../socket");
@@ -49,14 +49,20 @@ router.post("/:id/confirm", async (req, res) => {
     if (request.status !== "pending") return res.status(400).json({ error: "Request is no longer pending" });
 
     // Check for conflicting bookings (in case something changed)
+    const toDateOnly = (d) => {
+      const dt = new Date(d);
+      return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
+    };
+    const startDateOnly = toDateOnly(request.startDate);
+    const endDateOnly = toDateOnly(request.endDate);
+
     const conflicting = await db.Booking.findOne({
       where: {
         carId: request.carId,
         status: { [Op.notIn]: ["completed", "cancelled"] },
-        [Op.or]: [
-          { startDate: { [Op.between]: [request.startDate, request.endDate] } },
-          { endDate: { [Op.between]: [request.startDate, request.endDate] } },
-          { [Op.and]: [{ startDate: { [Op.lte]: request.startDate } }, { endDate: { [Op.gte]: request.endDate } }] },
+        [Op.and]: [
+          db.sequelize.where(fn("DATE", col("start_date")), { [Op.lte]: endDateOnly }),
+          db.sequelize.where(fn("DATE", col("end_date")), { [Op.gte]: startDateOnly }),
         ],
       },
     });
@@ -117,10 +123,9 @@ router.post("/:id/confirm", async (req, res) => {
           id: { [Op.ne]: request.id },
           carId: request.carId,
           status: "pending",
-          [Op.or]: [
-            { startDate: { [Op.between]: [request.startDate, request.endDate] } },
-            { endDate: { [Op.between]: [request.startDate, request.endDate] } },
-            { [Op.and]: [{ startDate: { [Op.lte]: request.startDate } }, { endDate: { [Op.gte]: request.endDate } }] },
+          [Op.and]: [
+            db.sequelize.where(fn("DATE", col("start_date")), { [Op.lte]: endDateOnly }),
+            db.sequelize.where(fn("DATE", col("end_date")), { [Op.gte]: startDateOnly }),
           ],
         },
       }

@@ -1559,7 +1559,19 @@ function BookingsPageContent() {
                       ))}
                     </SelectContent>
                   </Select>
-                  <Button type="button" variant="outline" size="icon" className="shrink-0" onClick={() => setQuickCustomerOpen(true)}>
+                  <Button type="button" variant="outline" size="icon" className="shrink-0" onClick={() => {
+                    if (pendingRequestInfo) {
+                      setQuickCustomerForm({
+                        firstName: pendingRequestInfo.requesterFirstName,
+                        lastName: pendingRequestInfo.requesterLastName,
+                        email: pendingRequestInfo.requesterEmail || "",
+                        phone: pendingRequestInfo.requesterPhone,
+                        idNumber: "",
+                        personalNumber: "",
+                      });
+                    }
+                    setQuickCustomerOpen(true);
+                  }}>
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>

@@ -64,8 +64,8 @@ Return ONLY a valid JSON object with these fields (use null for fields you canno
   "driversLicenseExpiry": string or null (YYYY-MM-DD format),
   "dateOfBirth": string or null (YYYY-MM-DD format),
   "address": string or null,
-  "city": string or null,
-  "country": string or null,
+  "city": string or null (properly capitalized, e.g. "Pristina" not "PRISHTINË" or "prishtina"),
+  "country": string or null (full country name in English, e.g. "Kosovo", "Albania", "Germany", "United States"),
   "documentTypes": array of strings – which document types were detected: "id_card", "drivers_license", "passport"
 }
 
@@ -74,6 +74,8 @@ Important rules:
 - Extract ALL visible text fields from the documents
 - For dates, always convert to YYYY-MM-DD format
 - For names, capitalize properly (e.g. "JOHN DOE" → "John", "Doe")
+- For city names, return the standard English/Latin name with proper capitalization (e.g. "PRISHTINË" → "Pristina", "VUSHTRRI" → "Vushtrri", "TIRANË" → "Tirana")
+- For country, return the full English name (e.g. "RKS" or "XK" → "Kosovo", "AL" → "Albania", "DE" → "Germany")
 - If multiple documents are provided, merge data from all of them
 - Only return the JSON object, no markdown, no explanation`,
               },

@@ -23,17 +23,83 @@ body {
   opacity: 0.4;
 }
 
-/* Ensure calendar fits nicely */
+/* ── Calendar base variables ────────────────────────────── */
 .rdp-root {
   --rdp-accent-color: #2563eb;
-  --rdp-accent-background-color: #dbeafe;
-  --rdp-range_middle-background-color: #dbeafe;
-  --rdp-range_middle-color: #1e40af;
+  --rdp-accent-background-color: transparent;
+  --rdp-range_middle-background-color: transparent;
+  --rdp-range_middle-color: inherit;
 }
 
 .rdp-dark {
   --rdp-accent-color: #3b82f6;
-  --rdp-accent-background-color: rgba(59, 130, 246, 0.2);
-  --rdp-range_middle-background-color: rgba(59, 130, 246, 0.15);
-  --rdp-range_middle-color: #93c5fd;
+  --rdp-accent-background-color: transparent;
+  --rdp-range_middle-background-color: transparent;
+  --rdp-range_middle-color: inherit;
+}
+
+/* ── Range start: solid circle + right highlight band ──── */
+.rdp-range-start-day {
+  position: relative;
+  background: linear-gradient(to left, #dbeafe 50%, transparent 50%) !important;
+  border-radius: 0 !important;
+}
+.rdp-range-start-day .rdp-day_button {
+  background-color: #2563eb !important;
+  color: white !important;
+  border-radius: 9999px !important;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Range end: solid circle + left highlight band ─────── */
+.rdp-range-end-day {
+  position: relative;
+  background: linear-gradient(to right, #dbeafe 50%, transparent 50%) !important;
+  border-radius: 0 !important;
+}
+.rdp-range-end-day .rdp-day_button {
+  background-color: #2563eb !important;
+  color: white !important;
+  border-radius: 9999px !important;
+  position: relative;
+  z-index: 1;
+}
+
+/* When start and end are the same day */
+.rdp-range-start-day.rdp-range-end-day {
+  background: transparent !important;
+}
+
+/* ── Range middle: light band, no solid circle ─────────── */
+.rdp-range-middle-day {
+  background-color: #dbeafe !important;
+  border-radius: 0 !important;
+}
+.rdp-range-middle-day .rdp-day_button {
+  background-color: transparent !important;
+  color: #1e40af !important;
+  border-radius: 0 !important;
+}
+
+/* ── Dark mode overrides ───────────────────────────────── */
+.rdp-dark .rdp-range-start-day {
+  background: linear-gradient(to left, rgba(59,130,246,0.15) 50%, transparent 50%) !important;
+}
+.rdp-dark .rdp-range-start-day .rdp-day_button {
+  background-color: #3b82f6 !important;
+}
+
+.rdp-dark .rdp-range-end-day {
+  background: linear-gradient(to right, rgba(59,130,246,0.15) 50%, transparent 50%) !important;
+}
+.rdp-dark .rdp-range-end-day .rdp-day_button {
+  background-color: #3b82f6 !important;
+}
+
+.rdp-dark .rdp-range-middle-day {
+  background-color: rgba(59,130,246,0.15) !important;
+}
+.rdp-dark .rdp-range-middle-day .rdp-day_button {
+  color: #93c5fd !important;
 }

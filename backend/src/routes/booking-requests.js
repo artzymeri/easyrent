@@ -2,6 +2,7 @@ const router = require("express").Router();
 const { Op } = require("sequelize");
 const { authenticate } = require("../middleware/auth");
 const db = require("../db");
+const { getIO } = require("../socket");
 
 router.use(authenticate);
 
@@ -131,6 +132,12 @@ router.post("/:id/confirm", async (req, res) => {
       ],
     });
 
+    // Notify staff in real-time
+    const io = getIO();
+    if (io) {
+      io.to(`company-${request.companyId}`).emit("booking-request-change", { type: "confirmed", id: request.id });
+    }
+
     res.json({ message: "Booking confirmed", booking: created });
   } catch (err) {
     console.error("Confirm booking request error:", err);
@@ -149,6 +156,12 @@ router.post("/:id/reject", async (req, res) => {
     if (request.status !== "pending") return res.status(400).json({ error: "Request is no longer pending" });
 
     await request.update({ status: "rejected" });
+
+    const io = getIO();
+    if (io) {
+      io.to(`company-${request.companyId}`).emit("booking-request-change", { type: "rejected", id: request.id });
+    }
+
     res.json({ message: "Booking request rejected" });
   } catch (err) {
     console.error("Reject booking request error:", err);
@@ -165,7 +178,14 @@ router.delete("/:id", async (req, res) => {
     if (!request) return res.status(404).json({ error: "Request not found" });
     if (request.companyId !== req.user.companyId) return res.status(403).json({ error: "Access denied" });
 
+    const companyId = request.companyId;
     await request.destroy();
+
+    const io = getIO();
+    if (io) {
+      io.to(`company-${companyId}`).emit("booking-request-change", { type: "deleted", id: request.id });
+    }
+
     res.json({ message: "Booking request deleted" });
   } catch (err) {
     console.error("Delete booking request error:", err);

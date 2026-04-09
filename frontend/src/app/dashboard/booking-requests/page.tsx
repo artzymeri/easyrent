@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n";
 import { useCurrency } from "@/lib/currency-context";
+import { useSocket } from "@/lib/socket-context";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -84,6 +85,7 @@ const STATUS_STYLES: Record<string, string> = {
 export default function BookingRequestsPage() {
   const { t } = useTranslation();
   const { fc } = useCurrency();
+  const { pendingRequestCount, refreshPendingCount } = useSocket();
 
   const [requests, setRequests] = useState<BookingRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -112,6 +114,12 @@ export default function BookingRequestsPage() {
     fetchRequests();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
+
+  // Re-fetch when socket signals a change
+  useEffect(() => {
+    fetchRequests();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingRequestCount]);
 
   // ── Actions ───────────────────────────────────────────────
   const handleConfirm = async (req: BookingRequest) => {

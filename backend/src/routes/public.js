@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const { Op } = require("sequelize");
 const db = require("../db");
+const { getIO } = require("../socket");
 
 // ── Get company by subdomain (public) ─────────────────────────
 router.get("/:subdomain", async (req, res) => {
@@ -153,6 +154,12 @@ router.post("/:subdomain/booking-requests", async (req, res) => {
       requesterPhone: phone,
       status: "pending",
     });
+
+    // Notify staff in real-time
+    const io = getIO();
+    if (io) {
+      io.to(`company-${company.id}`).emit("booking-request-change", { type: "new", id: request.id });
+    }
 
     res.status(201).json({ message: "Booking request submitted", id: request.id });
   } catch (err) {

@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { api } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n";
+import { SocketProvider, useSocket } from "@/lib/socket-context";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
@@ -49,11 +50,8 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const pathname = usePathname();
-  const { t } = useTranslation();
   const [user, setUser] = useState<StaffUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("staff_token");
@@ -86,6 +84,30 @@ export default function DashboardLayout({
   }
 
   if (!user) return null;
+
+  return (
+    <SocketProvider companyId={user.companyId}>
+      <DashboardShell user={user} onLogout={handleLogout}>
+        {children}
+      </DashboardShell>
+    </SocketProvider>
+  );
+}
+
+// ── Inner shell that can access SocketProvider ────────────────
+function DashboardShell({
+  user,
+  onLogout,
+  children,
+}: {
+  user: StaffUser;
+  onLogout: () => void;
+  children: React.ReactNode;
+}) {
+  const pathname = usePathname();
+  const { t } = useTranslation();
+  const { pendingRequestCount } = useSocket();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const allNav = [
     ...NAV_KEYS,
@@ -120,6 +142,7 @@ export default function DashboardLayout({
           {allNav.map((item) => {
             const active = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
             const Icon = item.icon;
+            const showBadge = item.href === "/dashboard/booking-requests" && pendingRequestCount > 0;
             return (
               <Link
                 key={item.href}
@@ -132,7 +155,12 @@ export default function DashboardLayout({
                 }`}
               >
                 <Icon className="h-4 w-4" />
-                {t(item.labelKey)}
+                <span className="flex-1">{t(item.labelKey)}</span>
+                {showBadge && (
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[11px] font-semibold text-white">
+                    {pendingRequestCount}
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -150,7 +178,7 @@ export default function DashboardLayout({
               {t(`roles.${user.role}`)}
             </p>
           </div>
-          <Button variant="outline" size="sm" className="w-full" onClick={handleLogout}>
+          <Button variant="outline" size="sm" className="w-full" onClick={onLogout}>
             {t("common.logOut")}
           </Button>
         </div>

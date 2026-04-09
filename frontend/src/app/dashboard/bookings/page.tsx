@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n";
 import { useCurrency } from "@/lib/currency-context";
-import { CalendarDays, List, Play, CheckCircle2, XCircle, Car as CarIcon, User, MapPin, Clock, CreditCard, FileText, Hash, Download, ChevronLeft, ChevronRight, Camera, Image as ImageIcon, Mail, Plus } from "lucide-react";
+import { CalendarDays, List, Play, CheckCircle2, XCircle, Car as CarIcon, User, MapPin, Clock, CreditCard, FileText, Hash, Download, ChevronLeft, ChevronRight, Camera, Image as ImageIcon, Mail, Plus, X } from "lucide-react";
 import { DateTimePicker } from "@/components/date-time-picker";
 import { Button } from "@/components/ui/button";
 import { generateRentalReport, type ReportBooking, type ReportCompany } from "@/lib/generate-rental-report";
@@ -85,6 +85,13 @@ interface Customer {
   phone: string;
 }
 
+interface DeliveryPoint {
+  id: number;
+  name: string;
+  address: string | null;
+  isActive: boolean;
+}
+
 // Calendar helper
 function getDaysInMonth(year: number, month: number) {
   return new Date(year, month + 1, 0).getDate();
@@ -133,6 +140,7 @@ export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [cars, setCars] = useState<Car[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [deliveryPoints, setDeliveryPoints] = useState<DeliveryPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -165,6 +173,8 @@ export default function BookingsPage() {
   const [startingBooking, setStartingBooking] = useState<Booking | null>(null);
   const [preStartImages, setPreStartImages] = useState<ImageItem[]>([]);
   const [startingSaving, setStartingSaving] = useState(false);
+  const [pickupCustom, setPickupCustom] = useState(false);
+  const [returnCustom, setReturnCustom] = useState(false);
 
   // Quick customer creation
   const [quickCustomerOpen, setQuickCustomerOpen] = useState(false);
@@ -185,14 +195,16 @@ export default function BookingsPage() {
 
   const fetchAll = async () => {
     try {
-      const [bookingData, carData, custData] = await Promise.all([
+      const [bookingData, carData, custData, dpData] = await Promise.all([
         api.get<{ rows: Booking[] }>("/bookings?limit=100"),
         api.get<{ rows: Car[] }>("/cars"),
         api.get<{ rows: Customer[] }>("/customers"),
+        api.get<DeliveryPoint[]>("/delivery-points"),
       ]);
       setBookings(bookingData.rows || []);
       setCars(carData.rows || []);
       setCustomers(custData.rows || []);
+      setDeliveryPoints(dpData.filter((dp) => dp.isActive));
     } catch {
       toast.error(t("bookingsPage.toast.failedLoad"));
     } finally {
@@ -232,6 +244,8 @@ export default function BookingsPage() {
       });
       toast.success(t("bookingsPage.toast.created"));
       setForm({ carId: "", customerId: "", startDate: "", endDate: "", dailyRate: "", pickupLocation: "", returnLocation: "", discount: "", mileageOut: "", notes: "", secondaryDriverName: "", secondaryDriverPhone: "", secondaryDriverIdNumber: "", secondaryDriverLicense: "" });
+      setPickupCustom(false);
+      setReturnCustom(false);
       setDialogOpen(false);
       fetchAll();
     } catch {
@@ -1335,11 +1349,105 @@ export default function BookingsPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>{t("bookingsPage.pickupLocation")}</Label>
-                  <Input value={form.pickupLocation} onChange={(e) => setForm({ ...form, pickupLocation: e.target.value })} />
+                  {deliveryPoints.length > 0 && !pickupCustom ? (
+                    <Select
+                      value={form.pickupLocation}
+                      onValueChange={(val) => {
+                        if (val === "__custom__") {
+                          setPickupCustom(true);
+                          setForm({ ...form, pickupLocation: "" });
+                        } else {
+                          setForm({ ...form, pickupLocation: val ?? "" });
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder={t("bookingsPage.selectLocation")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {deliveryPoints.map((dp) => (
+                          <SelectItem key={dp.id} value={dp.name}>
+                            {dp.name}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value="__custom__">{t("bookingsPage.customLocation")}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Input
+                        value={form.pickupLocation}
+                        onChange={(e) => setForm({ ...form, pickupLocation: e.target.value })}
+                        placeholder={t("bookingsPage.pickupLocation")}
+                        className="flex-1"
+                      />
+                      {deliveryPoints.length > 0 && pickupCustom && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="shrink-0"
+                          onClick={() => {
+                            setPickupCustom(false);
+                            setForm({ ...form, pickupLocation: "" });
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label>{t("bookingsPage.returnLocation")}</Label>
-                  <Input value={form.returnLocation} onChange={(e) => setForm({ ...form, returnLocation: e.target.value })} />
+                  {deliveryPoints.length > 0 && !returnCustom ? (
+                    <Select
+                      value={form.returnLocation}
+                      onValueChange={(val) => {
+                        if (val === "__custom__") {
+                          setReturnCustom(true);
+                          setForm({ ...form, returnLocation: "" });
+                        } else {
+                          setForm({ ...form, returnLocation: val ?? "" });
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder={t("bookingsPage.selectLocation")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {deliveryPoints.map((dp) => (
+                          <SelectItem key={dp.id} value={dp.name}>
+                            {dp.name}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value="__custom__">{t("bookingsPage.customLocation")}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Input
+                        value={form.returnLocation}
+                        onChange={(e) => setForm({ ...form, returnLocation: e.target.value })}
+                        placeholder={t("bookingsPage.returnLocation")}
+                        className="flex-1"
+                      />
+                      {deliveryPoints.length > 0 && returnCustom && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="shrink-0"
+                          onClick={() => {
+                            setReturnCustom(false);
+                            setForm({ ...form, returnLocation: "" });
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 

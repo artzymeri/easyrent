@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useTranslation } from "@/lib/i18n";
 import { api } from "@/lib/api";
@@ -21,6 +21,10 @@ import {
   Camera,
   Save,
   Loader2,
+  Plus,
+  Pencil,
+  X,
+  Check,
 } from "lucide-react";
 import {
   Card,
@@ -41,6 +45,13 @@ const SignaturePad = dynamic(
   { ssr: false }
 );
 
+interface DeliveryPoint {
+  id: number;
+  name: string;
+  address: string | null;
+  isActive: boolean;
+}
+
 interface TabCompanyProps {
   company: CompanySettings;
   onCompanyUpdate: (company: CompanySettings) => void;
@@ -55,6 +66,85 @@ export function TabCompany({ company, onCompanyUpdate, initialForm }: TabCompany
   const [logoCropperOpen, setLogoCropperOpen] = useState(false);
   const [stampCropperOpen, setStampCropperOpen] = useState(false);
   const [signaturePadOpen, setSignaturePadOpen] = useState(false);
+
+  // Delivery points state
+  const [deliveryPoints, setDeliveryPoints] = useState<DeliveryPoint[]>([]);
+  const [dpLoading, setDpLoading] = useState(true);
+  const [newDpName, setNewDpName] = useState("");
+  const [newDpAddress, setNewDpAddress] = useState("");
+  const [addingDp, setAddingDp] = useState(false);
+  const [showAddDp, setShowAddDp] = useState(false);
+  const [editingDpId, setEditingDpId] = useState<number | null>(null);
+  const [editDpName, setEditDpName] = useState("");
+  const [editDpAddress, setEditDpAddress] = useState("");
+
+  useEffect(() => {
+    fetchDeliveryPoints();
+  }, []);
+
+  const fetchDeliveryPoints = async () => {
+    try {
+      const data = await api.get<DeliveryPoint[]>("/delivery-points");
+      setDeliveryPoints(data);
+    } catch {
+      toast.error(t("settings.failedDeliveryPoints"));
+    } finally {
+      setDpLoading(false);
+    }
+  };
+
+  const handleAddDp = async () => {
+    if (!newDpName.trim()) return;
+    setAddingDp(true);
+    try {
+      const point = await api.post<DeliveryPoint>("/delivery-points", {
+        name: newDpName.trim(),
+        address: newDpAddress.trim() || null,
+      });
+      setDeliveryPoints((prev) => [...prev, point].sort((a, b) => a.name.localeCompare(b.name)));
+      setNewDpName("");
+      setNewDpAddress("");
+      setShowAddDp(false);
+      toast.success(t("settings.deliveryPointAdded"));
+    } catch {
+      toast.error(t("settings.failedAddDeliveryPoint"));
+    } finally {
+      setAddingDp(false);
+    }
+  };
+
+  const handleUpdateDp = async (id: number) => {
+    if (!editDpName.trim()) return;
+    try {
+      const updated = await api.put<DeliveryPoint>(`/delivery-points/${id}`, {
+        name: editDpName.trim(),
+        address: editDpAddress.trim() || null,
+      });
+      setDeliveryPoints((prev) =>
+        prev.map((p) => (p.id === id ? updated : p)).sort((a, b) => a.name.localeCompare(b.name))
+      );
+      setEditingDpId(null);
+      toast.success(t("settings.deliveryPointUpdated"));
+    } catch {
+      toast.error(t("settings.failedUpdateDeliveryPoint"));
+    }
+  };
+
+  const handleDeleteDp = async (id: number) => {
+    try {
+      await api.delete(`/delivery-points/${id}`);
+      setDeliveryPoints((prev) => prev.filter((p) => p.id !== id));
+      toast.success(t("settings.deliveryPointDeleted"));
+    } catch {
+      toast.error(t("settings.failedDeleteDeliveryPoint"));
+    }
+  };
+
+  const startEditDp = (point: DeliveryPoint) => {
+    setEditingDpId(point.id);
+    setEditDpName(point.name);
+    setEditDpAddress(point.address || "");
+  };
 
   const updateField = (field: keyof CompanyForm, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -372,6 +462,163 @@ export function TabCompany({ company, onCompanyUpdate, initialForm }: TabCompany
                 />
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Delivery Points */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  {t("settings.deliveryPoints")}
+                </CardTitle>
+                <CardDescription>
+                  {t("settings.deliveryPointsDescription")}
+                </CardDescription>
+              </div>
+              {!showAddDp && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowAddDp(true)}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  {t("settings.addDeliveryPoint")}
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Add new delivery point form */}
+            {showAddDp && (
+              <div className="rounded-lg border p-4 space-y-3">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label className="text-sm">{t("settings.deliveryPointName")} *</Label>
+                    <Input
+                      value={newDpName}
+                      onChange={(e) => setNewDpName(e.target.value)}
+                      placeholder={t("settings.deliveryPointNamePlaceholder")}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-sm">{t("settings.deliveryPointAddress")}</Label>
+                    <Input
+                      value={newDpAddress}
+                      onChange={(e) => setNewDpAddress(e.target.value)}
+                      placeholder={t("settings.deliveryPointAddressPlaceholder")}
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setShowAddDp(false);
+                      setNewDpName("");
+                      setNewDpAddress("");
+                    }}
+                  >
+                    {t("common.cancel")}
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleAddDp}
+                    disabled={addingDp || !newDpName.trim()}
+                  >
+                    {addingDp ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Plus className="mr-2 h-4 w-4" />
+                    )}
+                    {t("settings.addDeliveryPoint")}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* List of delivery points */}
+            {dpLoading ? (
+              <div className="flex justify-center py-6">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : deliveryPoints.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">
+                {t("settings.noDeliveryPoints")}
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {deliveryPoints.map((point) => (
+                  <div
+                    key={point.id}
+                    className="flex items-center gap-3 rounded-lg border p-3"
+                  >
+                    {editingDpId === point.id ? (
+                      <>
+                        <div className="flex-1 grid gap-2 sm:grid-cols-2">
+                          <Input
+                            value={editDpName}
+                            onChange={(e) => setEditDpName(e.target.value)}
+                            placeholder={t("settings.deliveryPointNamePlaceholder")}
+                          />
+                          <Input
+                            value={editDpAddress}
+                            onChange={(e) => setEditDpAddress(e.target.value)}
+                            placeholder={t("settings.deliveryPointAddressPlaceholder")}
+                          />
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 shrink-0"
+                          onClick={() => handleUpdateDp(point.id)}
+                          disabled={!editDpName.trim()}
+                        >
+                          <Check className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 shrink-0"
+                          onClick={() => setEditingDpId(null)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{point.name}</p>
+                          {point.address && (
+                            <p className="text-xs text-muted-foreground truncate">{point.address}</p>
+                          )}
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 shrink-0"
+                          onClick={() => startEditDp(point)}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 shrink-0 text-destructive hover:text-destructive"
+                          onClick={() => handleDeleteDp(point.id)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

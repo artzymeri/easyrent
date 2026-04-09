@@ -1546,7 +1546,11 @@ function BookingsPageContent() {
                 <Label>{t("bookingsPage.customer")} *</Label>
                 <div className="flex gap-2">
                   <Select value={form.customerId} onValueChange={(val) => setForm({ ...form, customerId: val ?? "" })}>
-                    <SelectTrigger className="w-full"><SelectValue placeholder={t("bookingsPage.selectCustomer")} /></SelectTrigger>
+                    <SelectTrigger className="w-full">
+                      {form.customerId
+                        ? (() => { const c = customers.find((c) => String(c.id) === form.customerId); return c ? `${c.firstName} ${c.lastName} (${c.phone})` : t("bookingsPage.selectCustomer"); })()
+                        : <SelectValue placeholder={t("bookingsPage.selectCustomer")} />}
+                    </SelectTrigger>
                     <SelectContent>
                       {customers.map((c) => (
                         <SelectItem key={c.id} value={String(c.id)}>
@@ -1575,7 +1579,11 @@ function BookingsPageContent() {
                     });
                   }}
                 >
-                  <SelectTrigger className="w-full"><SelectValue placeholder={t("bookingsPage.selectCar")} /></SelectTrigger>
+                  <SelectTrigger className="w-full">
+                    {form.carId
+                      ? (() => { const c = cars.find((c) => String(c.id) === form.carId); return c ? `${c.make} ${c.model} (${c.licensePlate})` : t("bookingsPage.selectCar"); })()
+                      : <SelectValue placeholder={t("bookingsPage.selectCar")} />}
+                  </SelectTrigger>
                   <SelectContent>
                     {cars.filter((c) => c.status === "available" || String(c.id) === form.carId).map((c) => (
                       <SelectItem key={c.id} value={String(c.id)}>

@@ -3,6 +3,7 @@ export interface Company {
   name: string;
   subdomain: string;
   logoUrl: string | null;
+  slogan: string | null;
   email: string | null;
   phone: string | null;
   address: string | null;
@@ -31,4 +32,19 @@ export interface Car {
   dailyRate: number;
   mileage: number;
   images: CarImage[];
+}
+
+export interface BookedRange {
+  start: string;
+  end: string;
+}
+
+export interface BookingRequestPayload {
+  carId: number;
+  startDate: string;
+  endDate: string;
+  firstName: string;
+  lastName: string;
+  email?: string;
+  phone: string;
 }

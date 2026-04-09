@@ -1,8 +1,9 @@
 import type { TemplateProps } from "./types";
 import { formatCurrency } from "@/lib/currency";
 import { Mail, Phone, MapPin, Fuel, Users, Gauge, Zap } from "lucide-react";
+import { CarBookButton } from "@/components/car-book-button";
 
-export function SportyTemplate({ company, cars, currency }: TemplateProps) {
+export function SportyTemplate({ company, cars, currency, subdomain }: TemplateProps) {
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
       {/* Header */}
@@ -10,7 +11,7 @@ export function SportyTemplate({ company, cars, currency }: TemplateProps) {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
             {company.logoUrl && (
-              <img src={company.logoUrl} alt={company.name} className="h-10 w-10 rounded-lg object-cover" />
+              <img src={company.logoUrl} alt={company.name} className="h-10 w-auto max-w-[120px] rounded-lg object-contain" />
             )}
             <h1 className="text-xl font-black uppercase tracking-wider">{company.name}</h1>
           </div>
@@ -31,13 +32,21 @@ export function SportyTemplate({ company, cars, currency }: TemplateProps) {
           RENT
         </div>
         <div className="relative mx-auto max-w-7xl">
+          {company.logoUrl && (
+            <div className="mb-6">
+              <img src={company.logoUrl} alt={company.name} className="h-14 w-auto max-w-[180px] object-contain" />
+            </div>
+          )}
           <div className="flex items-center gap-2 text-red-500">
             <Zap className="h-5 w-5" />
             <span className="text-sm font-bold uppercase tracking-widest">{cars.length} Cars Ready</span>
           </div>
           <h2 className="mt-4 text-5xl font-black uppercase leading-tight md:text-7xl">
-            Feel The<br />
-            <span className="text-red-500">Power</span>
+            {company.slogan ? (
+              <span>{company.slogan}</span>
+            ) : (
+              <>Feel The<br /><span className="text-red-500">Power</span></>
+            )}
           </h2>
           <p className="mt-4 max-w-md text-lg text-zinc-400">
             High-performance rentals for those who demand the best.
@@ -76,6 +85,15 @@ export function SportyTemplate({ company, cars, currency }: TemplateProps) {
                       <span className="flex items-center gap-1 rounded bg-zinc-800 px-2 py-1"><Gauge className="h-3.5 w-3.5" /> {car.transmission}</span>
                       <span className="flex items-center gap-1 rounded bg-zinc-800 px-2 py-1"><Users className="h-3.5 w-3.5" /> {car.seats}</span>
                     </div>
+                    <CarBookButton
+                      car={car}
+                      currency={currency}
+                      subdomain={subdomain}
+                      className="mt-4 w-full rounded-lg bg-red-600 py-2.5 text-sm font-bold uppercase tracking-wide text-white hover:bg-red-700 transition-colors"
+                      accentColor="bg-red-600"
+                      accentHover="hover:bg-red-700"
+                      theme="dark"
+                    />
                   </div>
                 </div>
               );
@@ -90,6 +108,9 @@ export function SportyTemplate({ company, cars, currency }: TemplateProps) {
           <div className="flex flex-col items-center gap-6 md:flex-row md:justify-between">
             <div className="text-center md:text-left">
               <p className="font-black uppercase tracking-widest">{company.name}</p>
+              {company.slogan && (
+                <p className="mt-1 text-sm text-zinc-500 italic">{company.slogan}</p>
+              )}
               {(company.city || company.address) && (
                 <p className="mt-1 flex items-center gap-1.5 text-sm text-zinc-500"><MapPin className="h-4 w-4" /> {company.address || company.city}{company.country && `, ${company.country}`}</p>
               )}

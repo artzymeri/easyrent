@@ -1,8 +1,9 @@
 import type { TemplateProps } from "./types";
 import { formatCurrency } from "@/lib/currency";
 import { Mail, Phone, MapPin, Fuel, Users, Gauge } from "lucide-react";
+import { CarBookButton } from "@/components/car-book-button";
 
-export function ElegantTemplate({ company, cars, currency }: TemplateProps) {
+export function ElegantTemplate({ company, cars, currency, subdomain }: TemplateProps) {
   return (
     <div className="min-h-screen bg-stone-950 text-stone-100">
       {/* Header */}
@@ -10,7 +11,7 @@ export function ElegantTemplate({ company, cars, currency }: TemplateProps) {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
           <div className="flex items-center gap-3">
             {company.logoUrl && (
-              <img src={company.logoUrl} alt={company.name} className="h-10 w-10 rounded-full object-cover border border-amber-700/50" />
+              <img src={company.logoUrl} alt={company.name} className="h-10 w-auto max-w-[120px] rounded-full object-contain border border-amber-700/50" />
             )}
             <h1 className="text-xl font-light tracking-widest uppercase text-amber-200">{company.name}</h1>
           </div>
@@ -25,9 +26,18 @@ export function ElegantTemplate({ company, cars, currency }: TemplateProps) {
       <section className="relative px-6 py-24 text-center">
         <div className="absolute inset-0 bg-gradient-to-b from-stone-950 via-stone-900/50 to-stone-950" />
         <div className="relative">
+          {company.logoUrl && (
+            <div className="mb-6 flex justify-center">
+              <img src={company.logoUrl} alt={company.name} className="h-14 w-auto max-w-[180px] object-contain" />
+            </div>
+          )}
           <p className="text-sm font-medium uppercase tracking-[0.3em] text-amber-600">Premium Car Rental</p>
           <h2 className="mt-4 text-4xl font-light tracking-tight text-white md:text-6xl">
-            Luxury <span className="italic text-amber-400">Meets</span> Convenience
+            {company.slogan ? (
+              <span>{company.slogan}</span>
+            ) : (
+              <>Luxury <span className="italic text-amber-400">Meets</span> Convenience</>
+            )}
           </h2>
           <div className="mx-auto mt-6 h-px w-24 bg-gradient-to-r from-transparent via-amber-600 to-transparent" />
           <p className="mx-auto mt-6 max-w-md text-stone-400">
@@ -67,6 +77,15 @@ export function ElegantTemplate({ company, cars, currency }: TemplateProps) {
                         <span className="text-xs text-stone-500">/day</span>
                       </div>
                     </div>
+                    <CarBookButton
+                      car={car}
+                      currency={currency}
+                      subdomain={subdomain}
+                      className="mt-4 w-full rounded-lg border border-amber-700/50 bg-amber-900/20 py-2.5 text-sm font-medium text-amber-300 hover:bg-amber-900/40 transition-colors"
+                      accentColor="bg-amber-700"
+                      accentHover="hover:bg-amber-800"
+                      theme="dark"
+                    />
                   </div>
                 </div>
               );
@@ -79,6 +98,9 @@ export function ElegantTemplate({ company, cars, currency }: TemplateProps) {
       <footer className="border-t border-stone-800 px-6 py-12">
         <div className="mx-auto max-w-7xl text-center">
           <p className="text-xs uppercase tracking-[0.3em] text-amber-700">{company.name}</p>
+          {company.slogan && (
+            <p className="mt-2 text-sm italic text-stone-500">{company.slogan}</p>
+          )}
           <div className="mt-4 flex flex-wrap items-center justify-center gap-6 text-sm text-stone-500">
             {company.phone && <a href={`tel:${company.phone}`} className="flex items-center gap-1.5 hover:text-amber-400"><Phone className="h-4 w-4" /> {company.phone}</a>}
             {company.email && <a href={`mailto:${company.email}`} className="flex items-center gap-1.5 hover:text-amber-400"><Mail className="h-4 w-4" /> {company.email}</a>}

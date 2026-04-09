@@ -62,6 +62,7 @@ app.use("/api/staff",      require("./routes/staff"));
 app.use("/api/cars",       require("./routes/cars"));
 app.use("/api/customers",  require("./routes/customers"));
 app.use("/api/bookings",   require("./routes/bookings"));
+app.use("/api/booking-requests", require("./routes/booking-requests"));
 app.use("/api/settings",   require("./routes/settings"));
 app.use("/api/delivery-points", require("./routes/delivery-points"));
 app.use("/api/dashboard",  require("./routes/dashboard"));

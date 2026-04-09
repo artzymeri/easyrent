@@ -1,8 +1,9 @@
 import type { TemplateProps } from "./types";
 import { formatCurrency } from "@/lib/currency";
 import { Mail, Phone, MapPin, Fuel, Users, Gauge, ArrowRight } from "lucide-react";
+import { CarBookButton } from "@/components/car-book-button";
 
-export function ModernTemplate({ company, cars, currency }: TemplateProps) {
+export function ModernTemplate({ company, cars, currency, subdomain }: TemplateProps) {
   return (
     <div className="min-h-screen bg-white text-gray-900">
       {/* Navbar */}
@@ -10,7 +11,7 @@ export function ModernTemplate({ company, cars, currency }: TemplateProps) {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
             {company.logoUrl && (
-              <img src={company.logoUrl} alt={company.name} className="h-9 w-9 rounded-full object-cover ring-2 ring-violet-500/50" />
+              <img src={company.logoUrl} alt={company.name} className="h-9 w-auto max-w-[120px] rounded-full object-contain ring-2 ring-violet-500/50" />
             )}
             <span className="text-lg font-bold text-white">{company.name}</span>
           </div>
@@ -28,11 +29,20 @@ export function ModernTemplate({ company, cars, currency }: TemplateProps) {
       <section className="relative flex min-h-[70vh] items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-violet-950 pt-16">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(139,92,246,0.15),transparent_50%)]" />
         <div className="relative z-10 px-6 text-center">
+          {company.logoUrl && (
+            <div className="mb-6 flex justify-center">
+              <img src={company.logoUrl} alt={company.name} className="h-16 w-auto max-w-[200px] object-contain" />
+            </div>
+          )}
           <div className="mb-4 inline-block rounded-full bg-violet-600/20 px-4 py-1.5 text-sm font-medium text-violet-300">
             {cars.length} vehicles available
           </div>
           <h1 className="text-5xl font-black tracking-tight text-white md:text-7xl">
-            Drive Your <span className="bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent">Dream</span>
+            {company.slogan ? (
+              <span>{company.slogan}</span>
+            ) : (
+              <>Drive Your <span className="bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent">Dream</span></>
+            )}
           </h1>
           <p className="mx-auto mt-6 max-w-md text-lg text-slate-400">
             Premium car rental experience. Pick your ride and hit the road.
@@ -80,6 +90,14 @@ export function ModernTemplate({ company, cars, currency }: TemplateProps) {
                       <span className="flex items-center gap-1"><Gauge className="h-4 w-4" /> {car.transmission}</span>
                       <span className="flex items-center gap-1"><Users className="h-4 w-4" /> {car.seats}</span>
                     </div>
+                    <CarBookButton
+                      car={car}
+                      currency={currency}
+                      subdomain={subdomain}
+                      className="mt-4 w-full rounded-xl bg-violet-600 py-2.5 text-sm font-semibold text-white hover:bg-violet-700 transition-colors"
+                      accentColor="bg-violet-600"
+                      accentHover="hover:bg-violet-700"
+                    />
                   </div>
                 </div>
               );
@@ -92,6 +110,9 @@ export function ModernTemplate({ company, cars, currency }: TemplateProps) {
       <section className="bg-slate-950 px-6 py-16 text-white">
         <div className="mx-auto max-w-7xl text-center">
           <h2 className="text-2xl font-bold">Get In Touch</h2>
+          {company.slogan && (
+            <p className="mt-2 text-sm text-slate-400 italic">{company.slogan}</p>
+          )}
           <div className="mt-6 flex flex-wrap items-center justify-center gap-8 text-slate-300">
             {company.phone && <a href={`tel:${company.phone}`} className="flex items-center gap-2 hover:text-violet-400"><Phone className="h-5 w-5" /> {company.phone}</a>}
             {company.email && <a href={`mailto:${company.email}`} className="flex items-center gap-2 hover:text-violet-400"><Mail className="h-5 w-5" /> {company.email}</a>}

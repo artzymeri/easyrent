@@ -1,8 +1,9 @@
 import type { TemplateProps } from "./types";
 import { formatCurrency } from "@/lib/currency";
 import { Mail, Phone, MapPin, Fuel, Users, Gauge } from "lucide-react";
+import { CarBookButton } from "@/components/car-book-button";
 
-export function ClassicTemplate({ company, cars, currency }: TemplateProps) {
+export function ClassicTemplate({ company, cars, currency, subdomain }: TemplateProps) {
   return (
     <div className="min-h-screen bg-white text-gray-900">
       {/* Header */}
@@ -10,7 +11,7 @@ export function ClassicTemplate({ company, cars, currency }: TemplateProps) {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
             {company.logoUrl && (
-              <img src={company.logoUrl} alt={company.name} className="h-10 w-10 rounded-lg object-cover" />
+              <img src={company.logoUrl} alt={company.name} className="h-10 w-auto max-w-[120px] rounded-lg object-contain" />
             )}
             <h1 className="text-xl font-bold">{company.name}</h1>
           </div>
@@ -31,7 +32,14 @@ export function ClassicTemplate({ company, cars, currency }: TemplateProps) {
 
       {/* Hero */}
       <section className="bg-gradient-to-br from-slate-800 to-slate-900 px-6 py-20 text-center text-white">
-        <h2 className="text-4xl font-bold md:text-5xl">Rent Your Perfect Car</h2>
+        {company.logoUrl && (
+          <div className="mb-6 flex justify-center">
+            <img src={company.logoUrl} alt={company.name} className="h-16 w-auto max-w-[200px] object-contain" />
+          </div>
+        )}
+        <h2 className="text-4xl font-bold md:text-5xl">
+          {company.slogan || "Rent Your Perfect Car"}
+        </h2>
         <p className="mx-auto mt-4 max-w-xl text-lg text-slate-300">
           Browse our selection of quality vehicles. Affordable rates, reliable cars.
         </p>
@@ -76,6 +84,14 @@ export function ClassicTemplate({ company, cars, currency }: TemplateProps) {
                       <span className="flex items-center gap-1"><Gauge className="h-3.5 w-3.5" /> {car.transmission}</span>
                       <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" /> {car.seats} seats</span>
                     </div>
+                    <CarBookButton
+                      car={car}
+                      currency={currency}
+                      subdomain={subdomain}
+                      className="mt-4 w-full rounded-lg bg-blue-600 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+                      accentColor="bg-blue-600"
+                      accentHover="hover:bg-blue-700"
+                    />
                   </div>
                 </div>
               );
@@ -104,6 +120,9 @@ export function ClassicTemplate({ company, cars, currency }: TemplateProps) {
               </span>
             )}
           </div>
+          {company.slogan && (
+            <p className="mb-2 text-sm italic text-gray-400">{company.slogan}</p>
+          )}
           <p>© {new Date().getFullYear()} {company.name}. All rights reserved.</p>
           <p className="mt-1 text-xs text-gray-400">Powered by Kindura</p>
         </div>

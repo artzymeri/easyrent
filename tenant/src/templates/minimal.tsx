@@ -1,8 +1,9 @@
 import type { TemplateProps } from "./types";
 import { formatCurrency } from "@/lib/currency";
 import { Mail, Phone, MapPin, Fuel, Users, Gauge } from "lucide-react";
+import { CarBookButton } from "@/components/car-book-button";
 
-export function MinimalTemplate({ company, cars, currency }: TemplateProps) {
+export function MinimalTemplate({ company, cars, currency, subdomain }: TemplateProps) {
   return (
     <div className="min-h-screen bg-neutral-50 text-neutral-900">
       {/* Header */}
@@ -10,7 +11,7 @@ export function MinimalTemplate({ company, cars, currency }: TemplateProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             {company.logoUrl && (
-              <img src={company.logoUrl} alt={company.name} className="h-8 w-8 rounded-md object-cover" />
+              <img src={company.logoUrl} alt={company.name} className="h-8 w-auto max-w-[100px] rounded-md object-contain" />
             )}
             <span className="text-lg font-medium">{company.name}</span>
           </div>
@@ -23,8 +24,13 @@ export function MinimalTemplate({ company, cars, currency }: TemplateProps) {
 
       {/* Hero */}
       <section className="mx-auto max-w-6xl px-6 pb-16 pt-8">
+        {company.logoUrl && (
+          <div className="mb-6">
+            <img src={company.logoUrl} alt={company.name} className="h-12 w-auto max-w-[160px] object-contain" />
+          </div>
+        )}
         <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
-          {company.name}
+          {company.slogan || company.name}
         </h1>
         <p className="mt-3 text-lg text-neutral-500">
           {cars.length} {cars.length === 1 ? "vehicle" : "vehicles"} available for rent
@@ -72,6 +78,14 @@ export function MinimalTemplate({ company, cars, currency }: TemplateProps) {
                       <span className="flex items-center gap-1"><Gauge className="h-3 w-3" /> {car.transmission}</span>
                       <span className="flex items-center gap-1"><Users className="h-3 w-3" /> {car.seats}</span>
                     </div>
+                    <CarBookButton
+                      car={car}
+                      currency={currency}
+                      subdomain={subdomain}
+                      className="mt-3 w-full rounded-lg border border-neutral-300 bg-white py-2 text-sm font-medium text-neutral-900 hover:bg-neutral-100 transition-colors"
+                      accentColor="bg-neutral-900"
+                      accentHover="hover:bg-neutral-800"
+                    />
                   </div>
                 </div>
               );

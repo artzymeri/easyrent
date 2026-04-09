@@ -4,4 +4,5 @@ export interface TemplateProps {
   company: Company;
   cars: Car[];
   currency: string;
+  subdomain: string;
 }

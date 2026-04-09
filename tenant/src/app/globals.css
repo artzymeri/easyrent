@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "react-day-picker/style.css";
 
 :root {
   --background: #ffffff;
@@ -14,4 +15,25 @@
 
 body {
   font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Date picker booked dates styling */
+.rdp-booked .rdp-day_button {
+  text-decoration: line-through;
+  opacity: 0.4;
+}
+
+/* Ensure calendar fits nicely */
+.rdp-root {
+  --rdp-accent-color: #2563eb;
+  --rdp-accent-background-color: #dbeafe;
+  --rdp-range_middle-background-color: #dbeafe;
+  --rdp-range_middle-color: #1e40af;
+}
+
+.rdp-dark {
+  --rdp-accent-color: #3b82f6;
+  --rdp-accent-background-color: rgba(59, 130, 246, 0.2);
+  --rdp-range_middle-background-color: rgba(59, 130, 246, 0.15);
+  --rdp-range_middle-color: #93c5fd;
 }

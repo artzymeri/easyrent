@@ -17,6 +17,7 @@ import {
   UserCog,
   Settings,
   Menu,
+  Inbox,
 } from "lucide-react";
 
 interface StaffUser {
@@ -31,6 +32,7 @@ interface StaffUser {
 const NAV_KEYS = [
   { href: "/dashboard", labelKey: "nav.dashboard", icon: LayoutDashboard },
   { href: "/dashboard/bookings", labelKey: "nav.bookings", icon: CalendarDays },
+  { href: "/dashboard/booking-requests", labelKey: "nav.bookingRequests", icon: Inbox },
   { href: "/dashboard/cars", labelKey: "nav.cars", icon: Car },
   { href: "/dashboard/customers", labelKey: "nav.customers", icon: Users },
 ];

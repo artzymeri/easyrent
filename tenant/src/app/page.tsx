@@ -42,7 +42,7 @@ export default async function TenantPage({ searchParams }: PageProps) {
 
   const { rows: cars, currency } = carsData;
 
-  const templateProps = { company, cars, currency };
+  const templateProps = { company, cars, currency, subdomain };
 
   switch (company.websiteTemplate) {
     case "modern":

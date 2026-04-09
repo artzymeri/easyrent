@@ -3,6 +3,7 @@ const { Op } = require("sequelize");
 const { authenticate } = require("../middleware/auth");
 const db = require("../db");
 const { getIO } = require("../socket");
+const { sendEmail, bookingConfirmationEmail } = require("../services/emailService");
 
 router.use(authenticate);
 
@@ -136,6 +137,31 @@ router.post("/:id/confirm", async (req, res) => {
     const io = getIO();
     if (io) {
       io.to(`company-${request.companyId}`).emit("booking-request-change", { type: "confirmed", id: request.id });
+    }
+
+    // Send confirmation email to requester if they provided an email
+    if (request.requesterEmail) {
+      try {
+        const company = await db.Company.findByPk(request.companyId, { attributes: ["name", "currency"] });
+        const carInfo = `${request.car.make} ${request.car.model} (${request.car.licensePlate})`;
+        const currencySymbol = { EUR: "€", USD: "$", GBP: "£", CHF: "CHF ", ALL: "", RSD: "", TRY: "₺" }[company.currency] || company.currency + " ";
+        const emailContent = bookingConfirmationEmail(
+          request.requesterFirstName,
+          request.requesterLastName,
+          company.name,
+          carInfo,
+          request.startDate,
+          request.endDate,
+          request.totalDays,
+          parseFloat(request.totalAmount).toFixed(2),
+          currencySymbol
+        );
+        sendEmail({ to: request.requesterEmail, ...emailContent }).catch((err) =>
+          console.error("Failed to send booking confirmation email:", err)
+        );
+      } catch (emailErr) {
+        console.error("Error preparing confirmation email:", emailErr);
+      }
     }
 
     res.json({ message: "Booking confirmed", booking: created });

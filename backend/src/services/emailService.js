@@ -233,10 +233,64 @@ function bookingReportEmail(customerFirstName, customerLastName, bookingId, comp
   };
 }
 
+/**
+ * Booking confirmation email sent to the requester when a booking request is confirmed
+ */
+function bookingConfirmationEmail(firstName, lastName, companyName, carInfo, startDate, endDate, totalDays, totalAmount, currency) {
+  const formatDate = (d) => {
+    const date = new Date(d);
+    return date.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+  };
+
+  const html = wrapInLayout(
+    `
+    <h1>Booking Confirmed! ✅</h1>
+    <p>Dear ${firstName} ${lastName},</p>
+    <p>Great news! Your booking request with <strong>${companyName}</strong> has been confirmed. Here are your reservation details:</p>
+    <div style="background: #f0fdf4; border-radius: 8px; padding: 20px; margin: 16px 0 24px; border: 1px solid #bbf7d0;">
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <td style="padding: 8px 0; font-size: 13px; color: #71717a;">Vehicle</td>
+          <td style="padding: 8px 0; font-size: 13px; color: #18181b; font-weight: 600; text-align: right;">${carInfo}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; font-size: 13px; color: #71717a; border-top: 1px solid #dcfce7;">Pick-up Date</td>
+          <td style="padding: 8px 0; font-size: 13px; color: #18181b; font-weight: 600; text-align: right; border-top: 1px solid #dcfce7;">${formatDate(startDate)}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; font-size: 13px; color: #71717a; border-top: 1px solid #dcfce7;">Return Date</td>
+          <td style="padding: 8px 0; font-size: 13px; color: #18181b; font-weight: 600; text-align: right; border-top: 1px solid #dcfce7;">${formatDate(endDate)}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; font-size: 13px; color: #71717a; border-top: 1px solid #dcfce7;">Duration</td>
+          <td style="padding: 8px 0; font-size: 13px; color: #18181b; font-weight: 600; text-align: right; border-top: 1px solid #dcfce7;">${totalDays} day${totalDays !== 1 ? "s" : ""}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; font-size: 14px; color: #18181b; font-weight: 700; border-top: 2px solid #bbf7d0;">Total</td>
+          <td style="padding: 8px 0; font-size: 14px; color: #18181b; font-weight: 700; text-align: right; border-top: 2px solid #bbf7d0;">${currency}${totalAmount}</td>
+        </tr>
+      </table>
+    </div>
+    <p>If you have any questions or need to make changes, please contact <strong>${companyName}</strong> directly.</p>
+    <p>We look forward to seeing you! 🚗</p>
+    <div class="divider"></div>
+    <p style="font-size: 12px; color: #a1a1aa;">This is an automated confirmation email. Please do not reply directly to this message.</p>
+    `,
+    companyName
+  );
+
+  return {
+    subject: `Booking Confirmed — ${companyName}`,
+    html,
+    text: `Dear ${firstName} ${lastName}, your booking with ${companyName} has been confirmed! Vehicle: ${carInfo}. Pick-up: ${formatDate(startDate)}. Return: ${formatDate(endDate)}. Duration: ${totalDays} day(s). Total: ${currency}${totalAmount}. We look forward to seeing you!`,
+  };
+}
+
 module.exports = {
   sendEmail,
   adminPasswordResetEmail,
   staffPasswordResetEmail,
   staffWelcomeEmail,
   bookingReportEmail,
+  bookingConfirmationEmail,
 };

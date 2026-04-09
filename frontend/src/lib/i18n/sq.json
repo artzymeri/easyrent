@@ -391,7 +391,14 @@
     "startBooking": "Fillo Rezervimin",
     "completeBookingTitle": "Përfundo Rezervimin",
     "completeBookingDescription": "Shikoni fotot para-fillimit dhe konfirmoni kthimin e veturës.",
-    "noPreStartImages": "Nuk janë bërë foto para-fillimit"
+    "noPreStartImages": "Nuk janë bërë foto para-fillimit",
+    "filterByCustomer": "Filtro sipas klientit",
+    "allCustomers": "Të Gjithë Klientët",
+    "filterFrom": "Nga",
+    "filterTo": "Deri",
+    "clearFilters": "Pastro Filtrat",
+    "downloadReport": "Shkarko Raportin",
+    "noBookingsFilter": "Asnjë rezervim nuk përputhet me filtrat aktuale."
   },
   "staffPage": {
     "title": "Stafi",

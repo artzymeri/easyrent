@@ -391,7 +391,14 @@
     "startBooking": "Start Booking",
     "completeBookingTitle": "Complete Booking",
     "completeBookingDescription": "Review the pre-start photos and confirm the car's return.",
-    "noPreStartImages": "No pre-start photos were taken"
+    "noPreStartImages": "No pre-start photos were taken",
+    "filterByCustomer": "Filter by customer",
+    "allCustomers": "All Customers",
+    "filterFrom": "From",
+    "filterTo": "To",
+    "clearFilters": "Clear Filters",
+    "downloadReport": "Download Report",
+    "noBookingsFilter": "No bookings match the current filters."
   },
   "staffPage": {
     "title": "Staff",

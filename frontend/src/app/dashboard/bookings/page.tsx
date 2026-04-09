@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n";
 import { useCurrency } from "@/lib/currency-context";
-import { CalendarDays, List, Play, CheckCircle2, XCircle, Car as CarIcon, User, MapPin, Clock, CreditCard, FileText, Hash, Download, ChevronLeft, ChevronRight, Camera, Image as ImageIcon, Mail, Plus, X } from "lucide-react";
+import { CalendarDays, List, Play, CheckCircle2, XCircle, Car as CarIcon, User, MapPin, Clock, CreditCard, FileText, Hash, Download, ChevronLeft, ChevronRight, Camera, Image as ImageIcon, Mail, Plus, X, RotateCcw } from "lucide-react";
 import { DateTimePicker } from "@/components/date-time-picker";
+import { DatePicker } from "@/components/date-picker";
 import { Button } from "@/components/ui/button";
 import { generateRentalReport, type ReportBooking, type ReportCompany } from "@/lib/generate-rental-report";
 import { Input } from "@/components/ui/input";
@@ -193,15 +194,32 @@ export default function BookingsPage() {
   const [settlePaymentAmount, setSettlePaymentAmount] = useState("");
   const [completeSaving, setCompleteSaving] = useState(false);
 
+  // Filter state
+  const [filterCustomerId, setFilterCustomerId] = useState("");
+  const [filterFrom, setFilterFrom] = useState("");
+  const [filterTo, setFilterTo] = useState("");
+
+  const hasActiveFilters = filterCustomerId !== "" || filterFrom !== "" || filterTo !== "";
+
+  const fetchBookings = async (custId?: string, from?: string, to?: string) => {
+    const params = new URLSearchParams();
+    params.set("limit", "500");
+    if (custId) params.set("customerId", custId);
+    if (from) params.set("from", from);
+    if (to) params.set("to", to);
+    const data = await api.get<{ rows: Booking[] }>(`/bookings?${params.toString()}`);
+    return data.rows || [];
+  };
+
   const fetchAll = async () => {
     try {
       const [bookingData, carData, custData, dpData] = await Promise.all([
-        api.get<{ rows: Booking[] }>("/bookings?limit=100"),
+        fetchBookings(filterCustomerId, filterFrom, filterTo),
         api.get<{ rows: Car[] }>("/cars"),
         api.get<{ rows: Customer[] }>("/customers"),
         api.get<DeliveryPoint[]>("/delivery-points"),
       ]);
-      setBookings(bookingData.rows || []);
+      setBookings(bookingData);
       setCars(carData.rows || []);
       setCustomers(custData.rows || []);
       setDeliveryPoints(dpData.filter((dp) => dp.isActive));
@@ -216,6 +234,41 @@ export default function BookingsPage() {
     fetchAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const applyFilters = async () => {
+    setLoading(true);
+    try {
+      const data = await fetchBookings(filterCustomerId, filterFrom, filterTo);
+      setBookings(data);
+    } catch {
+      toast.error(t("bookingsPage.toast.failedLoad"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const clearFilters = async () => {
+    setFilterCustomerId("");
+    setFilterFrom("");
+    setFilterTo("");
+    setLoading(true);
+    try {
+      const data = await fetchBookings("", "", "");
+      setBookings(data);
+    } catch {
+      toast.error(t("bookingsPage.toast.failedLoad"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Re-fetch bookings when filters change
+  useEffect(() => {
+    if (!loading) {
+      applyFilters();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterCustomerId, filterFrom, filterTo]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -633,6 +686,43 @@ export default function BookingsPage() {
           </div>
           <Button onClick={() => setDialogOpen(true)}>{t("bookingsPage.newBooking")}</Button>
         </div>
+      </div>
+
+      {/* Filter Bar */}
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="w-52">
+          <Label className="mb-1 text-xs text-muted-foreground">{t("bookingsPage.filterByCustomer")}</Label>
+          <Select
+            value={filterCustomerId}
+            onValueChange={(val) => setFilterCustomerId(val === "__all__" ? "" : (val ?? ""))}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder={t("bookingsPage.allCustomers")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">{t("bookingsPage.allCustomers")}</SelectItem>
+              {customers.map((c) => (
+                <SelectItem key={c.id} value={String(c.id)}>
+                  {c.firstName} {c.lastName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="w-44">
+          <Label className="mb-1 text-xs text-muted-foreground">{t("bookingsPage.filterFrom")}</Label>
+          <DatePicker value={filterFrom} onChange={setFilterFrom} placeholder={t("bookingsPage.filterFrom")} />
+        </div>
+        <div className="w-44">
+          <Label className="mb-1 text-xs text-muted-foreground">{t("bookingsPage.filterTo")}</Label>
+          <DatePicker value={filterTo} onChange={setFilterTo} placeholder={t("bookingsPage.filterTo")} />
+        </div>
+        {hasActiveFilters && (
+          <Button variant="ghost" size="sm" onClick={clearFilters} className="h-9">
+            <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+            {t("bookingsPage.clearFilters")}
+          </Button>
+        )}
       </div>
 
       {/* Calendar View */}
@@ -1242,6 +1332,11 @@ export default function BookingsPage() {
               onClick: (b) => { setSelectedBooking(b); setSheetOpen(true); },
             },
             {
+              label: t("bookingsPage.downloadReport"),
+              icon: <Download className="h-4 w-4" />,
+              onClick: (b) => handleDownloadReport(b.id),
+            },
+            {
               label: t("bookingsPage.start"),
               icon: <Play className="h-4 w-4" />,
               onClick: (b) => handleStartBooking(b),
@@ -1261,7 +1356,7 @@ export default function BookingsPage() {
               hidden: (b) => b.status !== "pending_start" && b.status !== "in_progress",
             },
           ]}
-          emptyMessage={t("bookingsPage.emptyState")}
+          emptyMessage={hasActiveFilters ? t("bookingsPage.noBookingsFilter") : t("bookingsPage.emptyState")}
           defaultSortKey="dates"
           defaultSortDir="desc"
         />

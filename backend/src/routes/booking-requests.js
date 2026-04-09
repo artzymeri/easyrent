@@ -35,6 +35,32 @@ router.get("/", async (req, res) => {
   }
 });
 
+// ── Get a single booking request by ID ────────────────────────
+router.get("/:id", async (req, res) => {
+  try {
+    if (!req.user.companyId) return res.status(400).json({ error: "No company context" });
+
+    const request = await db.BookingRequest.findByPk(req.params.id, {
+      include: [
+        {
+          model: db.Car,
+          as: "car",
+          attributes: ["id", "make", "model", "licensePlate", "color", "dailyRate"],
+          include: [{ model: db.CarImage, as: "images", attributes: ["id", "url", "isPrimary", "sortOrder"] }],
+        },
+      ],
+    });
+
+    if (!request) return res.status(404).json({ error: "Request not found" });
+    if (request.companyId !== req.user.companyId) return res.status(403).json({ error: "Access denied" });
+
+    res.json(request);
+  } catch (err) {
+    console.error("Get booking request error:", err);
+    res.status(500).json({ error: "Failed to fetch booking request" });
+  }
+});
+
 // ── Confirm a booking request (creates real booking + customer) ─
 router.post("/:id/confirm", async (req, res) => {
   try {
@@ -70,11 +96,13 @@ router.post("/:id/confirm", async (req, res) => {
       return res.status(409).json({ error: "Car is no longer available for the selected dates" });
     }
 
-    // Find or create customer
+    // Find or create customer (match on phone + name to avoid mixing up different people)
     let customer = await db.Customer.findOne({
       where: {
         companyId: request.companyId,
         phone: request.requesterPhone,
+        firstName: request.requesterFirstName,
+        lastName: request.requesterLastName,
       },
     });
 

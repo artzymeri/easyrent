@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n";
 import { useCurrency } from "@/lib/currency-context";
@@ -136,9 +137,11 @@ const BOOKING_COLORS = [
   { bg: "bg-orange-500", text: "text-white", dot: "bg-orange-500" },
 ];
 
-export default function BookingsPage() {
+function BookingsPageContent() {
   const { t } = useTranslation();
   const { fc, currency } = useCurrency();
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [cars, setCars] = useState<Car[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -200,6 +203,9 @@ export default function BookingsPage() {
   const [filterFrom, setFilterFrom] = useState("");
   const [filterTo, setFilterTo] = useState("");
 
+  // Booking request pre-fill state
+  const [pendingRequestId, setPendingRequestId] = useState<number | null>(null);
+
   const hasActiveFilters = filterCustomerId !== "" || filterFrom !== "" || filterTo !== "";
 
   const fetchBookings = async (custId?: string, from?: string, to?: string) => {
@@ -235,6 +241,110 @@ export default function BookingsPage() {
     fetchAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Handle pre-fill from booking request
+  useEffect(() => {
+    const fromRequest = searchParams.get("fromRequest");
+    if (!fromRequest || loading) return;
+
+    const requestId = parseInt(fromRequest);
+    if (isNaN(requestId)) return;
+
+    // Only process once
+    if (pendingRequestId === requestId) return;
+    setPendingRequestId(requestId);
+
+    (async () => {
+      try {
+        // Fetch the booking request details
+        const req = await api.get<{
+          id: number;
+          carId: number;
+          startDate: string;
+          endDate: string;
+          dailyRate: string;
+          totalDays: number;
+          totalAmount: string;
+          requesterFirstName: string;
+          requesterLastName: string;
+          requesterEmail: string | null;
+          requesterPhone: string;
+          car: { id: number; make: string; model: string; licensePlate: string; dailyRate: string };
+        }>(`/booking-requests/${requestId}`);
+
+        // Find or create customer matching the requester
+        let matchedCustomer = customers.find(
+          (c) =>
+            c.phone === req.requesterPhone &&
+            c.firstName === req.requesterFirstName &&
+            c.lastName === req.requesterLastName
+        );
+
+        if (!matchedCustomer) {
+          // Create the customer
+          try {
+            const created = await api.post<Customer & { id: number }>("/customers", {
+              firstName: req.requesterFirstName,
+              lastName: req.requesterLastName,
+              email: req.requesterEmail || "",
+              phone: req.requesterPhone,
+            });
+            setCustomers((prev) => [...prev, created]);
+            matchedCustomer = created;
+          } catch {
+            // Customer may already exist, re-fetch and try matching by phone
+            const freshCustomers = await api.get<{ rows: Customer[] }>("/customers");
+            setCustomers(freshCustomers.rows || []);
+            matchedCustomer = (freshCustomers.rows || []).find(
+              (c) => c.phone === req.requesterPhone
+            );
+          }
+        }
+
+        // Pre-fill the form
+        // Normalize dates from API format "2026-04-25T10:00:00.000Z" to DateTimePicker format "2026-04-25T10:00"
+        const normalizeDate = (dateStr: string) => {
+          const d = new Date(dateStr);
+          const yyyy = d.getUTCFullYear();
+          const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
+          const dd = String(d.getUTCDate()).padStart(2, "0");
+          const hh = String(d.getUTCHours()).padStart(2, "0");
+          const min = String(d.getUTCMinutes()).padStart(2, "0");
+          return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+        };
+
+        setForm({
+          carId: String(req.carId),
+          customerId: matchedCustomer ? String(matchedCustomer.id) : "",
+          startDate: normalizeDate(req.startDate),
+          endDate: normalizeDate(req.endDate),
+          dailyRate: String(req.dailyRate),
+          pickupLocation: "",
+          returnLocation: "",
+          discount: "",
+          mileageOut: "",
+          notes: "",
+          secondaryDriverName: "",
+          secondaryDriverPhone: "",
+          secondaryDriverIdNumber: "",
+          secondaryDriverLicense: "",
+        });
+
+        // Store the request ID so handleCreate can pass it to the backend
+        setPendingRequestId(requestId);
+
+        // Open the new booking sheet
+        setDialogOpen(true);
+
+        // Clean up the URL
+        router.replace("/dashboard/bookings", { scroll: false });
+      } catch (err) {
+        console.error("Failed to load booking request:", err);
+        toast.error(t("bookingsPage.toast.failedLoad"));
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, loading, customers.length]);
 
   const applyFilters = async () => {
     setLoading(true);
@@ -295,9 +405,11 @@ export default function BookingsPage() {
         secondaryDriverPhone: form.secondaryDriverPhone || undefined,
         secondaryDriverIdNumber: form.secondaryDriverIdNumber || undefined,
         secondaryDriverLicense: form.secondaryDriverLicense || undefined,
+        bookingRequestId: pendingRequestId || undefined,
       });
       toast.success(t("bookingsPage.toast.created"));
       setForm({ carId: "", customerId: "", startDate: "", endDate: "", dailyRate: "", pickupLocation: "", returnLocation: "", discount: "", mileageOut: "", notes: "", secondaryDriverName: "", secondaryDriverPhone: "", secondaryDriverIdNumber: "", secondaryDriverLicense: "" });
+      setPendingRequestId(null);
       setPickupCustom(false);
       setReturnCustom(false);
       setDialogOpen(false);
@@ -1395,11 +1507,22 @@ export default function BookingsPage() {
       )}
 
       {/* New Booking Sheet */}
-      <Sheet open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Sheet open={dialogOpen} onOpenChange={(open) => {
+        setDialogOpen(open);
+        if (!open) setPendingRequestId(null);
+      }}>
         <SheetContent side="right" className="w-full gap-0 sm:max-w-xl">
           <SheetHeader className="border-b">
-            <SheetTitle>{t("bookingsPage.dialogTitle")}</SheetTitle>
-            <SheetDescription>{t("bookingsPage.dialogDescription")}</SheetDescription>
+            <SheetTitle>
+              {pendingRequestId
+                ? t("bookingsPage.confirmRequestTitle")
+                : t("bookingsPage.dialogTitle")}
+            </SheetTitle>
+            <SheetDescription>
+              {pendingRequestId
+                ? t("bookingsPage.confirmRequestDescription")
+                : t("bookingsPage.dialogDescription")}
+            </SheetDescription>
           </SheetHeader>
           <form onSubmit={handleCreate} className="flex flex-1 flex-col overflow-hidden">
             <div className="flex-1 space-y-4 overflow-y-auto p-4">
@@ -1439,7 +1562,7 @@ export default function BookingsPage() {
                 >
                   <SelectTrigger className="w-full"><SelectValue placeholder={t("bookingsPage.selectCar")} /></SelectTrigger>
                   <SelectContent>
-                    {cars.filter((c) => c.status === "available").map((c) => (
+                    {cars.filter((c) => c.status === "available" || String(c.id) === form.carId).map((c) => (
                       <SelectItem key={c.id} value={String(c.id)}>
                         {c.make} {c.model} ({c.licensePlate}) — {fc(c.dailyRate)}/{t("bookingsPage.perDay")}
                       </SelectItem>
@@ -1618,11 +1741,25 @@ export default function BookingsPage() {
             </div>
             <SheetFooter className="border-t">
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>{t("common.cancel")}</Button>
-              <Button type="submit" disabled={saving}>{saving ? t("bookingsPage.creating") : t("bookingsPage.createBooking")}</Button>
+              <Button type="submit" disabled={saving}>
+                {saving
+                  ? t("bookingsPage.creating")
+                  : pendingRequestId
+                    ? t("bookingsPage.confirmAndCreate")
+                    : t("bookingsPage.createBooking")}
+              </Button>
             </SheetFooter>
           </form>
         </SheetContent>
       </Sheet>
     </div>
+  );
+}
+
+export default function BookingsPage() {
+  return (
+    <Suspense>
+      <BookingsPageContent />
+    </Suspense>
   );
 }

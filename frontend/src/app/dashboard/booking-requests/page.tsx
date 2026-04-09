@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n";
 import { useCurrency } from "@/lib/currency-context";
@@ -16,13 +17,6 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import {
   Inbox,
@@ -86,12 +80,11 @@ export default function BookingRequestsPage() {
   const { t } = useTranslation();
   const { fc } = useCurrency();
   const { pendingRequestCount, refreshPendingCount } = useSocket();
+  const router = useRouter();
 
   const [requests, setRequests] = useState<BookingRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<StatusFilter>("all");
-  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState<BookingRequest | null>(null);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
 
   // ── Fetch ─────────────────────────────────────────────────
@@ -122,19 +115,9 @@ export default function BookingRequestsPage() {
   }, [pendingRequestCount]);
 
   // ── Actions ───────────────────────────────────────────────
-  const handleConfirm = async (req: BookingRequest) => {
-    setActionLoading(req.id);
-    try {
-      await api.post(`/booking-requests/${req.id}/confirm`, {});
-      toast.success(t("bookingRequestsPage.confirmSuccess"));
-      setConfirmDialogOpen(false);
-      setSelectedRequest(null);
-      fetchRequests();
-    } catch {
-      toast.error(t("bookingRequestsPage.error"));
-    } finally {
-      setActionLoading(null);
-    }
+  const handleConfirm = (req: BookingRequest) => {
+    // Navigate to bookings page with the request ID to pre-fill the booking form
+    router.push(`/dashboard/bookings?fromRequest=${req.id}`);
   };
 
   const handleReject = async (req: BookingRequest) => {
@@ -386,10 +369,7 @@ export default function BookingRequestsPage() {
                         <div className="flex flex-wrap gap-2">
                           <Button
                             size="sm"
-                            onClick={() => {
-                              setSelectedRequest(req);
-                              setConfirmDialogOpen(true);
-                            }}
+                            onClick={() => handleConfirm(req)}
                             disabled={isActioning}
                           >
                             <CheckCircle2 className="mr-1 h-4 w-4" />
@@ -445,78 +425,6 @@ export default function BookingRequestsPage() {
           })}
         </div>
       )}
-
-      {/* Confirm Dialog */}
-      <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t("bookingRequestsPage.confirmTitle")}</DialogTitle>
-            <DialogDescription>
-              {t("bookingRequestsPage.confirmDescription")}
-            </DialogDescription>
-          </DialogHeader>
-
-          {selectedRequest && (
-            <div className="space-y-4 py-2">
-              {/* Summary */}
-              <div className="rounded-lg bg-muted p-4 space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t("bookingRequestsPage.car")}</span>
-                  <span className="font-medium">
-                    {selectedRequest.car.make} {selectedRequest.car.model} ({selectedRequest.car.licensePlate})
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t("bookingRequestsPage.requester")}</span>
-                  <span className="font-medium">
-                    {selectedRequest.requesterFirstName} {selectedRequest.requesterLastName}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t("bookingRequestsPage.phone")}</span>
-                  <span className="font-medium">{selectedRequest.requesterPhone}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t("bookingRequestsPage.dates")}</span>
-                  <span className="font-medium">
-                    {formatDate(selectedRequest.startDate)} – {formatDate(selectedRequest.endDate)}
-                  </span>
-                </div>
-                <Separator />
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t("bookingRequestsPage.totalAmount")}</span>
-                  <span className="text-lg font-bold">{fc(selectedRequest.totalAmount)}</span>
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setConfirmDialogOpen(false);
-                    setSelectedRequest(null);
-                  }}
-                >
-                  {t("common.cancel")}
-                </Button>
-                <Button
-                  onClick={() => handleConfirm(selectedRequest)}
-                  disabled={actionLoading === selectedRequest.id}
-                >
-                  {actionLoading === selectedRequest.id ? (
-                    <Spinner />
-                  ) : (
-                    <>
-                      <CheckCircle2 className="mr-1 h-4 w-4" />
-                      {t("bookingRequestsPage.confirm")}
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

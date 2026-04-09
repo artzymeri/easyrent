@@ -4,7 +4,8 @@ const { validate } = require("../middleware/validate");
 const { authenticate } = require("../middleware/auth");
 const { Op, fn, col } = require("sequelize");
 const db = require("../db");
-const { sendEmail, bookingReportEmail } = require("../services/emailService");
+const { sendEmail, bookingReportEmail, bookingConfirmationEmail } = require("../services/emailService");
+const { getIO } = require("../socket");
 
 router.use(authenticate);
 
@@ -58,7 +59,7 @@ router.get("/", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     if (!req.user.companyId) return res.status(400).json({ error: "No company context" });
-    const { carId, customerId, startDate, endDate, dailyRate, discount, pickupLocation, returnLocation, notes, mileageOut, secondaryDriverName, secondaryDriverPhone, secondaryDriverIdNumber, secondaryDriverLicense } = req.body;
+    const { carId, customerId, startDate, endDate, dailyRate, discount, pickupLocation, returnLocation, notes, mileageOut, secondaryDriverName, secondaryDriverPhone, secondaryDriverIdNumber, secondaryDriverLicense, bookingRequestId } = req.body;
     const startDateOnly = startDate.substring(0, 10);
     const endDateOnly = endDate.substring(0, 10);
     const conflicting = await db.Booking.findOne({
@@ -84,7 +85,9 @@ router.post("/", async (req, res) => {
       createdByStaffId: req.user.type === "staff" ? req.user.id : null,
       startDate, endDate, dailyRate, totalDays, subtotal,
       discount: discountAmount, totalAmount,
-      pickupLocation, returnLocation, notes, mileageOut,
+      pickupLocation, returnLocation,
+      notes: bookingRequestId ? `${notes || ""}${notes ? "\n" : ""}Created from booking request #${bookingRequestId}`.trim() : (notes || null),
+      mileageOut,
       secondaryDriverName, secondaryDriverPhone, secondaryDriverIdNumber, secondaryDriverLicense,
       status: "pending_start",
     });
@@ -92,6 +95,70 @@ router.post("/", async (req, res) => {
     const created = await db.Booking.findByPk(booking.id, {
       include: [{ model: db.Car, as: "car" }, { model: db.Customer, as: "customer" }],
     });
+
+    // If created from a booking request, mark it as confirmed + handle side effects
+    if (bookingRequestId) {
+      try {
+        const request = await db.BookingRequest.findByPk(bookingRequestId, {
+          include: [{ model: db.Car, as: "car" }],
+        });
+        if (request && request.companyId === req.user.companyId && request.status === "pending") {
+          await request.update({ status: "confirmed" });
+
+          // Auto-reject overlapping pending requests for the same car
+          const reqStartOnly = request.startDate.toString().substring(0, 10);
+          const reqEndOnly = request.endDate.toString().substring(0, 10);
+          await db.BookingRequest.update(
+            { status: "rejected" },
+            {
+              where: {
+                id: { [Op.ne]: request.id },
+                carId: request.carId,
+                status: "pending",
+                [Op.and]: [
+                  db.sequelize.where(fn("DATE", col("start_date")), { [Op.lte]: reqEndOnly }),
+                  db.sequelize.where(fn("DATE", col("end_date")), { [Op.gte]: reqStartOnly }),
+                ],
+              },
+            }
+          );
+
+          // Notify via socket
+          const io = getIO();
+          if (io) {
+            io.to(`company-${req.user.companyId}`).emit("booking-request-change", { type: "confirmed", id: request.id });
+          }
+
+          // Send confirmation email
+          if (request.requesterEmail) {
+            try {
+              const company = await db.Company.findByPk(req.user.companyId, { attributes: ["name", "currency"] });
+              const carInfo = `${request.car.make} ${request.car.model} (${request.car.licensePlate})`;
+              const currencySymbol = { EUR: "€", USD: "$", GBP: "£", CHF: "CHF ", ALL: "", RSD: "", TRY: "₺" }[company.currency] || company.currency + " ";
+              const emailContent = bookingConfirmationEmail(
+                request.requesterFirstName,
+                request.requesterLastName,
+                company.name,
+                carInfo,
+                request.startDate,
+                request.endDate,
+                request.totalDays,
+                parseFloat(request.totalAmount).toFixed(2),
+                currencySymbol
+              );
+              sendEmail({ to: request.requesterEmail, ...emailContent }).catch((err) =>
+                console.error("Failed to send booking confirmation email:", err)
+              );
+            } catch (emailErr) {
+              console.error("Error preparing confirmation email:", emailErr);
+            }
+          }
+        }
+      } catch (reqErr) {
+        console.error("Error processing booking request confirmation:", reqErr);
+      }
+    }
+
     res.status(201).json(created);
   } catch (err) {
     console.error("Create booking error:", err);

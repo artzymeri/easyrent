@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Spinner } from "@/components/ui/spinner";
 import { ImageUpload, type ImageItem } from "@/components/image-upload";
 import {
   Sheet,
@@ -651,7 +652,7 @@ export default function BookingsPage() {
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="text-muted-foreground">{t("bookingsPage.loadingBookings")}</div>
+        <Spinner className="h-8 w-8" />
       </div>
     );
   }

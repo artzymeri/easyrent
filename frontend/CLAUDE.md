@@ -63,6 +63,7 @@ frontend/
 5. This is a public-facing app — prioritize UX, performance, accessibility, and mobile responsiveness.
 6. Features to expect (not yet implemented): property listing/search, rental application flow, tenant dashboard, payment portal, maintenance request submission, lease document viewing, account management.
 7. **NEVER use emojis in the UI.** Always use **Lucide React icons** (`lucide-react`) instead of emoji characters. This applies to navigation, buttons, feature cards, labels — everywhere.
+8. **Loading states must always use the `<Spinner>` component** (`@/components/ui/spinner`), never text like "Loading...". Use `<Spinner className="h-8 w-8" />` centered in a flex container. For full-page loading use `h-screen`, for section loading use `h-64`.
 
 ## Localization (i18n) — MANDATORY
 

@@ -12,7 +12,7 @@ export const COUNTRIES: CountryInfo[] = [
     name: "Kosovo",
     code: "XK",
     phoneCode: "+383",
-    cities: ["Pristina", "Prizren", "Peja", "Mitrovica", "Gjilan", "Ferizaj", "Gjakova", "Podujeva", "Vushtrri", "Suhareka", "Rahovec", "Drenas", "Lipjan", "Malisheva", "Kamenica", "Viti", "Deçan", "Istog", "Klinë", "Skenderaj", "Dragash", "Fushë Kosovë", "Kaçanik", "Shtime", "Obiliq", "Graçanica", "Hani i Elezit", "Mamushë", "Junik", "Kllokot", "Partesh", "Ranillug", "Shterpce"],
+    cities: ["Prishtinë", "Prizren", "Peja", "Mitrovica", "Gjilan", "Ferizaj", "Gjakova", "Podujeva", "Vushtrri", "Suhareka", "Rahovec", "Drenas", "Lipjan", "Malisheva", "Kamenica", "Viti", "Deçan", "Istog", "Klinë", "Skenderaj", "Dragash", "Fushë Kosovë", "Kaçanik", "Shtime", "Obiliq", "Graçanica", "Hani i Elezit", "Mamushë", "Junik", "Kllokot", "Partesh", "Ranillug", "Shterpce"],
   },
   {
     name: "Albania",

@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
+import { Spinner } from "@/components/ui/spinner";
 import {
   ArrowLeft,
   Trash2,
@@ -144,7 +145,7 @@ export default function CarDetailPage() {
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="text-muted-foreground">{t("common.loading")}</div>
+        <Spinner className="h-8 w-8" />
       </div>
     );
   }

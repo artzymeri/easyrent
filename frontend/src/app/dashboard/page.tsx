@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n";
 import { useCurrency } from "@/lib/currency-context";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Card,
   CardContent,
@@ -131,7 +132,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="text-muted-foreground">{t("dashboard.loadingDashboard")}</div>
+        <Spinner className="h-8 w-8" />
       </div>
     );
   }

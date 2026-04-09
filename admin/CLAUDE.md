@@ -46,6 +46,7 @@ admin/
 5. This panel will eventually need role-based access control — design pages with that in mind.
 6. Features to expect (not yet implemented): property management, tenant management, lease/contract management, payment tracking, maintenance requests, reporting/analytics dashboard, user & role management.
 7. **NEVER use emojis in the UI.** Always use **Lucide React icons** (`lucide-react`) instead of emoji characters. This applies to navigation, buttons, feature cards, labels — everywhere.
+8. **Loading states must always use the `<Spinner>` component** (`@/components/ui/spinner`), never text like "Loading...". Use `<Spinner className="h-8 w-8" />` centered in a flex container. For full-page loading use `h-screen`, for section loading use `h-64`.
 
 ## Localization (i18n) — MANDATORY
 

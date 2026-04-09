@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Spinner } from "@/components/ui/spinner";
 import {
   LayoutDashboard,
   CalendarDays,
@@ -77,7 +78,7 @@ export default function DashboardLayout({
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <div className="text-muted-foreground">{t("common.loading")}</div>
+        <Spinner className="h-8 w-8" />
       </div>
     );
   }

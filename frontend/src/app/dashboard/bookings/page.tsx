@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n";
 import { useCurrency } from "@/lib/currency-context";
-import { CalendarDays, List, Play, CheckCircle2, XCircle, Car as CarIcon, User, MapPin, Clock, CreditCard, FileText, Hash, Download, ChevronLeft, ChevronRight, Camera, Image as ImageIcon, Mail, Plus, X, RotateCcw } from "lucide-react";
+import { CalendarDays, List, Play, CheckCircle2, XCircle, Car as CarIcon, User, MapPin, Clock, CreditCard, FileText, Hash, Download, ChevronLeft, ChevronRight, Camera, Image as ImageIcon, Mail, Plus, X, RotateCcw, Info, Phone } from "lucide-react";
 import { DateTimePicker } from "@/components/date-time-picker";
 import { DatePicker } from "@/components/date-picker";
 import { Button } from "@/components/ui/button";
@@ -205,6 +205,19 @@ function BookingsPageContent() {
 
   // Booking request pre-fill state
   const [pendingRequestId, setPendingRequestId] = useState<number | null>(null);
+  const [pendingRequestInfo, setPendingRequestInfo] = useState<{
+    requesterFirstName: string;
+    requesterLastName: string;
+    requesterEmail: string | null;
+    requesterPhone: string;
+    startDate: string;
+    endDate: string;
+    totalDays: number;
+    totalAmount: string;
+    dailyRate: string;
+    carName: string;
+  } | null>(null);
+  const [requestInfoOpen, setRequestInfoOpen] = useState(false);
 
   const hasActiveFilters = filterCustomerId !== "" || filterFrom !== "" || filterTo !== "";
 
@@ -272,36 +285,6 @@ function BookingsPageContent() {
           car: { id: number; make: string; model: string; licensePlate: string; dailyRate: string };
         }>(`/booking-requests/${requestId}`);
 
-        // Find or create customer matching the requester
-        let matchedCustomer = customers.find(
-          (c) =>
-            c.phone === req.requesterPhone &&
-            c.firstName === req.requesterFirstName &&
-            c.lastName === req.requesterLastName
-        );
-
-        if (!matchedCustomer) {
-          // Create the customer
-          try {
-            const created = await api.post<Customer & { id: number }>("/customers", {
-              firstName: req.requesterFirstName,
-              lastName: req.requesterLastName,
-              email: req.requesterEmail || "",
-              phone: req.requesterPhone,
-            });
-            setCustomers((prev) => [...prev, created]);
-            matchedCustomer = created;
-          } catch {
-            // Customer may already exist, re-fetch and try matching by phone
-            const freshCustomers = await api.get<{ rows: Customer[] }>("/customers");
-            setCustomers(freshCustomers.rows || []);
-            matchedCustomer = (freshCustomers.rows || []).find(
-              (c) => c.phone === req.requesterPhone
-            );
-          }
-        }
-
-        // Pre-fill the form
         // Normalize dates from API format "2026-04-25T10:00:00.000Z" to DateTimePicker format "2026-04-25T10:00"
         const normalizeDate = (dateStr: string) => {
           const d = new Date(dateStr);
@@ -313,9 +296,24 @@ function BookingsPageContent() {
           return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
         };
 
+        // Store request info for the info modal
+        setPendingRequestInfo({
+          requesterFirstName: req.requesterFirstName,
+          requesterLastName: req.requesterLastName,
+          requesterEmail: req.requesterEmail,
+          requesterPhone: req.requesterPhone,
+          startDate: normalizeDate(req.startDate),
+          endDate: normalizeDate(req.endDate),
+          totalDays: req.totalDays,
+          totalAmount: req.totalAmount,
+          dailyRate: req.dailyRate,
+          carName: `${req.car.make} ${req.car.model} (${req.car.licensePlate})`,
+        });
+
+        // Pre-fill the form — don't pre-select customer, let staff pick/create
         setForm({
           carId: String(req.carId),
-          customerId: matchedCustomer ? String(matchedCustomer.id) : "",
+          customerId: "",
           startDate: normalizeDate(req.startDate),
           endDate: normalizeDate(req.endDate),
           dailyRate: String(req.dailyRate),
@@ -344,7 +342,7 @@ function BookingsPageContent() {
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams, loading, customers.length]);
+  }, [searchParams, loading]);
 
   const applyFilters = async () => {
     setLoading(true);
@@ -410,6 +408,7 @@ function BookingsPageContent() {
       toast.success(t("bookingsPage.toast.created"));
       setForm({ carId: "", customerId: "", startDate: "", endDate: "", dailyRate: "", pickupLocation: "", returnLocation: "", discount: "", mileageOut: "", notes: "", secondaryDriverName: "", secondaryDriverPhone: "", secondaryDriverIdNumber: "", secondaryDriverLicense: "" });
       setPendingRequestId(null);
+      setPendingRequestInfo(null);
       setPickupCustom(false);
       setReturnCustom(false);
       setDialogOpen(false);
@@ -1509,15 +1508,31 @@ function BookingsPageContent() {
       {/* New Booking Sheet */}
       <Sheet open={dialogOpen} onOpenChange={(open) => {
         setDialogOpen(open);
-        if (!open) setPendingRequestId(null);
+        if (!open) {
+          setPendingRequestId(null);
+          setPendingRequestInfo(null);
+        }
       }}>
         <SheetContent side="right" className="w-full gap-0 sm:max-w-xl">
           <SheetHeader className="border-b">
-            <SheetTitle>
-              {pendingRequestId
-                ? t("bookingsPage.confirmRequestTitle")
-                : t("bookingsPage.dialogTitle")}
-            </SheetTitle>
+            <div className="flex items-center gap-2">
+              <SheetTitle>
+                {pendingRequestId
+                  ? t("bookingsPage.confirmRequestTitle")
+                  : t("bookingsPage.dialogTitle")}
+              </SheetTitle>
+              {pendingRequestInfo && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-7 w-7 shrink-0 rounded-full"
+                  onClick={() => setRequestInfoOpen(true)}
+                >
+                  <Info className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
             <SheetDescription>
               {pendingRequestId
                 ? t("bookingsPage.confirmRequestDescription")
@@ -1752,6 +1767,62 @@ function BookingsPageContent() {
           </form>
         </SheetContent>
       </Sheet>
+
+      {/* Booking Request Info Dialog */}
+      <Dialog open={requestInfoOpen} onOpenChange={setRequestInfoOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("bookingsPage.requestInfoTitle")}</DialogTitle>
+            <DialogDescription>{t("bookingsPage.requestInfoDescription")}</DialogDescription>
+          </DialogHeader>
+          {pendingRequestInfo && (
+            <div className="space-y-3 text-sm">
+              <div className="rounded-lg bg-muted p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium">
+                    {pendingRequestInfo.requesterFirstName} {pendingRequestInfo.requesterLastName}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <span>{pendingRequestInfo.requesterPhone}</span>
+                </div>
+                {pendingRequestInfo.requesterEmail && (
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <span>{pendingRequestInfo.requesterEmail}</span>
+                  </div>
+                )}
+                <Separator />
+                <div className="flex items-center gap-2">
+                  <CarIcon className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium">{pendingRequestInfo.carName}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <span>
+                    {pendingRequestInfo.startDate.replace("T", " ")} — {pendingRequestInfo.endDate.replace("T", " ")}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                  <span>{pendingRequestInfo.totalDays} {t("bookingsPage.sheetDays")}</span>
+                </div>
+                <Separator />
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">{t("bookingsPage.dailyRate")}</span>
+                  <span className="font-medium">{fc(pendingRequestInfo.dailyRate)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">{t("bookingsPage.sheetTotal")}</span>
+                  <span className="text-lg font-bold">{fc(pendingRequestInfo.totalAmount)}</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

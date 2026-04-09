@@ -312,6 +312,8 @@
     "confirmAndCreate": "Confirm & Create Booking",
     "confirmRequestTitle": "Confirm Booking Request",
     "confirmRequestDescription": "Review and complete the booking details from the customer's request",
+    "requestInfoTitle": "Customer Request Details",
+    "requestInfoDescription": "Information submitted by the customer from the website",
     "perDay": "day",
     "emptyState": "No bookings yet. Click \"+ New Booking\" to create one.",
     "start": "Start",

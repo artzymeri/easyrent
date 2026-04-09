@@ -312,6 +312,8 @@
     "confirmAndCreate": "Konfirmo & Krijo Rezervimin",
     "confirmRequestTitle": "Konfirmo Kërkesën për Rezervim",
     "confirmRequestDescription": "Shqyrtoni dhe plotësoni detajet e rezervimit nga kërkesa e klientit",
+    "requestInfoTitle": "Detajet e Kërkesës",
+    "requestInfoDescription": "Informacioni i dërguar nga klienti përmes faqes së internetit",
     "perDay": "ditë",
     "emptyState": "Ende nuk ka rezervime. Klikoni \"+ Rezervim i Ri\" për të krijuar një.",
     "start": "Fillo",

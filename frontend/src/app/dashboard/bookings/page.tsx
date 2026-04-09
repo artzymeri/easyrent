@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { DataTable, Eye, Trash2, type DataTableAction } from "@/components/data-table";
+import { CustomerCreateSheet, type CustomerPrefill } from "@/components/customer-create-sheet";
 
 interface Booking {
   id: number;
@@ -181,12 +182,9 @@ function BookingsPageContent() {
   const [pickupCustom, setPickupCustom] = useState(false);
   const [returnCustom, setReturnCustom] = useState(false);
 
-  // Quick customer creation
+  // Customer creation sheet
   const [quickCustomerOpen, setQuickCustomerOpen] = useState(false);
-  const [quickCustomerSaving, setQuickCustomerSaving] = useState(false);
-  const [quickCustomerForm, setQuickCustomerForm] = useState({
-    firstName: "", lastName: "", email: "", phone: "", idNumber: "", personalNumber: "",
-  });
+  const [customerPrefill, setCustomerPrefill] = useState<CustomerPrefill | null>(null);
 
   // Complete booking dialog state
   const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
@@ -420,27 +418,7 @@ function BookingsPageContent() {
     }
   };
 
-  const handleQuickCustomerCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!quickCustomerForm.firstName || !quickCustomerForm.lastName) {
-      toast.error(t("customersPage.validation.required"));
-      return;
-    }
-    setQuickCustomerSaving(true);
-    try {
-      const created = await api.post<Customer & { id: number }>("/customers", quickCustomerForm);
-      // Add to local customers list and auto-select
-      setCustomers((prev) => [...prev, created]);
-      setForm((prev) => ({ ...prev, customerId: String(created.id) }));
-      setQuickCustomerOpen(false);
-      setQuickCustomerForm({ firstName: "", lastName: "", email: "", phone: "", idNumber: "", personalNumber: "" });
-      toast.success(t("customersPage.toast.added"));
-    } catch {
-      toast.error(t("customersPage.toast.failedAdd"));
-    } finally {
-      setQuickCustomerSaving(false);
-    }
-  };
+
 
   const updateStatus = async (bookingId: number, status: string, extra?: Record<string, unknown>) => {
     try {
@@ -1348,51 +1326,16 @@ function BookingsPageContent() {
         </DialogContent>
       </Dialog>
 
-      {/* Quick Customer Creation Sheet */}
-      <Sheet open={quickCustomerOpen} onOpenChange={setQuickCustomerOpen}>
-        <SheetContent side="right" className="w-full sm:max-w-md">
-          <SheetHeader>
-            <SheetTitle>{t("quickCustomer.title")}</SheetTitle>
-            <SheetDescription>{t("quickCustomer.description")}</SheetDescription>
-          </SheetHeader>
-          <form onSubmit={handleQuickCustomerCreate} className="flex flex-1 flex-col overflow-hidden">
-            <div className="flex-1 space-y-4 overflow-y-auto p-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>{t("customersPage.firstName")} *</Label>
-                  <Input value={quickCustomerForm.firstName} onChange={(e) => setQuickCustomerForm({ ...quickCustomerForm, firstName: e.target.value })} />
-                </div>
-                <div className="space-y-2">
-                  <Label>{t("customersPage.lastName")} *</Label>
-                  <Input value={quickCustomerForm.lastName} onChange={(e) => setQuickCustomerForm({ ...quickCustomerForm, lastName: e.target.value })} />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>{t("customersPage.email")}</Label>
-                <Input type="email" value={quickCustomerForm.email} onChange={(e) => setQuickCustomerForm({ ...quickCustomerForm, email: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label>{t("customersPage.phone")}</Label>
-                <Input value={quickCustomerForm.phone} onChange={(e) => setQuickCustomerForm({ ...quickCustomerForm, phone: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label>{t("customersPage.idNumber")}</Label>
-                <Input value={quickCustomerForm.idNumber} onChange={(e) => setQuickCustomerForm({ ...quickCustomerForm, idNumber: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label>{t("customersPage.personalNumber")}</Label>
-                <Input value={quickCustomerForm.personalNumber} onChange={(e) => setQuickCustomerForm({ ...quickCustomerForm, personalNumber: e.target.value })} />
-              </div>
-            </div>
-            <div className="flex gap-2 border-t p-4">
-              <Button type="button" variant="outline" className="flex-1" onClick={() => setQuickCustomerOpen(false)}>{t("common.cancel")}</Button>
-              <Button type="submit" className="flex-1" disabled={quickCustomerSaving}>
-                {quickCustomerSaving ? t("common.saving") : t("common.save")}
-              </Button>
-            </div>
-          </form>
-        </SheetContent>
-      </Sheet>
+      {/* Customer Creation Sheet (full form with document upload & AI) */}
+      <CustomerCreateSheet
+        open={quickCustomerOpen}
+        onOpenChange={setQuickCustomerOpen}
+        onCreated={(created) => {
+          setCustomers((prev) => [...prev, { id: created.id, firstName: created.firstName, lastName: created.lastName, phone: created.phone }]);
+          setForm((prev) => ({ ...prev, customerId: String(created.id) }));
+        }}
+        prefill={customerPrefill}
+      />
 
       {/* List View */}
       {view === "list" && (
@@ -1561,14 +1504,14 @@ function BookingsPageContent() {
                   </Select>
                   <Button type="button" variant="outline" size="icon" className="shrink-0" onClick={() => {
                     if (pendingRequestInfo) {
-                      setQuickCustomerForm({
+                      setCustomerPrefill({
                         firstName: pendingRequestInfo.requesterFirstName,
                         lastName: pendingRequestInfo.requesterLastName,
                         email: pendingRequestInfo.requesterEmail || "",
                         phone: pendingRequestInfo.requesterPhone,
-                        idNumber: "",
-                        personalNumber: "",
                       });
+                    } else {
+                      setCustomerPrefill(null);
                     }
                     setQuickCustomerOpen(true);
                   }}>

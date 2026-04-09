@@ -27,7 +27,7 @@ router.get("/:subdomain/cars", async (req, res) => {
     if (!company) return res.status(404).json({ error: "Company not found" });
 
     const cars = await db.Car.findAll({
-      where: { companyId: company.id, status: "available" },
+      where: { companyId: company.id, status: { [Op.ne]: "maintenance" } },
       include: [{ model: db.CarImage, as: "images", attributes: ["id", "url", "isPrimary", "sortOrder"] }],
       attributes: ["id", "make", "model", "year", "color", "fuelType", "transmission", "seats", "dailyRate", "mileage"],
       order: [["make", "ASC"], ["model", "ASC"]],

@@ -176,10 +176,6 @@ export function BookingModal({ car, currency, subdomain, onClose, accentColor = 
                       weekday: `text-xs font-medium ${subtextColor} w-10 h-8`,
                       day: `w-10 h-10 text-sm ${textColor}`,
                       day_button: "w-full h-full rounded-full transition-colors",
-                      selected: `!rounded-full`,
-                      range_start: "rdp-range-start-day",
-                      range_end: "rdp-range-end-day",
-                      range_middle: "rdp-range-middle-day",
                       disabled: `!text-gray-300 ${isDark ? "!text-zinc-600" : ""} line-through pointer-events-none`,
                       today: `font-bold ${isDark ? "text-blue-400" : "text-blue-600"}`,
                     }}

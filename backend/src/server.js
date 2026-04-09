@@ -26,10 +26,12 @@ const PORT = process.env.PORT || 5000;
         origin: (origin, callback) => {
           if (!origin) return callback(null, true);
           if (allowedOrigins.includes(origin)) return callback(null, true);
-          const wildcardOrigins = allowedOrigins.filter((o) => o.startsWith("*"));
-          for (const wo of wildcardOrigins) {
-            const domain = wo.replace("*", "");
-            if (origin.endsWith(domain)) return callback(null, true);
+          for (const ao of allowedOrigins) {
+            if (ao.includes("*")) {
+              const escaped = ao.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace("\\*", "[^.]+");
+              const regex = new RegExp(`^${escaped}$`);
+              if (regex.test(origin)) return callback(null, true);
+            }
           }
           callback(null, false);
         },

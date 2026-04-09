@@ -22,11 +22,14 @@ app.use(
       // Check exact match
       if (allowedOrigins.includes(origin)) return callback(null, true);
 
-      // Check wildcard subdomain patterns (e.g., *.kindura.app)
-      const wildcardOrigins = allowedOrigins.filter((o) => o.startsWith("*"));
-      for (const wo of wildcardOrigins) {
-        const domain = wo.replace("*", "");
-        if (origin.endsWith(domain)) return callback(null, true);
+      // Check wildcard subdomain patterns (e.g., https://*.kindura.app)
+      for (const ao of allowedOrigins) {
+        if (ao.includes("*")) {
+          // Turn "https://*.kindura.app" into a regex like /^https:\/\/[^.]+\.kindura\.app$/
+          const escaped = ao.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace("\\*", "[^.]+");
+          const regex = new RegExp(`^${escaped}$`);
+          if (regex.test(origin)) return callback(null, true);
+        }
       }
 
       callback(null, false);

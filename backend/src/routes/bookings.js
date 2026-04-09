@@ -21,13 +21,22 @@ function ensureCompanyAccess(req, res, next) {
 router.get("/", async (req, res) => {
   try {
     if (!req.user.companyId) return res.status(400).json({ error: "No company context" });
-    const { status, from, to, limit } = req.query;
+    const { status, from, to, limit, customerId } = req.query;
     const where = { companyId: req.user.companyId };
     if (status) where.status = status;
+    if (customerId) where.customerId = parseInt(customerId);
     if (from || to) {
-      where.startDate = {};
-      if (from) where.startDate[Op.gte] = new Date(from);
-      if (to) where.startDate[Op.lte] = new Date(to);
+      // Match bookings whose date range overlaps with [from, to]
+      if (from && to) {
+        where[Op.and] = [
+          { startDate: { [Op.lte]: new Date(to) } },
+          { endDate: { [Op.gte]: new Date(from) } },
+        ];
+      } else if (from) {
+        where.endDate = { [Op.gte]: new Date(from) };
+      } else if (to) {
+        where.startDate = { [Op.lte]: new Date(to) };
+      }
     }
     const bookings = await db.Booking.findAll({
       where,

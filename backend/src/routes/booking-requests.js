@@ -59,7 +59,7 @@ router.post("/:id/confirm", async (req, res) => {
     const conflicting = await db.Booking.findOne({
       where: {
         carId: request.carId,
-        status: { [Op.notIn]: ["completed", "cancelled"] },
+        status: { [Op.ne]: "cancelled" },
         [Op.and]: [
           db.sequelize.where(fn("DATE", col("start_date")), { [Op.lte]: endDateOnly }),
           db.sequelize.where(fn("DATE", col("end_date")), { [Op.gte]: startDateOnly }),

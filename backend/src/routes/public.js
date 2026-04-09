@@ -52,11 +52,11 @@ router.get("/:subdomain/cars/:carId/booked-dates", async (req, res) => {
     });
     if (!car) return res.status(404).json({ error: "Car not found" });
 
-    // Get all active bookings (not completed/cancelled)
+    // Get all bookings except cancelled (completed bookings still occupy dates)
     const bookings = await db.Booking.findAll({
       where: {
         carId: car.id,
-        status: { [Op.notIn]: ["completed", "cancelled"] },
+        status: { [Op.ne]: "cancelled" },
       },
       attributes: ["startDate", "endDate"],
     });
@@ -115,7 +115,7 @@ router.post("/:subdomain/booking-requests", async (req, res) => {
     const conflicting = await db.Booking.findOne({
       where: {
         carId,
-        status: { [Op.notIn]: ["completed", "cancelled"] },
+        status: { [Op.ne]: "cancelled" },
         [Op.and]: [
           db.sequelize.where(fn("DATE", col("start_date")), { [Op.lte]: endDateOnly }),
           db.sequelize.where(fn("DATE", col("end_date")), { [Op.gte]: startDateOnly }),

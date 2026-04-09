@@ -35,6 +35,7 @@ const CustomerDocument = require("./models/CustomerDocument")(sequelize, Sequeli
 const Booking = require("./models/Booking")(sequelize, Sequelize.DataTypes);
 const BookingImage = require("./models/BookingImage")(sequelize, Sequelize.DataTypes);
 const CarDocument = require("./models/CarDocument")(sequelize, Sequelize.DataTypes);
+const DeliveryPoint = require("./models/DeliveryPoint")(sequelize, Sequelize.DataTypes);
 
 db.User = User;
 db.Company = Company;
@@ -47,6 +48,7 @@ db.Customer = Customer;
 db.CustomerDocument = CustomerDocument;
 db.Booking = Booking;
 db.BookingImage = BookingImage;
+db.DeliveryPoint = DeliveryPoint;
 
 // Run associations after all models are loaded
 Object.keys(db).forEach((modelName) => {

@@ -8,6 +8,7 @@ module.exports = (sequelize, DataTypes) => {
       Company.hasMany(models.Car, { foreignKey: "companyId", as: "cars" });
       Company.hasMany(models.Customer, { foreignKey: "companyId", as: "customers" });
       Company.hasMany(models.Booking, { foreignKey: "companyId", as: "bookings" });
+      Company.hasMany(models.DeliveryPoint, { foreignKey: "companyId", as: "deliveryPoints" });
     }
   }
 

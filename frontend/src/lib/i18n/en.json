@@ -168,6 +168,7 @@
       "aiWorking": "AI is reading your documents and auto-filling the fields below. This may take a few seconds.",
       "extracted": "Fields auto-filled from documents!",
       "extractionFailed": "Could not extract data from documents. Please fill in manually.",
+      "unusable": "This image cannot be used — it is not a recognizable ID, passport, or driver's license, or is too blurry to read.",
       "maxReached": "Maximum number of documents reached",
       "types": {
         "idCard": "ID Card",

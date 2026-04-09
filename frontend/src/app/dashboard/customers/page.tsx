@@ -296,8 +296,17 @@ export default function CustomersPage() {
           }
 
           toast.success(t("customersPage.documents.extracted"));
-        } catch {
-          toast.error(t("customersPage.documents.extractionFailed"));
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : "";
+          if (msg.includes("unusable_document")) {
+            // Remove the docs that were just uploaded since AI can't use them
+            setDocuments((prev) =>
+              prev.filter((d) => !newDocs.some((nd) => nd.tempId === d.tempId))
+            );
+            toast.error(t("customersPage.documents.unusable"));
+          } else {
+            toast.error(t("customersPage.documents.extractionFailed"));
+          }
         } finally {
           setExtracting(false);
         }

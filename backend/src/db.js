@@ -31,6 +31,7 @@ const Car = require("./models/Car")(sequelize, Sequelize.DataTypes);
 const CarImage = require("./models/CarImage")(sequelize, Sequelize.DataTypes);
 const CarDamage = require("./models/CarDamage")(sequelize, Sequelize.DataTypes);
 const Customer = require("./models/Customer")(sequelize, Sequelize.DataTypes);
+const CustomerDocument = require("./models/CustomerDocument")(sequelize, Sequelize.DataTypes);
 const Booking = require("./models/Booking")(sequelize, Sequelize.DataTypes);
 const BookingImage = require("./models/BookingImage")(sequelize, Sequelize.DataTypes);
 const CarDocument = require("./models/CarDocument")(sequelize, Sequelize.DataTypes);
@@ -43,6 +44,7 @@ db.CarImage = CarImage;
 db.CarDamage = CarDamage;
 db.CarDocument = CarDocument;
 db.Customer = Customer;
+db.CustomerDocument = CustomerDocument;
 db.Booking = Booking;
 db.BookingImage = BookingImage;
 

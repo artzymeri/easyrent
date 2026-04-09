@@ -168,6 +168,7 @@
       "aiWorking": "AI po lexon dokumentet tuaja dhe po plotëson fushat më poshtë. Kjo mund të zgjasë disa sekonda.",
       "extracted": "Fushat u plotësuan automatikisht nga dokumentet!",
       "extractionFailed": "Nuk u arrit të nxirren të dhëna nga dokumentet. Ju lutem plotësoni manualisht.",
+      "unusable": "Kjo imazh nuk mund të përdoret — nuk është një letërnjoftim, pasaportë, ose patentë e njohshme, ose është shumë e turbullt për tu lexuar.",
       "maxReached": "Numri maksimal i dokumenteve u arrit",
       "types": {
         "idCard": "Letërnjoftim",

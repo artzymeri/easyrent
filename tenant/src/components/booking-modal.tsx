@@ -42,18 +42,23 @@ export function BookingModal({ car, currency, subdomain, onClose, accentColor = 
   const inputBg = isDark ? "bg-zinc-800 text-white border-zinc-700 placeholder:text-zinc-500" : "bg-white text-gray-900 border-gray-300 placeholder:text-gray-400";
 
   useEffect(() => {
-    getBookedDates(subdomain, car.id).then((data) => {
-      setDailyRate(Number(data.dailyRate) || Number(car.dailyRate));
-      const dates: Date[] = [];
-      for (const range of data.bookedRanges) {
-        const start = parseISO(range.start);
-        const end = parseISO(range.end);
-        const days = eachDayOfInterval({ start, end });
-        dates.push(...days);
-      }
-      setBookedDates(dates);
-      setLoading(false);
-    });
+    getBookedDates(subdomain, car.id)
+      .then((data) => {
+        setDailyRate(Number(data.dailyRate) || Number(car.dailyRate));
+        const dates: Date[] = [];
+        for (const r of data.bookedRanges) {
+          const start = parseISO(r.start);
+          const end = parseISO(r.end);
+          if (isNaN(start.getTime()) || isNaN(end.getTime())) continue;
+          const days = eachDayOfInterval({ start, end });
+          dates.push(...days);
+        }
+        setBookedDates(dates);
+        setLoading(false);
+      })
+      .catch(() => {
+        setLoading(false);
+      });
   }, [subdomain, car.id, car.dailyRate]);
 
   const totalDays = useMemo(() => {

@@ -39,7 +39,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { DataTable, Eye, type DataTableAction } from "@/components/data-table";
+import { DataTable, Eye, Trash2, type DataTableAction } from "@/components/data-table";
 
 interface Booking {
   id: number;
@@ -407,6 +407,19 @@ export default function BookingsPage() {
     }
   };
 
+  const handleDeleteBooking = async (bookingId: number) => {
+    if (!confirm(t("common.confirmDelete"))) return;
+    try {
+      await api.delete(`/bookings/${bookingId}`);
+      toast.success(t("common.deleted"));
+      setSheetOpen(false);
+      setSelectedBooking(null);
+      fetchAll();
+    } catch {
+      toast.error(t("common.failedDelete"));
+    }
+  };
+
   const handleDownloadReport = async (bookingId: number) => {
     setGeneratingReport(true);
     try {
@@ -615,11 +628,12 @@ export default function BookingsPage() {
                         const label = startsHere
                           ? `${b.car?.make} ${b.car?.model} — ${b.customer?.firstName} ${b.customer?.lastName}`
                           : `${b.car?.make} ${b.car?.model}`;
+                        const isCompleted = b.status === "completed";
 
                         return (
                           <div
                             key={b.id}
-                            className={`${color.bg} ${color.text} relative z-10 cursor-pointer truncate rounded-md px-1.5 py-0.5 text-[11px] font-medium leading-4 shadow-sm transition-opacity hover:opacity-80`}
+                            className={`${isCompleted ? "bg-gray-300 text-gray-500 dark:bg-gray-600 dark:text-gray-400" : `${color.bg} ${color.text}`} relative z-10 cursor-pointer truncate rounded-md px-1.5 py-0.5 text-[11px] font-medium leading-4 shadow-sm transition-opacity hover:opacity-80 ${isCompleted ? "opacity-50" : ""}`}
                             style={{
                               width: `calc(${span * 100}% + ${(span - 1) * 1}px)`,
                             }}
@@ -1015,6 +1029,16 @@ export default function BookingsPage() {
                       {sendingEmail ? t("email.sending") : t("email.sendToClient")}
                     </Button>
                   )}
+                  {b.status === "cancelled" && (
+                    <Button
+                      variant="destructive"
+                      className="w-full"
+                      onClick={() => handleDeleteBooking(b.id)}
+                    >
+                      <Trash2 className="mr-1.5 h-4 w-4" />
+                      {t("common.delete")}
+                    </Button>
+                  )}
                   {b.status !== "completed" && b.status !== "cancelled" && (
                     <div className="flex gap-2">
                       {b.status === "pending_start" && (
@@ -1355,6 +1379,13 @@ export default function BookingsPage() {
               onClick: (b) => updateStatus(b.id, "cancelled"),
               variant: "destructive",
               hidden: (b) => b.status !== "pending_start" && b.status !== "in_progress",
+            },
+            {
+              label: t("common.delete"),
+              icon: <Trash2 className="h-4 w-4" />,
+              onClick: (b) => handleDeleteBooking(b.id),
+              variant: "destructive",
+              hidden: (b) => b.status !== "cancelled",
             },
           ]}
           emptyMessage={hasActiveFilters ? t("bookingsPage.noBookingsFilter") : t("bookingsPage.emptyState")}

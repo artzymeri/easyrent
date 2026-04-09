@@ -7,6 +7,9 @@ require("dotenv").config();
 
 const app = express();
 
+// Trust proxy (required for Render, Railway, etc. behind reverse proxies)
+app.set("trust proxy", 1);
+
 // ── Security & Middleware ─────────────────────────────────────
 app.use(helmet());
 app.use(

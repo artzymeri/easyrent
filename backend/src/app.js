@@ -28,8 +28,10 @@ app.use(
       // Check wildcard subdomain patterns (e.g., https://*.kindura.app)
       for (const ao of allowedOrigins) {
         if (ao.includes("*")) {
-          // Turn "https://*.kindura.app" into a regex like /^https:\/\/[^.]+\.kindura\.app$/
-          const escaped = ao.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace("\\*", "[^.]+");
+          // Turn "https://*.kindura.app" into regex /^https:\/\/[^.]+\.kindura\.app$/
+          const escaped = ao
+            .replace(/[.*+?^${}()|[\]\\]/g, "\\$&") // escape ALL regex chars including * and .
+            .replace("\\*", "[^.]+");                 // then swap \* for a subdomain matcher
           const regex = new RegExp(`^${escaped}$`);
           if (regex.test(origin)) return callback(null, true);
         }

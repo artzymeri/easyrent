@@ -28,7 +28,9 @@ const PORT = process.env.PORT || 5000;
           if (allowedOrigins.includes(origin)) return callback(null, true);
           for (const ao of allowedOrigins) {
             if (ao.includes("*")) {
-              const escaped = ao.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace("\\*", "[^.]+");
+              const escaped = ao
+                .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+                .replace("\\*", "[^.]+");
               const regex = new RegExp(`^${escaped}$`);
               if (regex.test(origin)) return callback(null, true);
             }

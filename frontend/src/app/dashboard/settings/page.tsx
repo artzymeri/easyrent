@@ -108,7 +108,7 @@ export default function SettingsPage() {
           )}
         </TabsList>
 
-        <TabsContent value="preferences" className="mt-4 overflow-y-auto pr-1">
+        <TabsContent value="preferences" className="mt-4 overflow-y-auto p-1">
           <TabPreferences isManager={isManager} />
         </TabsContent>
 

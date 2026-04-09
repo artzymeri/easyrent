@@ -159,6 +159,22 @@
       "failedCreate": "Failed to create customer",
       "failedUpdate": "Failed to update customer",
       "alreadyExists": "A customer with this phone number already exists"
+    },
+    "documents": {
+      "title": "Documents",
+      "upload": "Upload ID, Passport, or Driver's License",
+      "hint": "Upload document photos to auto-fill customer details using AI",
+      "analyzing": "AI is analyzing documents…",
+      "aiWorking": "AI is reading your documents and auto-filling the fields below. This may take a few seconds.",
+      "extracted": "Fields auto-filled from documents!",
+      "extractionFailed": "Could not extract data from documents. Please fill in manually.",
+      "maxReached": "Maximum number of documents reached",
+      "types": {
+        "idCard": "ID Card",
+        "driversLicense": "License",
+        "passport": "Passport",
+        "other": "Document"
+      }
     }
   },
   "carsPage": {

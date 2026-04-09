@@ -91,7 +91,7 @@ export function TabAccount({ user, onUserUpdate, initialProfile }: TabAccountPro
 
   return (
     <>
-      <div className="flex-1 space-y-6 overflow-y-auto pr-1 pb-4">
+      <div className="flex-1 space-y-6 overflow-y-auto p-1 pb-4">
         {/* Profile */}
         <Card>
           <CardHeader>

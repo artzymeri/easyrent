@@ -159,6 +159,22 @@
       "failedCreate": "Dështoi krijimi i klientit",
       "failedUpdate": "Dështoi përditësimi i klientit",
       "alreadyExists": "Një klient me këtë numër telefoni ekziston tashmë"
+    },
+    "documents": {
+      "title": "Dokumentet",
+      "upload": "Ngarko ID, Pasaportë, ose Patentë Shoferi",
+      "hint": "Ngarko foto të dokumenteve për të plotësuar automatikisht detajet e klientit me AI",
+      "analyzing": "AI po analizon dokumentet…",
+      "aiWorking": "AI po lexon dokumentet tuaja dhe po plotëson fushat më poshtë. Kjo mund të zgjasë disa sekonda.",
+      "extracted": "Fushat u plotësuan automatikisht nga dokumentet!",
+      "extractionFailed": "Nuk u arrit të nxirren të dhëna nga dokumentet. Ju lutem plotësoni manualisht.",
+      "maxReached": "Numri maksimal i dokumenteve u arrit",
+      "types": {
+        "idCard": "Letërnjoftim",
+        "driversLicense": "Patentë",
+        "passport": "Pasaportë",
+        "other": "Dokument"
+      }
     }
   },
   "carsPage": {

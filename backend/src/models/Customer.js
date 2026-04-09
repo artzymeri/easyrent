@@ -41,6 +41,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING(100),
         field: "id_number",
       },
+      personalNumber: {
+        type: DataTypes.STRING(100),
+        field: "personal_number",
+      },
       driversLicense: {
         type: DataTypes.STRING(100),
         field: "drivers_license",

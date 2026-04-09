@@ -58,7 +58,8 @@ Return ONLY a valid JSON object with these fields (use null for fields you canno
   "lastName": string or null,
   "email": string or null,
   "phone": string or null,
-  "idNumber": string or null (government ID / passport number),
+  "idNumber": string or null (government ID card number / passport number),
+  "personalNumber": string or null (personal identification number / national ID number – this is different from the ID card number),
   "driversLicense": string or null (driver's license number),
   "driversLicenseExpiry": string or null (YYYY-MM-DD format),
   "dateOfBirth": string or null (YYYY-MM-DD format),
@@ -137,7 +138,7 @@ router.post("/", async (req, res) => {
     // Clean optional fields – convert empty strings to null
     const data = { ...req.body };
     const { documents, ...customerData } = data;
-    const optionalFields = ["email", "idNumber", "driversLicense", "driversLicenseExpiry", "dateOfBirth", "address", "city", "country", "notes"];
+    const optionalFields = ["email", "idNumber", "personalNumber", "driversLicense", "driversLicenseExpiry", "dateOfBirth", "address", "city", "country", "notes"];
     for (const key of optionalFields) {
       if (customerData[key] === "" || customerData[key] === undefined) customerData[key] = null;
     }

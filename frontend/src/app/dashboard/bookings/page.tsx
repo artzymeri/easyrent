@@ -181,7 +181,7 @@ export default function BookingsPage() {
   const [quickCustomerOpen, setQuickCustomerOpen] = useState(false);
   const [quickCustomerSaving, setQuickCustomerSaving] = useState(false);
   const [quickCustomerForm, setQuickCustomerForm] = useState({
-    firstName: "", lastName: "", email: "", phone: "", idNumber: "", driversLicense: "",
+    firstName: "", lastName: "", email: "", phone: "", idNumber: "", personalNumber: "", driversLicense: "",
   });
 
   // Complete booking dialog state
@@ -321,7 +321,7 @@ export default function BookingsPage() {
       setCustomers((prev) => [...prev, created]);
       setForm((prev) => ({ ...prev, customerId: String(created.id) }));
       setQuickCustomerOpen(false);
-      setQuickCustomerForm({ firstName: "", lastName: "", email: "", phone: "", idNumber: "", driversLicense: "" });
+      setQuickCustomerForm({ firstName: "", lastName: "", email: "", phone: "", idNumber: "", personalNumber: "", driversLicense: "" });
       toast.success(t("customersPage.toast.added"));
     } catch {
       toast.error(t("customersPage.toast.failedAdd"));
@@ -1242,6 +1242,10 @@ export default function BookingsPage() {
               <div className="space-y-2">
                 <Label>{t("customersPage.idNumber")}</Label>
                 <Input value={quickCustomerForm.idNumber} onChange={(e) => setQuickCustomerForm({ ...quickCustomerForm, idNumber: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>{t("customersPage.personalNumber")}</Label>
+                <Input value={quickCustomerForm.personalNumber} onChange={(e) => setQuickCustomerForm({ ...quickCustomerForm, personalNumber: e.target.value })} />
               </div>
               <div className="space-y-2">
                 <Label>{t("customersPage.driversLicense")}</Label>

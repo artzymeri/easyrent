@@ -30,6 +30,7 @@ export interface ReportBooking {
     phone: string;
     email?: string;
     idNumber?: string;
+    personalNumber?: string;
     driversLicense?: string;
     dateOfBirth?: string;
     address?: string;
@@ -194,6 +195,7 @@ export async function generateRentalReport(
   if (customer.phone) customerRows.push([t("report.phone"), customer.phone]);
   if (customer.email) customerRows.push([t("report.email"), customer.email]);
   if (customer.idNumber) customerRows.push([t("report.idNumber"), customer.idNumber]);
+  if (customer.personalNumber) customerRows.push([t("report.personalNumber"), customer.personalNumber]);
   if (customer.driversLicense) customerRows.push([t("report.driversLicense"), customer.driversLicense]);
   if (customer.dateOfBirth) customerRows.push([t("report.dateOfBirth"), formatDate(customer.dateOfBirth)]);
   if (customer.address) {

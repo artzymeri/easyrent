@@ -42,6 +42,7 @@ interface Customer {
   email: string;
   phone: string;
   idNumber: string;
+  personalNumber: string;
   driversLicense: string;
   driversLicenseExpiry: string;
   dateOfBirth: string;
@@ -59,6 +60,7 @@ const EMPTY_FORM = {
   email: "",
   phone: "",
   idNumber: "",
+  personalNumber: "",
   driversLicense: "",
   driversLicenseExpiry: "",
   dateOfBirth: "",
@@ -123,6 +125,7 @@ export default function CustomersPage() {
         email: detail.email || "",
         phone: detail.phone || "",
         idNumber: detail.idNumber || "",
+        personalNumber: detail.personalNumber || "",
         driversLicense: detail.driversLicense || "",
         driversLicenseExpiry: detail.driversLicenseExpiry || "",
         dateOfBirth: detail.dateOfBirth || "",
@@ -151,6 +154,7 @@ export default function CustomersPage() {
         email: detail.email || "",
         phone: detail.phone || "",
         idNumber: detail.idNumber || "",
+        personalNumber: detail.personalNumber || "",
         driversLicense: detail.driversLicense || "",
         driversLicenseExpiry: detail.driversLicenseExpiry || "",
         dateOfBirth: detail.dateOfBirth || "",
@@ -251,6 +255,7 @@ export default function CustomersPage() {
             email?: string | null;
             phone?: string | null;
             idNumber?: string | null;
+            personalNumber?: string | null;
             driversLicense?: string | null;
             driversLicenseExpiry?: string | null;
             dateOfBirth?: string | null;
@@ -270,6 +275,7 @@ export default function CustomersPage() {
             email: prev.email || extracted.email || "",
             phone: prev.phone || extracted.phone || "",
             idNumber: prev.idNumber || extracted.idNumber || "",
+            personalNumber: prev.personalNumber || extracted.personalNumber || "",
             driversLicense: prev.driversLicense || extracted.driversLicense || "",
             driversLicenseExpiry: prev.driversLicenseExpiry || extracted.driversLicenseExpiry || "",
             dateOfBirth: prev.dateOfBirth || extracted.dateOfBirth || "",
@@ -494,15 +500,21 @@ export default function CustomersPage() {
                   <Input value={form.idNumber} onChange={(e) => setForm({ ...form, idNumber: e.target.value })} disabled={isDisabled || extracting} />
                 </div>
                 <div className="space-y-2">
-                  <Label>{t("customersPage.driversLicense")}</Label>
-                  <Input value={form.driversLicense} onChange={(e) => setForm({ ...form, driversLicense: e.target.value })} disabled={isDisabled || extracting} />
+                  <Label>{t("customersPage.personalNumber")}</Label>
+                  <Input value={form.personalNumber} onChange={(e) => setForm({ ...form, personalNumber: e.target.value })} disabled={isDisabled || extracting} />
                 </div>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
+                  <Label>{t("customersPage.driversLicense")}</Label>
+                  <Input value={form.driversLicense} onChange={(e) => setForm({ ...form, driversLicense: e.target.value })} disabled={isDisabled || extracting} />
+                </div>
+                <div className="space-y-2">
                   <Label>{t("customersPage.dateOfBirth")}</Label>
                   <DatePicker value={form.dateOfBirth} onChange={(val) => setForm({ ...form, dateOfBirth: val })} maxDate={new Date()} disabled={isDisabled || extracting} />
                 </div>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>{t("customersPage.address")}</Label>
                   <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} disabled={isDisabled || extracting} />
@@ -566,8 +578,9 @@ export default function CustomersPage() {
             render: (c) => (
               <div className="flex flex-wrap gap-1">
                 {c.idNumber && <Badge variant="outline" className="text-xs">ID: {c.idNumber}</Badge>}
+                {c.personalNumber && <Badge variant="outline" className="text-xs">PN: {c.personalNumber}</Badge>}
                 {c.driversLicense && <Badge variant="outline" className="text-xs">DL: {c.driversLicense}</Badge>}
-                {!c.idNumber && !c.driversLicense && <span className="text-muted-foreground">—</span>}
+                {!c.idNumber && !c.personalNumber && !c.driversLicense && <span className="text-muted-foreground">—</span>}
               </div>
             ),
           },
@@ -584,7 +597,7 @@ export default function CustomersPage() {
         ]}
         getRowId={(c) => c.id}
         searchFn={(c, q) =>
-          `${c.firstName} ${c.lastName} ${c.phone} ${c.email} ${c.idNumber}`.toLowerCase().includes(q)
+          `${c.firstName} ${c.lastName} ${c.phone} ${c.email} ${c.idNumber} ${c.personalNumber}`.toLowerCase().includes(q)
         }
         actions={[
           {

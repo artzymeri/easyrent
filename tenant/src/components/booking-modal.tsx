@@ -153,7 +153,7 @@ export function BookingModal({ car, currency, subdomain, onClose, accentColor = 
               </div>
             ) : (
               <>
-                <div className={`rounded-xl border ${borderColor} p-3 mb-4`}>
+                <div className={`rounded-xl border ${borderColor} p-3 mb-4 ${isDark ? "rdp-dark" : "rdp-light"}`}>
                   <DayPicker
                     mode="range"
                     selected={range}
@@ -167,18 +167,6 @@ export function BookingModal({ car, currency, subdomain, onClose, accentColor = 
                     }}
                     numberOfMonths={1}
                     fromDate={new Date()}
-                    classNames={{
-                      root: `w-full ${isDark ? "rdp-dark" : ""}`,
-                      month_caption: `text-sm font-semibold ${textColor} mb-2`,
-                      nav: "flex gap-1",
-                      button_previous: `p-1.5 rounded-lg ${isDark ? "hover:bg-zinc-800 text-gray-400" : "hover:bg-gray-100 text-gray-600"}`,
-                      button_next: `p-1.5 rounded-lg ${isDark ? "hover:bg-zinc-800 text-gray-400" : "hover:bg-gray-100 text-gray-600"}`,
-                      weekday: `text-xs font-medium ${subtextColor} w-10 h-8`,
-                      day: `w-10 h-10 text-sm ${textColor}`,
-                      day_button: "w-full h-full rounded-full transition-colors",
-                      disabled: `!text-gray-300 ${isDark ? "!text-zinc-600" : ""} line-through pointer-events-none`,
-                      today: `font-bold ${isDark ? "text-blue-400" : "text-blue-600"}`,
-                    }}
                   />
                 </div>
 

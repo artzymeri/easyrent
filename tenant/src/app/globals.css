@@ -1,5 +1,5 @@
-@import "tailwindcss";
 @import "react-day-picker/style.css";
+@import "tailwindcss";
 
 :root {
   --background: #ffffff;
@@ -19,11 +19,11 @@ body {
 
 /* Date picker booked dates styling */
 .rdp-booked .rdp-day_button {
-  text-decoration: line-through;
-  opacity: 0.4;
+  text-decoration: line-through !important;
+  opacity: 0.4 !important;
 }
 
-/* ── Calendar range styling (uses rdp v9 native variables) ── */
+/* ── Calendar base styling ── */
 .rdp-root {
   --rdp-accent-color: #2563eb;
   --rdp-accent-background-color: #dbeafe;
@@ -33,9 +33,47 @@ body {
   --rdp-range_start-date-background-color: #2563eb;
   --rdp-range_end-color: white;
   --rdp-range_end-date-background-color: #2563eb;
+  width: 100%;
 }
 
-.rdp-dark {
+/* Make day buttons circular */
+.rdp-day_button {
+  border-radius: 9999px !important;
+}
+
+/* Start/end: solid circles */
+.rdp-range_start .rdp-day_button,
+.rdp-range_end .rdp-day_button {
+  border-radius: 9999px !important;
+}
+
+/* Middle: flat band, no rounding on container */
+.rdp-range_middle {
+  border-radius: 0 !important;
+}
+.rdp-range_middle .rdp-day_button {
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+
+/* Today styling */
+.rdp-today:not(.rdp-range_start):not(.rdp-range_end):not(.rdp-range_middle) {
+  font-weight: 700;
+}
+.rdp-today:not(.rdp-range_start):not(.rdp-range_end):not(.rdp-range_middle) .rdp-day_button {
+  color: #2563eb;
+}
+
+/* Disabled days */
+.rdp-disabled .rdp-day_button {
+  color: #d1d5db !important;
+  text-decoration: line-through;
+  pointer-events: none;
+}
+
+/* ── Dark mode ── */
+.rdp-dark .rdp-root,
+.rdp-dark.rdp-root {
   --rdp-accent-color: #3b82f6;
   --rdp-accent-background-color: rgba(59, 130, 246, 0.2);
   --rdp-range_middle-background-color: rgba(59, 130, 246, 0.15);
@@ -46,17 +84,27 @@ body {
   --rdp-range_end-date-background-color: #3b82f6;
 }
 
-/* Make start/end day buttons circular */
-.rdp-range_start .rdp-day_button,
-.rdp-range_end .rdp-day_button {
-  border-radius: 9999px;
+.rdp-dark .rdp-today:not(.rdp-range_start):not(.rdp-range_end):not(.rdp-range_middle) .rdp-day_button {
+  color: #60a5fa;
 }
 
-/* Flat band for middle — no rounding */
-.rdp-range_middle {
-  border-radius: 0;
+.rdp-dark .rdp-disabled .rdp-day_button {
+  color: #52525b !important;
 }
-.rdp-range_middle .rdp-day_button {
-  border-radius: 0;
-  background: transparent;
+
+.rdp-dark .rdp-day_button {
+  color: #e4e4e7;
+}
+
+.rdp-dark .rdp-month_caption {
+  color: white;
+}
+
+.rdp-dark .rdp-weekday {
+  color: #a1a1aa;
+}
+
+.rdp-dark .rdp-button_previous,
+.rdp-dark .rdp-button_next {
+  color: #a1a1aa;
 }

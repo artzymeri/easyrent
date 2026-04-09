@@ -637,7 +637,7 @@ export default function BookingsPage() {
                             style={{
                               width: `calc(${span * 100}% + ${(span - 1) * 1}px)`,
                             }}
-                            title={`${b.car?.make} ${b.car?.model} — ${b.customer?.firstName} ${b.customer?.lastName} (${new Date(b.startDate).toLocaleDateString()} → ${new Date(b.endDate).toLocaleDateString()})`}
+                            title={`${b.car?.make} ${b.car?.model} — ${b.customer?.firstName} ${b.customer?.lastName} (${new Date(b.startDate).toLocaleDateString(undefined, { timeZone: "UTC" })} → ${new Date(b.endDate).toLocaleDateString(undefined, { timeZone: "UTC" })})`}
                             onClick={(e) => { e.stopPropagation(); setSelectedBooking(b); setSheetOpen(true); }}
                           >
                             {label}
@@ -750,8 +750,8 @@ export default function BookingsPage() {
             const b = selectedBooking;
             const startDate = new Date(b.startDate);
             const endDate = new Date(b.endDate);
-            const formatDate = (d: Date) => d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
-            const formatTime = (d: Date) => d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+            const formatDate = (d: Date) => d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" });
+            const formatTime = (d: Date) => d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
             return (
               <>
                 <SheetHeader className="border-b">
@@ -999,7 +999,7 @@ export default function BookingsPage() {
 
                   {/* Created Info */}
                   <div className="text-xs text-muted-foreground">
-                    {t("bookingsPage.sheetCreatedAt", { date: new Date(b.createdAt).toLocaleString() })}
+                    {t("bookingsPage.sheetCreatedAt", { date: new Date(b.createdAt).toLocaleString(undefined, { timeZone: "UTC" }) })}
                     {b.createdBy && (
                       <span> · {t("bookingsPage.sheetCreatedBy", { name: `${b.createdBy.firstName} ${b.createdBy.lastName}` })}</span>
                     )}
@@ -1317,7 +1317,7 @@ export default function BookingsPage() {
               sortValue: (b) => new Date(b.startDate).getTime(),
               render: (b) => (
                 <span className="text-sm">
-                  {new Date(b.startDate).toLocaleDateString()} → {new Date(b.endDate).toLocaleDateString()}
+                  {new Date(b.startDate).toLocaleDateString(undefined, { timeZone: "UTC" })} → {new Date(b.endDate).toLocaleDateString(undefined, { timeZone: "UTC" })}
                 </span>
               ),
             },

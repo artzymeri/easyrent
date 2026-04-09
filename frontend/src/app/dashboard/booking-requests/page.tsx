@@ -166,16 +166,17 @@ export default function BookingRequestsPage() {
   // ── Helpers ───────────────────────────────────────────────
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
+    // Use UTC so displayed time matches the stored time (not shifted by browser timezone)
     const datePart = d.toLocaleDateString(undefined, {
       year: "numeric",
       month: "short",
       day: "numeric",
+      timeZone: "UTC",
     });
-    // Show time if it's not midnight (00:00)
-    const hours = d.getHours();
-    const minutes = d.getMinutes();
+    const hours = d.getUTCHours();
+    const minutes = d.getUTCMinutes();
     if (hours === 0 && minutes === 0) return datePart;
-    const timePart = d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+    const timePart = d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
     return `${datePart} ${timePart}`;
   };
 
@@ -186,6 +187,7 @@ export default function BookingRequestsPage() {
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
+      timeZone: "UTC",
     });
   };
 

@@ -109,7 +109,16 @@ router.put("/:id", async (req, res) => {
     if (!company) return res.status(404).json({ error: "Company not found" });
 
     const { name, email, phone, address, city, country, isActive, logoUrl, websiteTemplate, websitePublished, slogan, signature, stampUrl, businessNumber, businessFaxNumber, companyIdNumber } = req.body;
-    const updateData = { name, email, phone, address, city, country, isActive };
+    const updateData = {};
+    
+    // Only update fields that are explicitly provided
+    if (name !== undefined) updateData.name = name;
+    if (email !== undefined) updateData.email = email;
+    if (phone !== undefined) updateData.phone = phone;
+    if (address !== undefined) updateData.address = address;
+    if (city !== undefined) updateData.city = city;
+    if (country !== undefined) updateData.country = country;
+    if (isActive !== undefined) updateData.isActive = isActive;
     if (logoUrl !== undefined) updateData.logoUrl = logoUrl;
     if (websiteTemplate !== undefined) updateData.websiteTemplate = websiteTemplate;
     if (websitePublished !== undefined) updateData.websitePublished = websitePublished;
@@ -119,6 +128,7 @@ router.put("/:id", async (req, res) => {
     if (businessNumber !== undefined) updateData.businessNumber = businessNumber;
     if (businessFaxNumber !== undefined) updateData.businessFaxNumber = businessFaxNumber;
     if (companyIdNumber !== undefined) updateData.companyIdNumber = companyIdNumber;
+    
     await company.update(updateData);
 
     res.json(company);

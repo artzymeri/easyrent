@@ -141,6 +141,7 @@
     "address": "Adresa",
     "city": "Qyteti",
     "country": "Shteti",
+    "hasEmail": "Ka Email",
     "selectCountry": "Zgjidhni shtetin",
     "selectCity": "Zgjidhni qytetin",
     "selectCountryFirst": "Zgjidhni shtetin fillimisht",

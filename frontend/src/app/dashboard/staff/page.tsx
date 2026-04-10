@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n";
@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { DataTable, Pencil, Trash2 } from "@/components/data-table";
+import { FilterBar, type FilterConfig } from "@/components/filter-bar";
 import { UserCheck, UserX } from "lucide-react";
 
 interface StaffMember {
@@ -40,10 +41,20 @@ interface StaffMember {
   createdAt: string;
 }
 
+interface StaffResponse {
+  rows: StaffMember[];
+  count: number;
+  filters: {
+    roles: string[];
+    statuses: { value: string; label: string }[];
+  };
+}
+
 export default function StaffPage() {
   const router = useRouter();
   const { t } = useTranslation();
   const [staff, setStaff] = useState<StaffMember[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -56,10 +67,23 @@ export default function StaffPage() {
     phone: "",
   });
 
-  const fetchStaff = async () => {
+  // Filter state
+  const [search, setSearch] = useState("");
+  const [filterValues, setFilterValues] = useState<Record<string, string>>({});
+
+  const fetchStaff = useCallback(async () => {
     try {
-      const data = await api.get<StaffMember[]>("/staff");
-      setStaff(Array.isArray(data) ? data : []);
+      setLoading(true);
+      const params = new URLSearchParams();
+      if (search) params.append("search", search);
+      if (filterValues.role) params.append("role", filterValues.role);
+      if (filterValues.isActive) params.append("isActive", filterValues.isActive);
+      
+      const queryString = params.toString();
+      const data = await api.get<StaffResponse>(`/staff${queryString ? `?${queryString}` : ""}`);
+      
+      setStaff(data.rows || []);
+      setTotalCount(data.count || 0);
     } catch (err) {
       // If not authorized (regular user), redirect
       if (err instanceof Error && err.message.includes("403")) {
@@ -70,12 +94,45 @@ export default function StaffPage() {
     } finally {
       setLoading(false);
     }
+  }, [search, filterValues, router, t]);
+
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchStaff();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [fetchStaff]);
+
+  const handleFilterChange = (key: string, value: string) => {
+    setFilterValues((prev) => ({ ...prev, [key]: value }));
   };
 
-  useEffect(() => {
-    fetchStaff();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const handleClearFilters = () => {
+    setFilterValues({});
+    setSearch("");
+  };
+
+  const filterConfigs: FilterConfig[] = [
+    {
+      key: "role",
+      label: t("staffPage.tableHeaders.role"),
+      type: "select",
+      options: [
+        { value: "manager", label: t("roles.manager") },
+        { value: "regular", label: t("roles.regular") },
+      ],
+    },
+    {
+      key: "isActive",
+      label: t("staffPage.tableHeaders.status"),
+      type: "select",
+      options: [
+        { value: "true", label: t("common.active") },
+        { value: "false", label: t("common.inactive") },
+      ],
+    },
+  ];
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,21 +174,13 @@ export default function StaffPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <Spinner className="h-8 w-8" />
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{t("staffPage.title")}</h1>
           <p className="text-muted-foreground">
-            {t("staffPage.subtitle", { count: String(staff.length) })}
+            {t("staffPage.subtitle", { count: String(totalCount) })}
           </p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -187,79 +236,93 @@ export default function StaffPage() {
         </Dialog>
       </div>
 
-      <DataTable<StaffMember>
-        data={staff}
-        columns={[
-          {
-            key: "name",
-            header: t("staffPage.tableHeaders.name"),
-            sortValue: (s) => `${s.firstName} ${s.lastName}`,
-            render: (s) => <span className="font-medium">{s.firstName} {s.lastName}</span>,
-          },
-          {
-            key: "email",
-            header: t("staffPage.tableHeaders.email"),
-            sortValue: (s) => s.email,
-            render: (s) => <span className="text-muted-foreground">{s.email}</span>,
-          },
-          {
-            key: "role",
-            header: t("staffPage.tableHeaders.role"),
-            sortValue: (s) => s.role,
-            render: (s) => (
-              <Badge variant={s.role === "manager" ? "default" : "secondary"}>
-                {t(`roles.${s.role}`)}
-              </Badge>
-            ),
-          },
-          {
-            key: "status",
-            header: t("staffPage.tableHeaders.status"),
-            sortValue: (s) => (s.isActive ? 1 : 0),
-            render: (s) => (
-              <Badge variant={s.isActive ? "default" : "destructive"}>
-                {s.isActive ? t("common.active") : t("common.inactive")}
-              </Badge>
-            ),
-          },
-          {
-            key: "lastLogin",
-            header: t("staffPage.tableHeaders.lastLogin"),
-            sortValue: (s) => s.lastLoginAt ? new Date(s.lastLoginAt).getTime() : 0,
-            render: (s) => (
-              <span className="text-sm text-muted-foreground">
-                {s.lastLoginAt ? new Date(s.lastLoginAt).toLocaleDateString() : t("common.never")}
-              </span>
-            ),
-          },
-        ]}
-        getRowId={(s) => s.id}
-        searchFn={(s, q) =>
-          `${s.firstName} ${s.lastName} ${s.email} ${s.role}`.toLowerCase().includes(q)
-        }
-        actions={[
-          {
-            label: t("common.edit"),
-            icon: <Pencil className="h-4 w-4" />,
-            onClick: () => {},
-          },
-          {
-            label: t("common.activate"),
-            icon: <UserCheck className="h-4 w-4" />,
-            onClick: (s) => toggleActive(s),
-            hidden: (s) => s.isActive,
-          },
-          {
-            label: t("common.deactivate"),
-            icon: <UserX className="h-4 w-4" />,
-            onClick: (s) => toggleActive(s),
-            variant: "destructive",
-            hidden: (s) => !s.isActive,
-          },
-        ]}
-        emptyMessage={t("staffPage.emptyState")}
-        defaultSortKey="name"
+      <FilterBar
+        filters={filterConfigs}
+        filterValues={filterValues}
+        onFilterChange={handleFilterChange}
+        onClearFilters={handleClearFilters}
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder={t("common.search")}
       />
+
+      {loading ? (
+        <div className="flex h-64 items-center justify-center">
+          <Spinner className="h-8 w-8" />
+        </div>
+      ) : (
+        <DataTable<StaffMember>
+          data={staff}
+          columns={[
+            {
+              key: "name",
+              header: t("staffPage.tableHeaders.name"),
+              sortValue: (s) => `${s.firstName} ${s.lastName}`,
+              render: (s) => <span className="font-medium">{s.firstName} {s.lastName}</span>,
+            },
+            {
+              key: "email",
+              header: t("staffPage.tableHeaders.email"),
+              sortValue: (s) => s.email,
+              render: (s) => <span className="text-muted-foreground">{s.email}</span>,
+            },
+            {
+              key: "role",
+              header: t("staffPage.tableHeaders.role"),
+              sortValue: (s) => s.role,
+              render: (s) => (
+                <Badge variant={s.role === "manager" ? "default" : "secondary"}>
+                  {t(`roles.${s.role}`)}
+                </Badge>
+              ),
+            },
+            {
+              key: "status",
+              header: t("staffPage.tableHeaders.status"),
+              sortValue: (s) => (s.isActive ? 1 : 0),
+              render: (s) => (
+                <Badge variant={s.isActive ? "default" : "destructive"}>
+                  {s.isActive ? t("common.active") : t("common.inactive")}
+                </Badge>
+              ),
+            },
+            {
+              key: "lastLogin",
+              header: t("staffPage.tableHeaders.lastLogin"),
+              sortValue: (s) => s.lastLoginAt ? new Date(s.lastLoginAt).getTime() : 0,
+              render: (s) => (
+                <span className="text-sm text-muted-foreground">
+                  {s.lastLoginAt ? new Date(s.lastLoginAt).toLocaleDateString() : t("common.never")}
+                </span>
+              ),
+            },
+          ]}
+          getRowId={(s) => s.id}
+          actions={[
+            {
+              label: t("common.edit"),
+              icon: <Pencil className="h-4 w-4" />,
+              onClick: () => {},
+            },
+            {
+              label: t("common.activate"),
+              icon: <UserCheck className="h-4 w-4" />,
+              onClick: (s) => toggleActive(s),
+              hidden: (s) => s.isActive,
+            },
+            {
+              label: t("common.deactivate"),
+              icon: <UserX className="h-4 w-4" />,
+              onClick: (s) => toggleActive(s),
+              variant: "destructive",
+              hidden: (s) => !s.isActive,
+            },
+          ]}
+          emptyMessage={t("staffPage.emptyState")}
+          defaultSortKey="name"
+          hideSearch
+        />
+      )}
     </div>
   );
 }

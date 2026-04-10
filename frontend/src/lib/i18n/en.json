@@ -141,6 +141,7 @@
     "address": "Address",
     "city": "City",
     "country": "Country",
+    "hasEmail": "Has Email",
     "selectCountry": "Select country",
     "selectCity": "Select city",
     "selectCountryFirst": "Select country first",

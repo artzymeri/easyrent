@@ -2,14 +2,9 @@
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import {
-  Car as CarIcon,
-  User,
-  Calendar,
-  Phone,
-  Mail,
   CheckCircle2,
   XCircle,
   Trash2,
@@ -29,29 +24,30 @@ interface BookingRequestCardProps {
   onDelete: (req: BookingRequest) => void;
 }
 
-function formatDate(dateStr: string) {
-  const d = new Date(dateStr);
-  const datePart = d.toLocaleDateString(undefined, {
-    year: "numeric",
+function formatDateRange(startStr: string, endStr: string) {
+  const start = new Date(startStr);
+  const end = new Date(endStr);
+  
+  const formatOpts: Intl.DateTimeFormatOptions = {
     month: "short",
     day: "numeric",
-    timeZone: "UTC",
-  });
-  const hours = d.getUTCHours();
-  const minutes = d.getUTCMinutes();
-  if (hours === 0 && minutes === 0) return datePart;
-  const timePart = d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
-  return `${datePart} ${timePart}`;
-}
-
-function formatDateTime(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString(undefined, {
     year: "numeric",
-    month: "short",
-    day: "numeric",
     hour: "2-digit",
     minute: "2-digit",
     timeZone: "UTC",
+  };
+  
+  return `${start.toLocaleDateString(undefined, formatOpts)} – ${end.toLocaleDateString(undefined, formatOpts)}`;
+}
+
+function formatSubmittedAt(dateStr: string) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
@@ -72,10 +68,10 @@ export function BookingRequestCard({
   const carImg = getCarImage(req);
 
   return (
-    <Card className="overflow-hidden">
-      <div className="flex flex-col sm:flex-row">
-        {/* Car image */}
-        <div className="relative flex h-40 w-full shrink-0 items-center justify-center bg-muted sm:h-auto sm:w-48">
+    <Card className="overflow-hidden transition-shadow hover:shadow-md">
+      <div className="flex flex-col md:flex-row">
+        {/* Car image - compact */}
+        <div className="relative h-48 w-full shrink-0 bg-muted md:h-auto md:w-56">
           {carImg ? (
             <img
               src={carImg}
@@ -83,112 +79,73 @@ export function BookingRequestCard({
               className="h-full w-full object-cover"
             />
           ) : (
-            <ImageIcon className="h-10 w-10 text-muted-foreground/40" />
+            <div className="flex h-full items-center justify-center">
+              <ImageIcon className="h-10 w-10 text-muted-foreground/40" />
+            </div>
           )}
-          {/* Status badge overlay */}
-          <span
-            className={`absolute top-2 left-2 rounded-full border px-2.5 py-0.5 text-xs font-medium ${STATUS_STYLES[req.status] || ""}`}
+          {/* Status badge */}
+          <Badge
+            variant="secondary"
+            className={`absolute top-3 left-3 ${STATUS_STYLES[req.status] || ""}`}
           >
             {t(`bookingRequestsPage.${req.status}`)}
-          </span>
+          </Badge>
         </div>
 
         {/* Content */}
-        <div className="flex flex-1 flex-col gap-3 p-4">
-          {/* Top row: car + requester */}
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            {/* Car info */}
-            <div className="flex items-center gap-2">
-              <CarIcon className="h-4 w-4 text-muted-foreground" />
-              <span className="font-semibold">
+        <div className="flex flex-1 flex-col p-5">
+          {/* Header: Car name + submitted time */}
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <h3 className="text-lg font-semibold">
                 {req.car.make} {req.car.model}
-              </span>
-              <span className="text-sm text-muted-foreground">
-                {req.car.licensePlate}
-              </span>
+              </h3>
+              <p className="text-sm text-muted-foreground">{req.car.licensePlate}</p>
             </div>
-
-            {/* Submitted time */}
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Clock className="h-3 w-3" />
-              {t("bookingRequestsPage.submittedAt")}: {formatDateTime(req.createdAt)}
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Clock className="h-3.5 w-3.5" />
+              {t("bookingRequestsPage.submittedAt")}: {formatSubmittedAt(req.createdAt)}
             </div>
           </div>
 
-          <Separator />
-
-          {/* Details grid */}
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {/* Requester */}
-            <div className="flex items-start gap-2">
-              <User className="mt-0.5 h-4 w-4 text-muted-foreground" />
-              <div>
-                <p className="text-sm font-medium">
-                  {req.requesterFirstName} {req.requesterLastName}
-                </p>
-                <div className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
-                  <Phone className="h-3 w-3" />
-                  <a href={`tel:${req.requesterPhone}`} className="hover:underline">
-                    {req.requesterPhone}
-                  </a>
-                </div>
-                {req.requesterEmail && (
-                  <div className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
-                    <Mail className="h-3 w-3" />
-                    <a href={`mailto:${req.requesterEmail}`} className="hover:underline">
-                      {req.requesterEmail}
-                    </a>
-                  </div>
-                )}
-                {!req.requesterEmail && (
-                  <p className="mt-0.5 text-xs text-muted-foreground italic">
-                    {t("bookingRequestsPage.noEmail")}
-                  </p>
-                )}
-              </div>
+          {/* Main info - clean layout */}
+          <div className="mt-4 flex flex-wrap items-center gap-x-8 gap-y-3">
+            {/* Customer */}
+            <div>
+              <p className="text-sm font-medium">
+                {req.requesterFirstName} {req.requesterLastName}
+              </p>
+              <p className="text-xs text-muted-foreground">{req.requesterPhone}</p>
+              {req.requesterEmail && (
+                <p className="text-xs text-muted-foreground">{req.requesterEmail}</p>
+              )}
             </div>
 
             {/* Dates */}
-            <div className="flex items-start gap-2">
-              <Calendar className="mt-0.5 h-4 w-4 text-muted-foreground" />
-              <div>
-                <p className="text-sm font-medium">
-                  {formatDate(req.startDate)} – {formatDate(req.endDate)}
-                </p>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  {req.totalDays} {req.totalDays === 1 ? t("bookingRequestsPage.day") : t("bookingRequestsPage.days")}
-                </p>
-              </div>
+            <div>
+              <p className="text-sm font-medium">
+                {formatDateRange(req.startDate, req.endDate)}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {req.totalDays} {req.totalDays === 1 ? t("bookingRequestsPage.day") : t("bookingRequestsPage.days")}
+              </p>
             </div>
 
-            {/* Daily rate */}
-            <div>
+            {/* Pricing - right aligned */}
+            <div className="ml-auto text-right">
               <p className="text-xs text-muted-foreground">
-                {t("bookingRequestsPage.dailyRate")}
+                {t("bookingRequestsPage.dailyRate")}: {fc(req.dailyRate)}
               </p>
-              <p className="text-sm font-medium">{fc(req.dailyRate)}</p>
-            </div>
-
-            {/* Total */}
-            <div>
-              <p className="text-xs text-muted-foreground">
-                {t("bookingRequestsPage.totalAmount")}
-              </p>
-              <p className="text-lg font-bold">{fc(req.totalAmount)}</p>
+              <p className="text-xl font-bold">{fc(req.totalAmount)}</p>
             </div>
           </div>
 
           {/* Actions */}
-          {req.status === "pending" && (
-            <>
-              <Separator />
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  size="sm"
-                  onClick={() => onConfirm(req)}
-                  disabled={isActioning}
-                >
-                  <CheckCircle2 className="mr-1 h-4 w-4" />
+          <div className="mt-5 flex flex-wrap items-center gap-2 border-t pt-4">
+            {req.status === "pending" ? (
+              <>
+                <Button size="sm" onClick={() => onConfirm(req)} disabled={isActioning}>
+                  <CheckCircle2 className="mr-1.5 h-4 w-4" />
                   {t("bookingRequestsPage.confirm")}
                 </Button>
                 <Button
@@ -197,43 +154,34 @@ export function BookingRequestCard({
                   onClick={() => onReject(req)}
                   disabled={isActioning}
                 >
-                  <XCircle className="mr-1 h-4 w-4" />
+                  <XCircle className="mr-1.5 h-4 w-4" />
                   {t("bookingRequestsPage.reject")}
                 </Button>
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
-                  className="text-destructive hover:bg-destructive/10"
+                  className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                   onClick={() => onDelete(req)}
                   disabled={isActioning}
                 >
-                  <Trash2 className="mr-1 h-4 w-4" />
+                  <Trash2 className="mr-1.5 h-4 w-4" />
                   {t("bookingRequestsPage.delete")}
                 </Button>
-                {isActioning && <Spinner />}
-              </div>
-            </>
-          )}
-
-          {/* Non-pending: show delete only */}
-          {req.status !== "pending" && (
-            <>
-              <Separator />
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-destructive hover:bg-destructive/10"
-                  onClick={() => onDelete(req)}
-                  disabled={isActioning}
-                >
-                  <Trash2 className="mr-1 h-4 w-4" />
-                  {t("bookingRequestsPage.delete")}
-                </Button>
-                {isActioning && <Spinner />}
-              </div>
-            </>
-          )}
+              </>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                onClick={() => onDelete(req)}
+                disabled={isActioning}
+              >
+                <Trash2 className="mr-1.5 h-4 w-4" />
+                {t("bookingRequestsPage.delete")}
+              </Button>
+            )}
+            {isActioning && <Spinner className="h-4 w-4" />}
+          </div>
         </div>
       </div>
     </Card>

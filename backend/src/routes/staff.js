@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const bcrypt = require("bcrypt");
 const { body } = require("express-validator");
+const { Op } = require("sequelize");
 const { validate } = require("../middleware/validate");
 const { authenticate } = require("../middleware/auth");
 const db = require("../db");
@@ -100,13 +101,55 @@ router.get("/", async (req, res) => {
     if (req.user.type !== "admin" && req.user.role !== "manager") {
       return res.status(403).json({ error: "Only managers can view staff" });
     }
+    
+    const { search, role, isActive, sortBy = "createdAt", sortOrder = "DESC" } = req.query;
+    
+    // Build where clause
+    const where = { companyId: req.user.companyId };
+    
+    // Search filter
+    if (search) {
+      where[Op.or] = [
+        { firstName: { [Op.like]: `%${search}%` } },
+        { lastName: { [Op.like]: `%${search}%` } },
+        { email: { [Op.like]: `%${search}%` } },
+        { phone: { [Op.like]: `%${search}%` } },
+      ];
+    }
+    
+    // Role filter
+    if (role) {
+      where.role = role;
+    }
+    
+    // Active filter
+    if (isActive === "true") {
+      where.isActive = true;
+    } else if (isActive === "false") {
+      where.isActive = false;
+    }
+    
+    // Build order clause
+    const validSortFields = ["createdAt", "firstName", "lastName", "role", "lastLoginAt"];
+    const orderField = validSortFields.includes(sortBy) ? sortBy : "createdAt";
+    const orderDir = sortOrder === "ASC" ? "ASC" : "DESC";
+    
     const staff = await db.Staff.findAll({
-      where: { companyId: req.user.companyId },
+      where,
       attributes: { exclude: ["password"] },
-      order: [["createdAt", "DESC"]],
+      order: [[orderField, orderDir]],
     });
-    res.json(staff);
+    
+    res.json({
+      rows: staff,
+      count: staff.length,
+      filters: {
+        roles: ["manager", "regular"],
+        statuses: [{ value: "true", label: "Active" }, { value: "false", label: "Inactive" }],
+      },
+    });
   } catch (err) {
+    console.error("Fetch staff error:", err);
     res.status(500).json({ error: "Failed to fetch staff" });
   }
 });

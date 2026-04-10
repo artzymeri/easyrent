@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n";
@@ -8,6 +8,7 @@ import { useCurrency } from "@/lib/currency-context";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { DataTable } from "@/components/data-table";
+import { FilterBar, type FilterConfig } from "@/components/filter-bar";
 import { toast } from "sonner";
 
 import type { Car } from "./_components/types";
@@ -15,38 +16,119 @@ import { CarSheet } from "./_components/car-sheet";
 import { getCarColumns, getCarActions } from "./_components/car-table-columns";
 import { useCarSheet } from "./_components/use-car-sheet";
 
+interface FiltersData {
+  makes: string[];
+  colors: string[];
+  fuelTypes: string[];
+  transmissions: string[];
+  statuses: string[];
+}
+
 export default function CarsPage() {
   const { t } = useTranslation();
   const { fc } = useCurrency();
   const router = useRouter();
   const [cars, setCars] = useState<Car[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [filtersData, setFiltersData] = useState<FiltersData>({
+    makes: [],
+    colors: [],
+    fuelTypes: [],
+    transmissions: [],
+    statuses: ["available", "rented", "maintenance"],
+  });
 
-  const fetchCars = async () => {
+  // Filter state
+  const [search, setSearch] = useState("");
+  const [filterValues, setFilterValues] = useState<Record<string, string>>({});
+
+  const fetchCars = useCallback(async () => {
     try {
-      const data = await api.get<{ rows: Car[] }>("/cars");
+      setLoading(true);
+      const params = new URLSearchParams();
+      if (search) params.append("search", search);
+      if (filterValues.status) params.append("status", filterValues.status);
+      if (filterValues.make) params.append("make", filterValues.make);
+      if (filterValues.fuelType) params.append("fuelType", filterValues.fuelType);
+      if (filterValues.transmission) params.append("transmission", filterValues.transmission);
+      if (filterValues.color) params.append("color", filterValues.color);
+      
+      const queryString = params.toString();
+      const data = await api.get<{
+        rows: Car[];
+        count: number;
+        filters: FiltersData;
+      }>(`/cars${queryString ? `?${queryString}` : ""}`);
+      
       setCars(data.rows || []);
+      setTotalCount(data.count || 0);
+      setFiltersData(data.filters || filtersData);
     } catch {
       toast.error(t("carsPage.toast.failedLoad"));
     } finally {
       setLoading(false);
     }
+  }, [search, filterValues, t]);
+
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchCars();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [fetchCars]);
+
+  const handleFilterChange = (key: string, value: string) => {
+    setFilterValues((prev) => ({ ...prev, [key]: value }));
   };
 
-  useEffect(() => {
-    fetchCars();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const handleClearFilters = () => {
+    setFilterValues({});
+    setSearch("");
+  };
 
   const sheet = useCarSheet(t, fetchCars);
 
-  if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <Spinner className="h-8 w-8" />
-      </div>
-    );
-  }
+  // Build filter config
+  const statusLabels: Record<string, string> = {
+    available: t("carsPage.statusAvailable"),
+    rented: t("carsPage.statusRented"),
+    maintenance: t("carsPage.statusMaintenance"),
+  };
+
+  const filterConfigs: FilterConfig[] = [
+    {
+      key: "status",
+      label: t("carsPage.status"),
+      type: "select",
+      options: filtersData.statuses.map((s) => ({ value: s, label: statusLabels[s] || s })),
+    },
+    {
+      key: "make",
+      label: t("carsPage.make"),
+      type: "select",
+      options: filtersData.makes.map((m) => ({ value: m, label: m })),
+    },
+    {
+      key: "fuelType",
+      label: t("carsPage.fuelType"),
+      type: "select",
+      options: filtersData.fuelTypes.map((f) => ({ value: f, label: f })),
+    },
+    {
+      key: "transmission",
+      label: t("carsPage.transmission"),
+      type: "select",
+      options: filtersData.transmissions.map((t) => ({ value: t, label: t })),
+    },
+    {
+      key: "color",
+      label: t("carsPage.color"),
+      type: "select",
+      options: filtersData.colors.map((c) => ({ value: c, label: c })),
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -54,11 +136,21 @@ export default function CarsPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{t("carsPage.title")}</h1>
           <p className="text-muted-foreground">
-            {t("carsPage.subtitle", { count: String(cars.length) })}
+            {t("carsPage.subtitle", { count: String(totalCount) })}
           </p>
         </div>
         <Button onClick={sheet.openCreateSheet}>{t("carsPage.addCar")}</Button>
       </div>
+
+      <FilterBar
+        filters={filterConfigs}
+        filterValues={filterValues}
+        onFilterChange={handleFilterChange}
+        onClearFilters={handleClearFilters}
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder={t("common.search")}
+      />
 
       <CarSheet
         open={sheet.sheetOpen}
@@ -81,18 +173,22 @@ export default function CarsPage() {
         t={t}
       />
 
-      <DataTable<Car>
-        data={cars}
-        columns={getCarColumns(t, fc)}
-        getRowId={(c) => c.id}
-        searchFn={(c, q) =>
-          `${c.make} ${c.model} ${c.licensePlate} ${c.color} ${c.status}`.toLowerCase().includes(q)
-        }
-        actions={getCarActions(t, router, sheet.openEditSheet, fetchCars)}
-        emptyMessage={t("carsPage.emptyState")}
-        defaultSortKey="car"
-        onRowClick={(c) => router.push(`/dashboard/cars/${c.id}`)}
-      />
+      {loading ? (
+        <div className="flex h-64 items-center justify-center">
+          <Spinner className="h-8 w-8" />
+        </div>
+      ) : (
+        <DataTable<Car>
+          data={cars}
+          columns={getCarColumns(t, fc)}
+          getRowId={(c) => c.id}
+          actions={getCarActions(t, router, sheet.openEditSheet, fetchCars)}
+          emptyMessage={t("carsPage.emptyState")}
+          defaultSortKey="car"
+          onRowClick={(c) => router.push(`/dashboard/cars/${c.id}`)}
+          hideSearch
+        />
+      )}
     </div>
   );
 }

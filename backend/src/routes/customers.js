@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const { body } = require("express-validator");
+const { Op } = require("sequelize");
 const { validate } = require("../middleware/validate");
 const { authenticate } = require("../middleware/auth");
 const db = require("../db");
@@ -122,12 +123,80 @@ Important rules:
 router.get("/", async (req, res) => {
   try {
     if (!req.user.companyId) return res.status(400).json({ error: "No company context" });
-    const customers = await db.Customer.findAll({
-      where: { companyId: req.user.companyId },
-      order: [["createdAt", "DESC"]],
+    
+    const { search, city, country, hasEmail, sortBy = "createdAt", sortOrder = "DESC", page = 1, limit = 50 } = req.query;
+    
+    // Build where clause
+    const where = { companyId: req.user.companyId };
+    
+    // Search filter (name, phone, email, ID)
+    if (search) {
+      where[Op.or] = [
+        { firstName: { [Op.like]: `%${search}%` } },
+        { lastName: { [Op.like]: `%${search}%` } },
+        { phone: { [Op.like]: `%${search}%` } },
+        { email: { [Op.like]: `%${search}%` } },
+        { idNumber: { [Op.like]: `%${search}%` } },
+        { driversLicense: { [Op.like]: `%${search}%` } },
+      ];
+    }
+    
+    // City filter
+    if (city) {
+      where.city = city;
+    }
+    
+    // Country filter
+    if (country) {
+      where.country = country;
+    }
+    
+    // Has email filter
+    if (hasEmail === "true") {
+      where.email = { [Op.not]: null, [Op.ne]: "" };
+    } else if (hasEmail === "false") {
+      where[Op.or] = [{ email: null }, { email: "" }];
+    }
+    
+    // Build order clause
+    const validSortFields = ["createdAt", "firstName", "lastName", "city", "country"];
+    const orderField = validSortFields.includes(sortBy) ? sortBy : "createdAt";
+    const orderDir = sortOrder === "ASC" ? "ASC" : "DESC";
+    
+    // Pagination
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+    
+    const { rows, count } = await db.Customer.findAndCountAll({
+      where,
+      order: [[orderField, orderDir]],
+      limit: parseInt(limit),
+      offset,
     });
-    res.json({ rows: customers, count: customers.length });
+    
+    // Get distinct values for filter dropdowns
+    const cities = await db.Customer.findAll({
+      where: { companyId: req.user.companyId, city: { [Op.not]: null, [Op.ne]: "" } },
+      attributes: [[db.sequelize.fn("DISTINCT", db.sequelize.col("city")), "city"]],
+      raw: true,
+    });
+    const countries = await db.Customer.findAll({
+      where: { companyId: req.user.companyId, country: { [Op.not]: null, [Op.ne]: "" } },
+      attributes: [[db.sequelize.fn("DISTINCT", db.sequelize.col("country")), "country"]],
+      raw: true,
+    });
+    
+    res.json({
+      rows,
+      count,
+      page: parseInt(page),
+      totalPages: Math.ceil(count / parseInt(limit)),
+      filters: {
+        cities: cities.map((c) => c.city).filter(Boolean),
+        countries: countries.map((c) => c.country).filter(Boolean),
+      },
+    });
   } catch (err) {
+    console.error("Fetch customers error:", err);
     res.status(500).json({ error: "Failed to fetch customers" });
   }
 });

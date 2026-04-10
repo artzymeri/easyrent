@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { DataTable } from "@/components/data-table";
+import { FilterBar, type FilterConfig } from "@/components/filter-bar";
 import { toast } from "sonner";
 
 import type { Customer, CustomerForm, DocumentItem } from "./_components/types";
@@ -13,10 +14,21 @@ import { EMPTY_FORM } from "./_components/types";
 import { CustomerFormSheet } from "./_components/customer-form-sheet";
 import { useCustomerColumns, useCustomerActions } from "./_components/customer-table-config";
 
+interface FiltersData {
+  cities: string[];
+  countries: string[];
+}
+
 export default function CustomersPage() {
   const { t } = useTranslation();
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [filtersData, setFiltersData] = useState<FiltersData>({ cities: [], countries: [] });
+
+  // Filter state
+  const [search, setSearch] = useState("");
+  const [filterValues, setFilterValues] = useState<Record<string, string>>({});
 
   // Sheet state
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -29,21 +41,69 @@ export default function CustomersPage() {
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [extracting, setExtracting] = useState(false);
 
-  const fetchCustomers = async () => {
+  const fetchCustomers = useCallback(async () => {
     try {
-      const data = await api.get<{ rows: Customer[] }>("/customers");
+      setLoading(true);
+      const params = new URLSearchParams();
+      if (search) params.append("search", search);
+      if (filterValues.city) params.append("city", filterValues.city);
+      if (filterValues.country) params.append("country", filterValues.country);
+      if (filterValues.hasEmail) params.append("hasEmail", filterValues.hasEmail);
+      
+      const queryString = params.toString();
+      const data = await api.get<{
+        rows: Customer[];
+        count: number;
+        filters: FiltersData;
+      }>(`/customers${queryString ? `?${queryString}` : ""}`);
+      
       setCustomers(data.rows || []);
+      setTotalCount(data.count || 0);
+      setFiltersData(data.filters || { cities: [], countries: [] });
     } catch {
       toast.error(t("customersPage.toast.failedLoad"));
     } finally {
       setLoading(false);
     }
+  }, [search, filterValues, t]);
+
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchCustomers();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [fetchCustomers]);
+
+  const handleFilterChange = (key: string, value: string) => {
+    setFilterValues((prev) => ({ ...prev, [key]: value }));
   };
 
-  useEffect(() => {
-    fetchCustomers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const handleClearFilters = () => {
+    setFilterValues({});
+    setSearch("");
+  };
+
+  // Build filter config from server data
+  const filterConfigs: FilterConfig[] = [
+    {
+      key: "city",
+      label: t("customersPage.city"),
+      type: "select",
+      options: filtersData.cities.map((c) => ({ value: c, label: c })),
+    },
+    {
+      key: "country",
+      label: t("customersPage.country"),
+      type: "select",
+      options: filtersData.countries.map((c) => ({ value: c, label: c })),
+    },
+    {
+      key: "hasEmail",
+      label: t("customersPage.hasEmail"),
+      type: "boolean",
+    },
+  ];
 
   const populateFormFromDetail = (detail: Customer) => {
     setForm({
@@ -163,25 +223,27 @@ export default function CustomersPage() {
     onDelete: handleDelete,
   });
 
-  if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <Spinner className="h-8 w-8" />
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{t("customersPage.title")}</h1>
           <p className="text-muted-foreground">
-            {t("customersPage.subtitle", { count: String(customers.length) })}
+            {t("customersPage.subtitle", { count: String(totalCount) })}
           </p>
         </div>
         <Button onClick={openCreateSheet}>{t("customersPage.newCustomer")}</Button>
       </div>
+
+      <FilterBar
+        filters={filterConfigs}
+        filterValues={filterValues}
+        onFilterChange={handleFilterChange}
+        onClearFilters={handleClearFilters}
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder={t("common.search")}
+      />
 
       <CustomerFormSheet
         open={sheetOpen}
@@ -198,20 +260,22 @@ export default function CustomersPage() {
         onSwitchToEdit={() => setSheetMode("edit")}
       />
 
-      <DataTable<Customer>
-        data={customers}
-        columns={columns}
-        getRowId={(c) => c.id}
-        searchFn={(c, q) =>
-          `${c.firstName} ${c.lastName} ${c.phone} ${c.email} ${c.idNumber} ${c.personalNumber}`
-            .toLowerCase()
-            .includes(q)
-        }
-        actions={actions}
-        emptyMessage={t("customersPage.emptyState")}
-        defaultSortKey="name"
-        onRowClick={(c) => openViewSheet(c)}
-      />
+      {loading ? (
+        <div className="flex h-64 items-center justify-center">
+          <Spinner className="h-8 w-8" />
+        </div>
+      ) : (
+        <DataTable<Customer>
+          data={customers}
+          columns={columns}
+          getRowId={(c) => c.id}
+          actions={actions}
+          emptyMessage={t("customersPage.emptyState")}
+          defaultSortKey="name"
+          onRowClick={(c) => openViewSheet(c)}
+          hideSearch
+        />
+      )}
     </div>
   );
 }

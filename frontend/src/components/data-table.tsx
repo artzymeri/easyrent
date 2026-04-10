@@ -60,6 +60,7 @@ interface DataTableProps<T> {
   defaultSortKey?: string;
   defaultSortDir?: "asc" | "desc";
   onRowClick?: (row: T) => void;
+  hideSearch?: boolean;
 }
 
 export function DataTable<T>({
@@ -73,6 +74,7 @@ export function DataTable<T>({
   defaultSortKey,
   defaultSortDir = "asc",
   onRowClick,
+  hideSearch = false,
 }: DataTableProps<T>) {
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
@@ -134,14 +136,16 @@ export function DataTable<T>({
   return (
     <Card>
       <CardContent className="p-0">
-        <DataTableToolbar
-          hasSearch={!!searchFn}
-          search={search}
-          onSearchChange={(v) => { setSearch(v); setPage(0); }}
-          from={from}
-          to={to}
-          total={sorted.length}
-        />
+        {!hideSearch && (
+          <DataTableToolbar
+            hasSearch={!!searchFn}
+            search={search}
+            onSearchChange={(v) => { setSearch(v); setPage(0); }}
+            from={from}
+            to={to}
+            total={sorted.length}
+          />
+        )}
 
         <div className="overflow-x-auto">
           <Table>

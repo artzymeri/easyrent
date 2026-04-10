@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const { body } = require("express-validator");
+const { Op } = require("sequelize");
 const { validate } = require("../middleware/validate");
 const { authenticate } = require("../middleware/auth");
 const QRCode = require("qrcode");
@@ -20,17 +21,104 @@ function ensureCompanyAccess(req, res, next) {
 router.get("/", async (req, res) => {
   try {
     if (!req.user.companyId) return res.status(400).json({ error: "No company context" });
-    const cars = await db.Car.findAll({
-      where: { companyId: req.user.companyId },
+    
+    const { search, status, fuelType, transmission, make, color, sortBy = "createdAt", sortOrder = "DESC", page = 1, limit = 50 } = req.query;
+    
+    // Build where clause
+    const where = { companyId: req.user.companyId };
+    
+    // Search filter
+    if (search) {
+      where[Op.or] = [
+        { make: { [Op.like]: `%${search}%` } },
+        { model: { [Op.like]: `%${search}%` } },
+        { licensePlate: { [Op.like]: `%${search}%` } },
+        { color: { [Op.like]: `%${search}%` } },
+      ];
+    }
+    
+    // Status filter
+    if (status) {
+      where.status = status;
+    }
+    
+    // Fuel type filter
+    if (fuelType) {
+      where.fuelType = fuelType;
+    }
+    
+    // Transmission filter
+    if (transmission) {
+      where.transmission = transmission;
+    }
+    
+    // Make filter
+    if (make) {
+      where.make = make;
+    }
+    
+    // Color filter
+    if (color) {
+      where.color = color;
+    }
+    
+    // Build order clause
+    const validSortFields = ["createdAt", "make", "model", "dailyRate", "mileage", "status"];
+    const orderField = validSortFields.includes(sortBy) ? sortBy : "createdAt";
+    const orderDir = sortOrder === "ASC" ? "ASC" : "DESC";
+    
+    // Pagination
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+    
+    const { rows, count } = await db.Car.findAndCountAll({
+      where,
       include: [
         { model: db.CarImage, as: "images", attributes: ["id", "isPrimary", "sortOrder"] },
         { model: db.CarDamage, as: "damages", where: { repaired: false }, required: false },
         { model: db.CarDocument, as: "documents", attributes: ["id", "name", "type"] },
       ],
-      order: [["createdAt", "DESC"]],
+      order: [[orderField, orderDir]],
+      limit: parseInt(limit),
+      offset,
     });
-    res.json({ rows: cars, count: cars.length });
+    
+    // Get distinct values for filter dropdowns
+    const makes = await db.Car.findAll({
+      where: { companyId: req.user.companyId },
+      attributes: [[db.sequelize.fn("DISTINCT", db.sequelize.col("make")), "make"]],
+      raw: true,
+    });
+    const colors = await db.Car.findAll({
+      where: { companyId: req.user.companyId, color: { [Op.not]: null, [Op.ne]: "" } },
+      attributes: [[db.sequelize.fn("DISTINCT", db.sequelize.col("color")), "color"]],
+      raw: true,
+    });
+    const fuelTypes = await db.Car.findAll({
+      where: { companyId: req.user.companyId, fuelType: { [Op.not]: null, [Op.ne]: "" } },
+      attributes: [[db.sequelize.fn("DISTINCT", db.sequelize.col("fuelType")), "fuelType"]],
+      raw: true,
+    });
+    const transmissions = await db.Car.findAll({
+      where: { companyId: req.user.companyId, transmission: { [Op.not]: null, [Op.ne]: "" } },
+      attributes: [[db.sequelize.fn("DISTINCT", db.sequelize.col("transmission")), "transmission"]],
+      raw: true,
+    });
+    
+    res.json({
+      rows,
+      count,
+      page: parseInt(page),
+      totalPages: Math.ceil(count / parseInt(limit)),
+      filters: {
+        makes: makes.map((m) => m.make).filter(Boolean),
+        colors: colors.map((c) => c.color).filter(Boolean),
+        fuelTypes: fuelTypes.map((f) => f.fuelType).filter(Boolean),
+        transmissions: transmissions.map((t) => t.transmission).filter(Boolean),
+        statuses: ["available", "rented", "maintenance"],
+      },
+    });
   } catch (err) {
+    console.error("Fetch cars error:", err);
     res.status(500).json({ error: "Failed to fetch cars" });
   }
 });

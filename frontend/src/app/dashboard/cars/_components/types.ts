@@ -1,11 +1,22 @@
 import type { ImageItem } from "@/components/image-upload";
 
+export interface CarColor {
+  id: number;
+  code: string;
+  hex: string | null;
+  nameEn: string;
+  nameSq: string;
+  sortOrder: number;
+}
+
 export interface Car {
   id: number;
   make: string;
   model: string;
   year: number;
   color: string;
+  colorId: number | null;
+  carColor?: CarColor;
   licensePlate: string;
   status: string;
   dailyRate: number;
@@ -30,7 +41,8 @@ export interface CarFormData {
   make: string;
   model: string;
   year: string;
-  color: string;
+  color: string; // Legacy
+  colorId: string; // New - stores the color ID
   licensePlate: string;
   vin: string;
   engine: string;
@@ -51,6 +63,7 @@ export interface CarFormData {
   repairParts: string[];
 }
 
+// Legacy color keys - kept for backwards compatibility
 export const COLOR_KEYS = [
   "black", "white", "silver", "gray", "red", "blue",
   "green", "yellow", "orange", "brown", "beige", "gold",
@@ -69,6 +82,7 @@ export const EMPTY_FORM: CarFormData = {
   model: "",
   year: "",
   color: "",
+  colorId: "",
   licensePlate: "",
   vin: "",
   engine: "",
@@ -94,9 +108,11 @@ export interface CarFormFieldsProps {
   setForm: React.Dispatch<React.SetStateAction<CarFormData>>;
   makes: string[];
   models: string[];
+  carColors: CarColor[];
   loadModels: (make: string) => void;
   sheetMode: "create" | "edit";
   t: (key: string, params?: Record<string, string>) => string;
+  locale: string;
 }
 
 export interface CarFormServiceProps {

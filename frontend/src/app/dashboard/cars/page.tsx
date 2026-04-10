@@ -11,7 +11,7 @@ import { DataTable } from "@/components/data-table";
 import { FilterBar, type FilterConfig } from "@/components/filter-bar";
 import { toast } from "sonner";
 
-import type { Car } from "./_components/types";
+import type { Car, CarColor } from "./_components/types";
 import { CarSheet } from "./_components/car-sheet";
 import { getCarColumns, getCarActions } from "./_components/car-table-columns";
 import { useCarSheet } from "./_components/use-car-sheet";
@@ -19,6 +19,7 @@ import { useCarSheet } from "./_components/use-car-sheet";
 interface FiltersData {
   makes: string[];
   colors: string[];
+  carColors: CarColor[];
   fuelTypes: string[];
   transmissions: string[];
   statuses: string[];
@@ -34,6 +35,7 @@ export default function CarsPage() {
   const [filtersData, setFiltersData] = useState<FiltersData>({
     makes: [],
     colors: [],
+    carColors: [],
     fuelTypes: [],
     transmissions: [],
     statuses: ["available", "rented", "maintenance"],
@@ -88,7 +90,7 @@ export default function CarsPage() {
     setSearch("");
   };
 
-  const sheet = useCarSheet(t, fetchCars);
+  const sheet = useCarSheet(t, fetchCars, filtersData.carColors);
 
   // Build filter config
   const statusLabels: Record<string, string> = {
@@ -96,6 +98,10 @@ export default function CarsPage() {
     rented: t("carsPage.statusRented"),
     maintenance: t("carsPage.statusMaintenance"),
   };
+
+  // Get current locale for localized color names
+  const locale = t("_locale") || "en";
+  const getColorName = (color: CarColor) => locale === "sq" ? color.nameSq : color.nameEn;
 
   const filterConfigs: FilterConfig[] = [
     {
@@ -126,7 +132,7 @@ export default function CarsPage() {
       key: "color",
       label: t("carsPage.color"),
       type: "select",
-      options: filtersData.colors.map((c) => ({ value: c, label: c })),
+      options: filtersData.carColors.map((c) => ({ value: String(c.id), label: getColorName(c) })),
     },
   ];
 
@@ -162,6 +168,7 @@ export default function CarsPage() {
         setForm={sheet.setForm}
         makes={sheet.makes}
         models={sheet.models}
+        carColors={sheet.carColors}
         loadModels={sheet.loadModels}
         images={sheet.images}
         documents={sheet.documents}
@@ -171,6 +178,7 @@ export default function CarsPage() {
         docInputRef={sheet.docInputRef}
         onSubmit={sheet.handleSubmit}
         t={t}
+        locale={locale}
       />
 
       {loading ? (

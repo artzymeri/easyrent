@@ -5,6 +5,7 @@ module.exports = (sequelize, DataTypes) => {
   class Car extends Model {
     static associate(models) {
       Car.belongsTo(models.Company, { foreignKey: "companyId", as: "company" });
+      Car.belongsTo(models.CarColor, { foreignKey: "colorId", as: "carColor" });
       Car.hasMany(models.CarImage, { foreignKey: "carId", as: "images" });
       Car.hasMany(models.CarDamage, { foreignKey: "carId", as: "damages" });
       Car.hasMany(models.CarDocument, { foreignKey: "carId", as: "documents" });
@@ -34,7 +35,12 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
       year: DataTypes.INTEGER,
-      color: DataTypes.STRING(50),
+      color: DataTypes.STRING(50), // Legacy field, kept for reference
+      colorId: {
+        type: DataTypes.INTEGER.UNSIGNED,
+        allowNull: true,
+        field: "color_id",
+      },
       licensePlate: {
         type: DataTypes.STRING(50),
         field: "license_plate",

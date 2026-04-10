@@ -17,6 +17,19 @@ function ensureCompanyAccess(req, res, next) {
   next();
 }
 
+// ── Get all available car colors ──────────────────────────────
+router.get("/colors", async (req, res) => {
+  try {
+    const colors = await db.CarColor.findAll({
+      order: [["sortOrder", "ASC"]],
+    });
+    res.json(colors);
+  } catch (err) {
+    console.error("Fetch car colors error:", err);
+    res.status(500).json({ error: "Failed to fetch car colors" });
+  }
+});
+
 // ── List cars for authenticated user's company (shortcut) ────
 router.get("/", async (req, res) => {
   try {
@@ -57,9 +70,14 @@ router.get("/", async (req, res) => {
       where.make = make;
     }
     
-    // Color filter
+    // Color filter - support both colorId and legacy color string
     if (color) {
-      where.color = color;
+      // Check if it's a numeric ID or a string
+      if (!isNaN(parseInt(color))) {
+        where.colorId = parseInt(color);
+      } else {
+        where.color = color;
+      }
     }
     
     // Build order clause
@@ -76,6 +94,7 @@ router.get("/", async (req, res) => {
         { model: db.CarImage, as: "images", attributes: ["id", "isPrimary", "sortOrder"] },
         { model: db.CarDamage, as: "damages", where: { repaired: false }, required: false },
         { model: db.CarDocument, as: "documents", attributes: ["id", "name", "type"] },
+        { model: db.CarColor, as: "carColor" },
       ],
       order: [[orderField, orderDir]],
       limit: parseInt(limit),
@@ -88,11 +107,24 @@ router.get("/", async (req, res) => {
       attributes: [[db.sequelize.fn("DISTINCT", db.sequelize.col("make")), "make"]],
       raw: true,
     });
-    const colors = await db.Car.findAll({
-      where: { companyId: req.user.companyId, color: { [Op.not]: null, [Op.ne]: "" } },
+    
+    // Get all available car colors for filter dropdown
+    const carColors = await db.CarColor.findAll({
+      order: [["sortOrder", "ASC"]],
+      raw: true,
+    });
+    
+    // Also get legacy colors that haven't been migrated yet
+    const legacyColors = await db.Car.findAll({
+      where: { 
+        companyId: req.user.companyId, 
+        color: { [Op.not]: null, [Op.ne]: "" },
+        colorId: null,
+      },
       attributes: [[db.sequelize.fn("DISTINCT", db.sequelize.col("color")), "color"]],
       raw: true,
     });
+    
     const fuelTypes = await db.Car.findAll({
       where: { companyId: req.user.companyId, fuelType: { [Op.not]: null, [Op.ne]: "" } },
       attributes: [[db.sequelize.fn("DISTINCT", db.sequelize.col("fuel_type")), "fuelType"]],
@@ -111,7 +143,8 @@ router.get("/", async (req, res) => {
       totalPages: Math.ceil(count / parseInt(limit)),
       filters: {
         makes: makes.map((m) => m.make).filter(Boolean),
-        colors: colors.map((c) => c.color).filter(Boolean),
+        colors: legacyColors.map((c) => c.color).filter(Boolean),
+        carColors: carColors, // New structured colors with id, code, nameEn, nameSq, hex
         fuelTypes: fuelTypes.map((f) => f.fuelType).filter(Boolean),
         transmissions: transmissions.map((t) => t.transmission).filter(Boolean),
         statuses: ["available", "rented", "maintenance"],
@@ -176,6 +209,7 @@ router.get("/company/:companyId", ensureCompanyAccess, async (req, res) => {
       include: [
         { model: db.CarImage, as: "images", attributes: ["id", "isPrimary", "sortOrder"] },
         { model: db.CarDamage, as: "damages", where: { repaired: false }, required: false },
+        { model: db.CarColor, as: "carColor" },
       ],
       order: [["createdAt", "DESC"]],
     });
@@ -194,6 +228,7 @@ router.get("/:id", async (req, res) => {
         { model: db.CarDamage, as: "damages" },
         { model: db.CarDocument, as: "documents" },
         { model: db.Company, as: "company", attributes: ["id", "name", "subdomain"] },
+        { model: db.CarColor, as: "carColor" },
       ],
     });
     if (!car) return res.status(404).json({ error: "Car not found" });

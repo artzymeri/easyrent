@@ -10,16 +10,23 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { X } from "lucide-react";
-import { COLOR_KEYS, REPAIR_PARTS, type CarFormFieldsProps } from "./types";
+import { REPAIR_PARTS, type CarFormFieldsProps } from "./types";
+
+// Helper to get localized color name
+function getColorName(color: { nameEn: string; nameSq: string }, locale: string): string {
+  return locale === "sq" ? color.nameSq : color.nameEn;
+}
 
 export function CarFormFields({
   form,
   setForm,
   makes,
   models,
+  carColors,
   loadModels,
   sheetMode,
   t,
+  locale,
 }: CarFormFieldsProps) {
   return (
     <>
@@ -75,13 +82,31 @@ export function CarFormFields({
       {/* Color */}
       <div className="space-y-2">
         <Label>{t("carsPage.color")}</Label>
-        <Select value={form.color} onValueChange={(val) => setForm({ ...form, color: val ?? "" })}>
+        <Select value={form.colorId} onValueChange={(val) => setForm({ ...form, colorId: val ?? "" })}>
           <SelectTrigger className="w-full">
-            <SelectValue placeholder={t("carsPage.selectColor")} />
+            <SelectValue placeholder={t("carsPage.selectColor")}>
+              {form.colorId && carColors.find(c => String(c.id) === form.colorId) && (
+                <span className="flex items-center gap-2">
+                  <span
+                    className="size-3 rounded-full border"
+                    style={{ backgroundColor: carColors.find(c => String(c.id) === form.colorId)?.hex || '#ccc' }}
+                  />
+                  {getColorName(carColors.find(c => String(c.id) === form.colorId)!, locale)}
+                </span>
+              )}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            {COLOR_KEYS.map((c) => (
-              <SelectItem key={c} value={c}>{t(`carsPage.colors.${c}`)}</SelectItem>
+            {carColors.map((color) => (
+              <SelectItem key={color.id} value={String(color.id)}>
+                <span className="flex items-center gap-2">
+                  <span
+                    className="size-3 rounded-full border"
+                    style={{ backgroundColor: color.hex || '#ccc' }}
+                  />
+                  {getColorName(color, locale)}
+                </span>
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>

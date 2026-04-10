@@ -3,11 +3,11 @@ import { api } from "@/lib/api";
 import type { ImageItem } from "@/components/image-upload";
 import { toast } from "sonner";
 
-import type { Car, CarFormData, DocumentItem } from "./types";
+import type { Car, CarFormData, DocumentItem, CarColor } from "./types";
 import { EMPTY_FORM } from "./types";
 type TFunc = (key: string, opts?: Record<string, string>) => string;
 
-export function useCarSheet(t: TFunc, fetchCars: () => Promise<void>) {
+export function useCarSheet(t: TFunc, fetchCars: () => Promise<void>, carColors: CarColor[] = []) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetMode, setSheetMode] = useState<"create" | "edit">("create");
   const [editCarId, setEditCarId] = useState<number | null>(null);
@@ -71,7 +71,7 @@ export function useCarSheet(t: TFunc, fetchCars: () => Promise<void>) {
     try {
       const detail = await api.get<{
         id: number; make: string; model: string; year: number | null;
-        color: string; licensePlate: string; vin: string; engine: string;
+        color: string; colorId: number | null; licensePlate: string; vin: string; engine: string;
         fuelType: string; transmission: string; mileage: number; seats: number;
         dailyRate: number | null; status: string; notes: string;
         registrationExpiry: string; insuranceProvider: string;
@@ -94,6 +94,7 @@ export function useCarSheet(t: TFunc, fetchCars: () => Promise<void>) {
         model: detail.model || "",
         year: detail.year ? String(detail.year) : "",
         color: detail.color || "",
+        colorId: detail.colorId ? String(detail.colorId) : "",
         licensePlate: detail.licensePlate || "",
         vin: detail.vin || "",
         engine: detail.engine || "",
@@ -191,6 +192,7 @@ export function useCarSheet(t: TFunc, fetchCars: () => Promise<void>) {
       const carData = {
         ...form,
         year: form.year ? parseInt(form.year) : null,
+        colorId: form.colorId ? parseInt(form.colorId) : null,
         mileage: form.mileage ? parseInt(form.mileage) : 0,
         seats: form.seats ? parseInt(form.seats) : 5,
         dailyRate: form.dailyRate ? parseFloat(form.dailyRate) : null,
@@ -238,7 +240,9 @@ export function useCarSheet(t: TFunc, fetchCars: () => Promise<void>) {
       await api.put(`/cars/${editCarId}`, {
         make: form.make, model: form.model,
         year: form.year ? parseInt(form.year) : null,
-        color: form.color || null, licensePlate: form.licensePlate || null,
+        color: form.color || null,
+        colorId: form.colorId ? parseInt(form.colorId) : null,
+        licensePlate: form.licensePlate || null,
         vin: form.vin || null, engine: form.engine || null,
         fuelType: form.fuelType, transmission: form.transmission,
         mileage: form.mileage ? parseInt(form.mileage) : 0,
@@ -277,7 +281,7 @@ export function useCarSheet(t: TFunc, fetchCars: () => Promise<void>) {
   };
   return {
     sheetOpen, setSheetOpen, sheetMode, sheetLoading, saving,
-    form, setForm, makes, models, loadModels,
+    form, setForm, makes, models, loadModels, carColors,
     images, setImages, documents, docInputRef,
     openCreateSheet, openEditSheet,
     handleImageChange, handleDocumentFiles, handleRemoveDocument, handleSubmit,

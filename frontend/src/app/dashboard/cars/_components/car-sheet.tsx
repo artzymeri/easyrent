@@ -10,7 +10,7 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import type { ImageItem } from "@/components/image-upload";
-import type { CarFormData, DocumentItem } from "./types";
+import type { CarFormData, DocumentItem, CarColor } from "./types";
 import { CarFormFields } from "./car-form-fields";
 import { CarFormService } from "./car-form-service";
 
@@ -24,6 +24,7 @@ interface CarSheetProps {
   setForm: React.Dispatch<React.SetStateAction<CarFormData>>;
   makes: string[];
   models: string[];
+  carColors: CarColor[];
   loadModels: (make: string) => void;
   images: ImageItem[];
   documents: DocumentItem[];
@@ -33,6 +34,7 @@ interface CarSheetProps {
   docInputRef: React.RefObject<HTMLInputElement | null>;
   onSubmit: (e: React.FormEvent) => void;
   t: (key: string, params?: Record<string, string>) => string;
+  locale: string;
 }
 
 export function CarSheet({
@@ -45,6 +47,7 @@ export function CarSheet({
   setForm,
   makes,
   models,
+  carColors,
   loadModels,
   images,
   documents,
@@ -54,6 +57,7 @@ export function CarSheet({
   docInputRef,
   onSubmit,
   t,
+  locale,
 }: CarSheetProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -78,9 +82,11 @@ export function CarSheet({
                 setForm={setForm}
                 makes={makes}
                 models={models}
+                carColors={carColors}
                 loadModels={loadModels}
                 sheetMode={sheetMode}
                 t={t}
+                locale={locale}
               />
               <CarFormService
                 form={form}

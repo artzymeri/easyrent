@@ -13,6 +13,22 @@ export function statusColor(status: string) {
   }
 }
 
+// Helper to get localized color name
+function getColorDisplay(car: Car, t: (key: string) => string): string {
+  // If we have the new carColor relation, use it
+  if (car.carColor) {
+    const locale = t("_locale") || "en";
+    return locale === "sq" ? car.carColor.nameSq : car.carColor.nameEn;
+  }
+  // Fall back to legacy color field with translation
+  if (car.color) {
+    const colorKey = car.color.toLowerCase();
+    const colorTranslation = t(`carsPage.colors.${colorKey}`);
+    return colorTranslation.startsWith("carsPage.") ? car.color : colorTranslation;
+  }
+  return "";
+}
+
 export function getCarColumns(
   t: (key: string, params?: Record<string, string>) => string,
   fc: (amount: number) => string,
@@ -23,16 +39,22 @@ export function getCarColumns(
       header: t("carsPage.tableHeaders.car"),
       sortValue: (c) => `${c.make} ${c.model}`,
       render: (c) => {
-        const colorKey = c.color ? c.color.toLowerCase() : "";
-        const colorTranslation = colorKey ? t(`carsPage.colors.${colorKey}`) : "";
-        const colorDisplay = colorTranslation.startsWith("carsPage.") ? c.color : colorTranslation;
+        const colorDisplay = getColorDisplay(c, t);
         return (
-          <div>
-            <span className="font-medium">{c.make} {c.model}</span>
-            <span className="ml-1 text-muted-foreground">
-              {c.year ? `(${c.year})` : ""}
-              {c.color ? ` · ${colorDisplay}` : ""}
-            </span>
+          <div className="flex items-center gap-2">
+            {c.carColor?.hex && (
+              <span
+                className="size-3 shrink-0 rounded-full border"
+                style={{ backgroundColor: c.carColor.hex }}
+              />
+            )}
+            <div>
+              <span className="font-medium">{c.make} {c.model}</span>
+              <span className="ml-1 text-muted-foreground">
+                {c.year ? `(${c.year})` : ""}
+                {colorDisplay ? ` · ${colorDisplay}` : ""}
+              </span>
+            </div>
           </div>
         );
       },

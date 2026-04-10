@@ -101,55 +101,55 @@ export function NewBookingFormFields({
         </Select>
       </div>
 
-      {/* Start & End dates */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label>{t("bookingsPage.startDate")} *</Label>
-          <DateTimePicker value={form.startDate} onChange={(val) => setForm({ ...form, startDate: val })} minDate={new Date()} />
-        </div>
-        <div className="space-y-2">
-          <Label>{t("bookingsPage.endDate")} *</Label>
-          <DateTimePicker value={form.endDate} onChange={(val) => setForm({ ...form, endDate: val })} minDate={new Date()} />
-        </div>
+      {/* Start Date */}
+      <div className="space-y-2">
+        <Label>{t("bookingsPage.startDate")} *</Label>
+        <DateTimePicker value={form.startDate} onChange={(val) => setForm({ ...form, startDate: val })} minDate={new Date()} />
       </div>
 
-      {/* Daily Rate & Discount */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label>{t("bookingsPage.dailyRate")}</Label>
-          <Input type="number" step="0.01" value={form.dailyRate} onChange={(e) => setForm({ ...form, dailyRate: e.target.value })} />
-        </div>
-        <div className="space-y-2">
-          <Label>{t("bookingsPage.sheetDiscount")}</Label>
-          <Input type="number" step="0.01" value={form.discount} onChange={(e) => setForm({ ...form, discount: e.target.value })} />
-        </div>
+      {/* End Date */}
+      <div className="space-y-2">
+        <Label>{t("bookingsPage.endDate")} *</Label>
+        <DateTimePicker value={form.endDate} onChange={(val) => setForm({ ...form, endDate: val })} minDate={new Date()} />
       </div>
 
-      {/* Pickup & Return locations */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        <LocationField
-          label={t("bookingsPage.pickupLocation")}
-          value={form.pickupLocation}
-          onChange={(val) => setForm({ ...form, pickupLocation: val })}
-          deliveryPoints={deliveryPoints}
-          isCustom={pickupCustom}
-          setIsCustom={setPickupCustom}
-          placeholder={t("bookingsPage.pickupLocation")}
-          selectLocationLabel={t("bookingsPage.selectLocation")}
-          customLocationLabel={t("bookingsPage.customLocation")}
-        />
-        <LocationField
-          label={t("bookingsPage.returnLocation")}
-          value={form.returnLocation}
-          onChange={(val) => setForm({ ...form, returnLocation: val })}
-          deliveryPoints={deliveryPoints}
-          isCustom={returnCustom}
-          setIsCustom={setReturnCustom}
-          placeholder={t("bookingsPage.returnLocation")}
-          selectLocationLabel={t("bookingsPage.selectLocation")}
-          customLocationLabel={t("bookingsPage.customLocation")}
-        />
+      {/* Daily Rate */}
+      <div className="space-y-2">
+        <Label>{t("bookingsPage.dailyRate")}</Label>
+        <Input type="number" step="0.01" value={form.dailyRate} onChange={(e) => setForm({ ...form, dailyRate: e.target.value })} />
       </div>
+
+      {/* Discount */}
+      <div className="space-y-2">
+        <Label>{t("bookingsPage.sheetDiscount")}</Label>
+        <Input type="number" step="0.01" value={form.discount} onChange={(e) => setForm({ ...form, discount: e.target.value })} />
+      </div>
+
+      {/* Pickup Location */}
+      <LocationField
+        label={t("bookingsPage.pickupLocation")}
+        value={form.pickupLocation}
+        onChange={(val) => setForm({ ...form, pickupLocation: val })}
+        deliveryPoints={deliveryPoints}
+        isCustom={pickupCustom}
+        setIsCustom={setPickupCustom}
+        placeholder={t("bookingsPage.pickupLocation")}
+        selectLocationLabel={t("bookingsPage.selectLocation")}
+        customLocationLabel={t("bookingsPage.customLocation")}
+      />
+
+      {/* Return Location */}
+      <LocationField
+        label={t("bookingsPage.returnLocation")}
+        value={form.returnLocation}
+        onChange={(val) => setForm({ ...form, returnLocation: val })}
+        deliveryPoints={deliveryPoints}
+        isCustom={returnCustom}
+        setIsCustom={setReturnCustom}
+        placeholder={t("bookingsPage.returnLocation")}
+        selectLocationLabel={t("bookingsPage.selectLocation")}
+        customLocationLabel={t("bookingsPage.customLocation")}
+      />
 
       {/* Mileage Out */}
       <div className="space-y-2">
@@ -165,27 +165,23 @@ export function NewBookingFormFields({
 
       {/* Secondary Driver */}
       <Separator />
-      <div className="space-y-3">
+      <div className="space-y-4">
         <p className="text-sm font-medium text-muted-foreground">{t("bookingsPage.secondaryDriverOptional")}</p>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label>{t("bookingsPage.secondaryDriverName")}</Label>
-            <Input value={form.secondaryDriverName} onChange={(e) => setForm({ ...form, secondaryDriverName: e.target.value })} />
-          </div>
-          <div className="space-y-2">
-            <Label>{t("bookingsPage.secondaryDriverPhone")}</Label>
-            <Input value={form.secondaryDriverPhone} onChange={(e) => setForm({ ...form, secondaryDriverPhone: e.target.value })} />
-          </div>
+        <div className="space-y-2">
+          <Label>{t("bookingsPage.secondaryDriverName")}</Label>
+          <Input value={form.secondaryDriverName} onChange={(e) => setForm({ ...form, secondaryDriverName: e.target.value })} />
         </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label>{t("bookingsPage.secondaryDriverIdNumber")}</Label>
-            <Input value={form.secondaryDriverIdNumber} onChange={(e) => setForm({ ...form, secondaryDriverIdNumber: e.target.value })} />
-          </div>
-          <div className="space-y-2">
-            <Label>{t("bookingsPage.secondaryDriverLicense")}</Label>
-            <Input value={form.secondaryDriverLicense} onChange={(e) => setForm({ ...form, secondaryDriverLicense: e.target.value })} />
-          </div>
+        <div className="space-y-2">
+          <Label>{t("bookingsPage.secondaryDriverPhone")}</Label>
+          <Input value={form.secondaryDriverPhone} onChange={(e) => setForm({ ...form, secondaryDriverPhone: e.target.value })} />
+        </div>
+        <div className="space-y-2">
+          <Label>{t("bookingsPage.secondaryDriverIdNumber")}</Label>
+          <Input value={form.secondaryDriverIdNumber} onChange={(e) => setForm({ ...form, secondaryDriverIdNumber: e.target.value })} />
+        </div>
+        <div className="space-y-2">
+          <Label>{t("bookingsPage.secondaryDriverLicense")}</Label>
+          <Input value={form.secondaryDriverLicense} onChange={(e) => setForm({ ...form, secondaryDriverLicense: e.target.value })} />
         </div>
       </div>
     </div>

@@ -5,6 +5,7 @@
   "main": "src/server.js",
   "scripts": {
     "dev": "nodemon src/server.js",
+    "dev:prod-db": "./run-production.sh",
     "start": "npx sequelize-cli db:migrate && node src/server.js",
     "migrate": "node src/scripts/migrate.js up",
     "migrate:undo": "node src/scripts/migrate.js down",

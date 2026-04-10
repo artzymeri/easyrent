@@ -7,79 +7,16 @@ import { useTranslation } from "@/lib/i18n";
 import { useCurrency } from "@/lib/currency-context";
 import { useSocket } from "@/lib/socket-context";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
 import { toast } from "sonner";
-import {
-  Inbox,
-  Car as CarIcon,
-  User,
-  Calendar,
-  Phone,
-  Mail,
-  CheckCircle2,
-  XCircle,
-  Trash2,
-  Clock,
-  Image as ImageIcon,
-} from "lucide-react";
-
-// ── Types ─────────────────────────────────────────────────────
-interface CarImage {
-  id: number;
-  url: string;
-  isPrimary: boolean;
-  sortOrder: number;
-}
-
-interface BookingRequest {
-  id: number;
-  companyId: number;
-  carId: number;
-  startDate: string;
-  endDate: string;
-  totalDays: number;
-  dailyRate: string;
-  totalAmount: string;
-  requesterFirstName: string;
-  requesterLastName: string;
-  requesterEmail: string | null;
-  requesterPhone: string;
-  status: "pending" | "confirmed" | "rejected";
-  notes: string | null;
-  createdAt: string;
-  car: {
-    id: number;
-    make: string;
-    model: string;
-    licensePlate: string;
-    color: string;
-    dailyRate: string;
-    images: CarImage[];
-  };
-}
-
-type StatusFilter = "all" | "pending" | "confirmed" | "rejected";
-
-// ── Status badge helper ───────────────────────────────────────
-const STATUS_STYLES: Record<string, string> = {
-  pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
-  confirmed: "bg-green-100 text-green-800 border-green-200",
-  rejected: "bg-red-100 text-red-800 border-red-200",
-};
+import { Inbox } from "lucide-react";
+import type { BookingRequest, StatusFilter } from "./_components/types";
+import { BookingRequestCard } from "./_components/booking-request-card";
 
 export default function BookingRequestsPage() {
   const { t } = useTranslation();
   const { fc } = useCurrency();
-  const { pendingRequestCount, refreshPendingCount } = useSocket();
+  const { pendingRequestCount } = useSocket();
   const router = useRouter();
 
   const [requests, setRequests] = useState<BookingRequest[]>([]);
@@ -116,7 +53,6 @@ export default function BookingRequestsPage() {
 
   // ── Actions ───────────────────────────────────────────────
   const handleConfirm = (req: BookingRequest) => {
-    // Navigate to bookings page with the request ID to pre-fill the booking form
     router.push(`/dashboard/bookings?fromRequest=${req.id}`);
   };
 
@@ -144,39 +80,6 @@ export default function BookingRequestsPage() {
     } finally {
       setActionLoading(null);
     }
-  };
-
-  // ── Helpers ───────────────────────────────────────────────
-  const formatDate = (dateStr: string) => {
-    const d = new Date(dateStr);
-    // Use UTC so displayed time matches the stored time (not shifted by browser timezone)
-    const datePart = d.toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      timeZone: "UTC",
-    });
-    const hours = d.getUTCHours();
-    const minutes = d.getUTCMinutes();
-    if (hours === 0 && minutes === 0) return datePart;
-    const timePart = d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
-    return `${datePart} ${timePart}`;
-  };
-
-  const formatDateTime = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      timeZone: "UTC",
-    });
-  };
-
-  const getCarImage = (req: BookingRequest) => {
-    const primary = req.car.images?.find((img) => img.isPrimary);
-    return primary?.url || req.car.images?.[0]?.url || null;
   };
 
   // ── Filter tabs ───────────────────────────────────────────
@@ -251,178 +154,18 @@ export default function BookingRequestsPage() {
       {/* Request cards */}
       {!loading && requests.length > 0 && (
         <div className="grid gap-4">
-          {requests.map((req) => {
-            const carImg = getCarImage(req);
-            const isActioning = actionLoading === req.id;
-
-            return (
-              <Card key={req.id} className="overflow-hidden">
-                <div className="flex flex-col sm:flex-row">
-                  {/* Car image */}
-                  <div className="relative flex h-40 w-full shrink-0 items-center justify-center bg-muted sm:h-auto sm:w-48">
-                    {carImg ? (
-                      <img
-                        src={carImg}
-                        alt={`${req.car.make} ${req.car.model}`}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <ImageIcon className="h-10 w-10 text-muted-foreground/40" />
-                    )}
-                    {/* Status badge overlay */}
-                    <span
-                      className={`absolute top-2 left-2 rounded-full border px-2.5 py-0.5 text-xs font-medium ${STATUS_STYLES[req.status] || ""}`}
-                    >
-                      {t(`bookingRequestsPage.${req.status}`)}
-                    </span>
-                  </div>
-
-                  {/* Content */}
-                  <div className="flex flex-1 flex-col gap-3 p-4">
-                    {/* Top row: car + requester */}
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                      {/* Car info */}
-                      <div className="flex items-center gap-2">
-                        <CarIcon className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-semibold">
-                          {req.car.make} {req.car.model}
-                        </span>
-                        <span className="text-sm text-muted-foreground">
-                          {req.car.licensePlate}
-                        </span>
-                      </div>
-
-                      {/* Submitted time */}
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Clock className="h-3 w-3" />
-                        {t("bookingRequestsPage.submittedAt")}: {formatDateTime(req.createdAt)}
-                      </div>
-                    </div>
-
-                    <Separator />
-
-                    {/* Details grid */}
-                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                      {/* Requester */}
-                      <div className="flex items-start gap-2">
-                        <User className="mt-0.5 h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <p className="text-sm font-medium">
-                            {req.requesterFirstName} {req.requesterLastName}
-                          </p>
-                          <div className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
-                            <Phone className="h-3 w-3" />
-                            <a href={`tel:${req.requesterPhone}`} className="hover:underline">
-                              {req.requesterPhone}
-                            </a>
-                          </div>
-                          {req.requesterEmail && (
-                            <div className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
-                              <Mail className="h-3 w-3" />
-                              <a href={`mailto:${req.requesterEmail}`} className="hover:underline">
-                                {req.requesterEmail}
-                              </a>
-                            </div>
-                          )}
-                          {!req.requesterEmail && (
-                            <p className="mt-0.5 text-xs text-muted-foreground italic">
-                              {t("bookingRequestsPage.noEmail")}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Dates */}
-                      <div className="flex items-start gap-2">
-                        <Calendar className="mt-0.5 h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <p className="text-sm font-medium">
-                            {formatDate(req.startDate)} – {formatDate(req.endDate)}
-                          </p>
-                          <p className="mt-0.5 text-xs text-muted-foreground">
-                            {req.totalDays} {req.totalDays === 1 ? t("bookingRequestsPage.day") : t("bookingRequestsPage.days")}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Daily rate */}
-                      <div>
-                        <p className="text-xs text-muted-foreground">
-                          {t("bookingRequestsPage.dailyRate")}
-                        </p>
-                        <p className="text-sm font-medium">{fc(req.dailyRate)}</p>
-                      </div>
-
-                      {/* Total */}
-                      <div>
-                        <p className="text-xs text-muted-foreground">
-                          {t("bookingRequestsPage.totalAmount")}
-                        </p>
-                        <p className="text-lg font-bold">{fc(req.totalAmount)}</p>
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    {req.status === "pending" && (
-                      <>
-                        <Separator />
-                        <div className="flex flex-wrap gap-2">
-                          <Button
-                            size="sm"
-                            onClick={() => handleConfirm(req)}
-                            disabled={isActioning}
-                          >
-                            <CheckCircle2 className="mr-1 h-4 w-4" />
-                            {t("bookingRequestsPage.confirm")}
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleReject(req)}
-                            disabled={isActioning}
-                          >
-                            <XCircle className="mr-1 h-4 w-4" />
-                            {t("bookingRequestsPage.reject")}
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-destructive hover:bg-destructive/10"
-                            onClick={() => handleDelete(req)}
-                            disabled={isActioning}
-                          >
-                            <Trash2 className="mr-1 h-4 w-4" />
-                            {t("bookingRequestsPage.delete")}
-                          </Button>
-                          {isActioning && <Spinner />}
-                        </div>
-                      </>
-                    )}
-
-                    {/* Non-pending: show delete only */}
-                    {req.status !== "pending" && (
-                      <>
-                        <Separator />
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-destructive hover:bg-destructive/10"
-                            onClick={() => handleDelete(req)}
-                            disabled={isActioning}
-                          >
-                            <Trash2 className="mr-1 h-4 w-4" />
-                            {t("bookingRequestsPage.delete")}
-                          </Button>
-                          {isActioning && <Spinner />}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </Card>
-            );
-          })}
+          {requests.map((req) => (
+            <BookingRequestCard
+              key={req.id}
+              req={req}
+              isActioning={actionLoading === req.id}
+              t={t}
+              fc={fc}
+              onConfirm={handleConfirm}
+              onReject={handleReject}
+              onDelete={handleDelete}
+            />
+          ))}
         </div>
       )}
     </div>

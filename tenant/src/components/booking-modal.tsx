@@ -6,7 +6,10 @@ import { eachDayOfInterval, isWithinInterval, parseISO, format, isBefore, startO
 import { getBookedDates, submitBookingRequest } from "@/lib/api";
 import { formatCurrency } from "@/lib/currency";
 import type { Car } from "@/lib/types";
-import { X, Loader2, CheckCircle, Calendar, User, Phone, Mail, Clock } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
+import { BookingSuccess } from "./booking-success";
+import { BookingContactForm } from "./booking-contact-form";
+import { BookingDateSummary } from "./booking-date-summary";
 
 interface BookingModalProps {
   car: Car;
@@ -50,15 +53,12 @@ export function BookingModal({ car, currency, subdomain, onClose, accentColor = 
           const start = parseISO(r.start);
           const end = parseISO(r.end);
           if (isNaN(start.getTime()) || isNaN(end.getTime())) continue;
-          const days = eachDayOfInterval({ start, end });
-          dates.push(...days);
+          dates.push(...eachDayOfInterval({ start, end }));
         }
         setBookedDates(dates);
         setLoading(false);
       })
-      .catch(() => {
-        setLoading(false);
-      });
+      .catch(() => setLoading(false));
   }, [subdomain, car.id, car.dailyRate]);
 
   const totalDays = useMemo(() => {
@@ -68,45 +68,28 @@ export function BookingModal({ car, currency, subdomain, onClose, accentColor = 
 
   const totalAmount = totalDays * dailyRate;
 
-  // Check if selected range overlaps with booked dates
   const hasOverlap = useMemo(() => {
     if (!range?.from || !range?.to) return false;
-    return bookedDates.some((d) =>
-      isWithinInterval(d, { start: range.from!, end: range.to! })
-    );
+    return bookedDates.some((d) => isWithinInterval(d, { start: range.from!, end: range.to! }));
   }, [range, bookedDates]);
 
   const isDisabledDay = (date: Date) => {
     if (isBefore(date, startOfDay(new Date()))) return true;
-    return bookedDates.some(
-      (d) => d.toDateString() === date.toDateString()
-    );
+    return bookedDates.some((d) => d.toDateString() === date.toDateString());
   };
 
   const handleSubmit = async () => {
-    if (!range?.from || !range?.to || !firstName || !lastName || !phone) return;
-    if (hasOverlap) return;
-
+    if (!range?.from || !range?.to || !firstName || !lastName || !phone || hasOverlap) return;
     setSubmitting(true);
     setError("");
-
     const result = await submitBookingRequest(subdomain, {
-      carId: car.id,
-      startDate: `${format(range.from, "yyyy-MM-dd")}T${pickupTime}`,
-      endDate: `${format(range.to, "yyyy-MM-dd")}T${returnTime}`,
-      firstName,
-      lastName,
-      email: email || undefined,
-      phone,
+      carId: car.id, startDate: `${format(range.from, "yyyy-MM-dd")}T${pickupTime}`,
+      endDate: `${format(range.to, "yyyy-MM-dd")}T${returnTime}`, firstName, lastName,
+      email: email || undefined, phone,
     });
-
     setSubmitting(false);
-
-    if (result.success) {
-      setSuccess(true);
-    } else {
-      setError(result.error || "Something went wrong");
-    }
+    if (result.success) setSuccess(true);
+    else setError(result.error || "Something went wrong");
   };
 
   const canSubmit = range?.from && range?.to && firstName && lastName && phone && !hasOverlap && !submitting;
@@ -114,46 +97,20 @@ export function BookingModal({ car, currency, subdomain, onClose, accentColor = 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
-      <div
-        className={`relative z-10 w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl ${bgColor} p-6 shadow-2xl border ${borderColor}`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className={`absolute right-4 top-4 rounded-full p-1.5 ${isDark ? "hover:bg-zinc-800 text-gray-400" : "hover:bg-gray-100 text-gray-400"} transition-colors`}
-        >
+      <div className={`relative z-10 w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl ${bgColor} p-6 shadow-2xl border ${borderColor}`} onClick={(e) => e.stopPropagation()}>
+        <button onClick={onClose} className={`absolute right-4 top-4 rounded-full p-1.5 ${isDark ? "hover:bg-zinc-800 text-gray-400" : "hover:bg-gray-100 text-gray-400"} transition-colors`}>
           <X className="h-5 w-5" />
         </button>
 
         {success ? (
-          <div className="py-12 text-center">
-            <div className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full ${isDark ? "bg-green-900/30" : "bg-green-50"}`}>
-              <CheckCircle className="h-8 w-8 text-green-500" />
-            </div>
-            <h3 className={`text-xl font-bold ${textColor}`}>Request Submitted!</h3>
-            <p className={`mt-2 ${subtextColor}`}>
-              Your booking request for <strong>{car.make} {car.model}</strong> has been sent.
-              The team will review it and contact you shortly.
-            </p>
-            <button
-              onClick={onClose}
-              className={`mt-6 rounded-xl ${accentColor} px-6 py-2.5 text-sm font-semibold text-white ${accentHover} transition-colors`}
-            >
-              Done
-            </button>
-          </div>
+          <BookingSuccess car={car} accentColor={accentColor} accentHover={accentHover} textColor={textColor} subtextColor={subtextColor} isDark={isDark} onClose={onClose} />
         ) : (
           <>
-            {/* Header */}
             <div className="mb-5">
               <h3 className={`text-xl font-bold ${textColor}`}>Book {car.make} {car.model}</h3>
-              <p className={`mt-1 text-sm ${subtextColor}`}>
-                {formatCurrency(dailyRate, currency)}/day • Select your dates below
-              </p>
+              <p className={`mt-1 text-sm ${subtextColor}`}>{formatCurrency(dailyRate, currency)}/day • Select your dates below</p>
             </div>
 
-            {/* Calendar */}
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className={`h-6 w-6 animate-spin ${subtextColor}`} />
@@ -161,160 +118,31 @@ export function BookingModal({ car, currency, subdomain, onClose, accentColor = 
             ) : (
               <>
                 <div className={`rounded-xl border ${borderColor} p-3 mb-4 ${isDark ? "rdp-dark" : "rdp-light"}`}>
-                  <DayPicker
-                    mode="range"
-                    selected={range}
-                    onSelect={setRange}
-                    disabled={isDisabledDay}
-                    excludeDisabled
-                    modifiers={{
-                      booked: bookedDates,
-                    }}
-                    modifiersClassNames={{
-                      booked: "rdp-booked",
-                    }}
-                    numberOfMonths={1}
-                    fromDate={new Date()}
+                  <DayPicker mode="range" selected={range} onSelect={setRange} disabled={isDisabledDay} excludeDisabled modifiers={{ booked: bookedDates }} modifiersClassNames={{ booked: "rdp-booked" }} numberOfMonths={1} fromDate={new Date()} />
+                </div>
+
+                {range?.from && range?.to && (
+                  <BookingDateSummary
+                    range={range as { from: Date; to: Date }}
+                    pickupTime={pickupTime} returnTime={returnTime}
+                    totalDays={totalDays} totalAmount={totalAmount} currency={currency}
+                    hasOverlap={hasOverlap} borderColor={borderColor} textColor={textColor}
+                    subtextColor={subtextColor} inputBg={inputBg}
+                    onPickupTimeChange={setPickupTime} onReturnTimeChange={setReturnTime}
                   />
-                </div>
-
-                {/* Time selection */}
-                {range?.from && range?.to && (
-                  <div className={`grid grid-cols-2 gap-3 mb-4`}>
-                    <div>
-                      <label className={`mb-1 block text-xs font-medium ${subtextColor}`}>
-                        Pickup Time
-                      </label>
-                      <div className="relative">
-                        <Clock className={`absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${subtextColor}`} />
-                        <input
-                          type="time"
-                          value={pickupTime}
-                          onChange={(e) => setPickupTime(e.target.value)}
-                          className={`w-full rounded-lg border py-2.5 pl-9 pr-3 text-sm ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className={`mb-1 block text-xs font-medium ${subtextColor}`}>
-                        Return Time
-                      </label>
-                      <div className="relative">
-                        <Clock className={`absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${subtextColor}`} />
-                        <input
-                          type="time"
-                          value={returnTime}
-                          onChange={(e) => setReturnTime(e.target.value)}
-                          className={`w-full rounded-lg border py-2.5 pl-9 pr-3 text-sm ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                        />
-                      </div>
-                    </div>
-                  </div>
                 )}
 
-                {/* Date summary */}
-                {range?.from && range?.to && (
-                  <div className={`rounded-xl border ${borderColor} p-4 mb-4`}>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Calendar className={`h-4 w-4 ${subtextColor}`} />
-                        <span className={`text-sm ${textColor}`}>
-                          {format(range.from, "MMM d")} {pickupTime} — {format(range.to, "MMM d, yyyy")} {returnTime}
-                        </span>
-                      </div>
-                      <span className={`text-sm ${subtextColor}`}>{totalDays} {totalDays === 1 ? "day" : "days"}</span>
-                    </div>
-                    <div className={`mt-2 flex items-center justify-between border-t pt-2 ${borderColor}`}>
-                      <span className={`text-sm font-medium ${textColor}`}>Total</span>
-                      <span className={`text-lg font-bold ${textColor}`}>{formatCurrency(totalAmount, currency)}</span>
-                    </div>
-                    {hasOverlap && (
-                      <p className="mt-2 text-sm text-red-500">Selected dates overlap with existing bookings. Please choose different dates.</p>
-                    )}
-                  </div>
-                )}
+                <BookingContactForm
+                  firstName={firstName} lastName={lastName} email={email} phone={phone}
+                  onFirstNameChange={setFirstName} onLastNameChange={setLastName}
+                  onEmailChange={setEmail} onPhoneChange={setPhone}
+                  subtextColor={subtextColor} inputBg={inputBg}
+                />
 
-                {/* Contact form */}
-                <div className="space-y-3 mb-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className={`mb-1 block text-xs font-medium ${subtextColor}`}>
-                        First Name *
-                      </label>
-                      <div className="relative">
-                        <User className={`absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${subtextColor}`} />
-                        <input
-                          type="text"
-                          value={firstName}
-                          onChange={(e) => setFirstName(e.target.value)}
-                          placeholder="John"
-                          className={`w-full rounded-lg border py-2.5 pl-9 pr-3 text-sm ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className={`mb-1 block text-xs font-medium ${subtextColor}`}>
-                        Last Name *
-                      </label>
-                      <input
-                        type="text"
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
-                        placeholder="Doe"
-                        className={`w-full rounded-lg border py-2.5 px-3 text-sm ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className={`mb-1 block text-xs font-medium ${subtextColor}`}>
-                      Phone Number *
-                    </label>
-                    <div className="relative">
-                      <Phone className={`absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${subtextColor}`} />
-                      <input
-                        type="tel"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        placeholder="+383 44 123 456"
-                        className={`w-full rounded-lg border py-2.5 pl-9 pr-3 text-sm ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className={`mb-1 block text-xs font-medium ${subtextColor}`}>
-                      Email <span className={subtextColor}>(optional)</span>
-                    </label>
-                    <div className="relative">
-                      <Mail className={`absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${subtextColor}`} />
-                      <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="john@example.com"
-                        className={`w-full rounded-lg border py-2.5 pl-9 pr-3 text-sm ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                      />
-                    </div>
-                  </div>
-                </div>
+                {error && <p className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">{error}</p>}
 
-                {error && (
-                  <p className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">{error}</p>
-                )}
-
-                {/* Submit button */}
-                <button
-                  onClick={handleSubmit}
-                  disabled={!canSubmit}
-                  className={`w-full rounded-xl ${accentColor} px-4 py-3 text-sm font-semibold text-white ${accentHover} transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
-                >
-                  {submitting ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Submitting...
-                    </>
-                  ) : (
-                    "Request Booking"
-                  )}
+                <button onClick={handleSubmit} disabled={!canSubmit} className={`w-full rounded-xl ${accentColor} px-4 py-3 text-sm font-semibold text-white ${accentHover} transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}>
+                  {submitting ? (<><Loader2 className="h-4 w-4 animate-spin" />Submitting...</>) : "Request Booking"}
                 </button>
 
                 <p className={`mt-3 text-center text-xs ${subtextColor}`}>

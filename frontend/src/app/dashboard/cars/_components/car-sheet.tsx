@@ -1,0 +1,114 @@
+"use client";
+
+import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+} from "@/components/ui/sheet";
+import type { ImageItem } from "@/components/image-upload";
+import type { CarFormData, DocumentItem } from "./types";
+import { CarFormFields } from "./car-form-fields";
+import { CarFormService } from "./car-form-service";
+
+interface CarSheetProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  sheetMode: "create" | "edit";
+  sheetLoading: boolean;
+  saving: boolean;
+  form: CarFormData;
+  setForm: React.Dispatch<React.SetStateAction<CarFormData>>;
+  makes: string[];
+  models: string[];
+  loadModels: (make: string) => void;
+  images: ImageItem[];
+  documents: DocumentItem[];
+  onImageChange: (updated: ImageItem[]) => void;
+  onDocumentFiles: (files: FileList | File[]) => void;
+  onRemoveDocument: (index: number) => void;
+  docInputRef: React.RefObject<HTMLInputElement | null>;
+  onSubmit: (e: React.FormEvent) => void;
+  t: (key: string, params?: Record<string, string>) => string;
+}
+
+export function CarSheet({
+  open,
+  onOpenChange,
+  sheetMode,
+  sheetLoading,
+  saving,
+  form,
+  setForm,
+  makes,
+  models,
+  loadModels,
+  images,
+  documents,
+  onImageChange,
+  onDocumentFiles,
+  onRemoveDocument,
+  docInputRef,
+  onSubmit,
+  t,
+}: CarSheetProps) {
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="w-full gap-0 sm:max-w-xl">
+        <SheetHeader className="border-b">
+          <SheetTitle>{sheetMode === "edit" ? t("carEdit.title") : t("carsPage.dialogTitle")}</SheetTitle>
+          <SheetDescription>
+            {sheetMode === "edit"
+              ? `${form.make} ${form.model}${form.year ? ` (${form.year})` : ""}`
+              : t("carsPage.dialogDescription")}
+          </SheetDescription>
+        </SheetHeader>
+        {sheetLoading ? (
+          <div className="flex flex-1 items-center justify-center">
+            <div className="text-muted-foreground">{t("common.loading")}</div>
+          </div>
+        ) : (
+          <form onSubmit={onSubmit} className="flex flex-1 flex-col overflow-hidden">
+            <div className="flex-1 space-y-4 overflow-y-auto p-4">
+              <CarFormFields
+                form={form}
+                setForm={setForm}
+                makes={makes}
+                models={models}
+                loadModels={loadModels}
+                sheetMode={sheetMode}
+                t={t}
+              />
+              <CarFormService
+                form={form}
+                setForm={setForm}
+                images={images}
+                documents={documents}
+                sheetMode={sheetMode}
+                onImageChange={onImageChange}
+                onDocumentFiles={onDocumentFiles}
+                onRemoveDocument={onRemoveDocument}
+                docInputRef={docInputRef}
+                t={t}
+              />
+            </div>
+            <SheetFooter className="border-t">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                {t("common.cancel")}
+              </Button>
+              <Button type="submit" disabled={saving}>
+                {saving
+                  ? (sheetMode === "edit" ? t("carEdit.saving") : t("carsPage.adding"))
+                  : (sheetMode === "edit" ? t("carEdit.saveChanges") : t("carsPage.addCarBtn"))
+                }
+              </Button>
+            </SheetFooter>
+          </form>
+        )}
+      </SheetContent>
+    </Sheet>
+  );
+}

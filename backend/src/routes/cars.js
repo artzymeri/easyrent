@@ -95,7 +95,7 @@ router.get("/", async (req, res) => {
     });
     const fuelTypes = await db.Car.findAll({
       where: { companyId: req.user.companyId, fuelType: { [Op.not]: null, [Op.ne]: "" } },
-      attributes: [[db.sequelize.fn("DISTINCT", db.sequelize.col("fuelType")), "fuelType"]],
+      attributes: [[db.sequelize.fn("DISTINCT", db.sequelize.col("fuel_type")), "fuelType"]],
       raw: true,
     });
     const transmissions = await db.Car.findAll({

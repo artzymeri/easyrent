@@ -104,16 +104,16 @@ export function BookingCalendar({ bookings, calYear, calMonth, setCalYear, setCa
   today.setHours(0, 0, 0, 0);
 
   return (
-    <div className="rounded-xl border bg-card shadow-sm">
+    <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
       {/* Header with month navigation */}
-      <div className="flex items-center justify-between border-b px-6 py-4">
+      <div className="flex items-center justify-between border-b px-4 py-3 sm:px-6 sm:py-4">
         <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => {
           if (calMonth === 0) { setCalMonth(11); setCalYear(calYear - 1); }
           else setCalMonth(calMonth - 1);
         }}>
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        <h2 className="text-lg font-semibold">{t(MONTH_KEYS[calMonth])} {calYear}</h2>
+        <h2 className="text-base font-semibold sm:text-lg">{t(MONTH_KEYS[calMonth])} {calYear}</h2>
         <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => {
           if (calMonth === 11) { setCalMonth(0); setCalYear(calYear + 1); }
           else setCalMonth(calMonth + 1);
@@ -122,17 +122,20 @@ export function BookingCalendar({ bookings, calYear, calMonth, setCalYear, setCa
         </Button>
       </div>
 
-      {/* Day header row */}
-      <div className="grid grid-cols-7 border-b">
-        {DAY_KEYS.map((dk) => (
-          <div key={dk} className="border-r last:border-r-0 px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            {t(dk)}
+      {/* Scrollable calendar container for mobile */}
+      <div className="overflow-x-auto">
+        <div className="min-w-[600px]">
+          {/* Day header row */}
+          <div className="grid grid-cols-7 border-b">
+            {DAY_KEYS.map((dk) => (
+              <div key={dk} className="border-r last:border-r-0 px-2 py-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground sm:px-3 sm:py-2.5">
+                {t(dk)}
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
 
-      {/* Calendar grid */}
-      <div className="grid grid-cols-7">
+          {/* Calendar grid */}
+          <div className="grid grid-cols-7">
         {weeks.map((week, wi) =>
           week.map((d, di) => {
             const dayBookings = getBookingsForDate(d);
@@ -204,6 +207,8 @@ export function BookingCalendar({ bookings, calYear, calMonth, setCalYear, setCa
             );
           })
         )}
+          </div>
+        </div>
       </div>
     </div>
   );

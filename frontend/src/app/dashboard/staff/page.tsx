@@ -175,16 +175,16 @@ export default function StaffPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t("staffPage.title")}</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{t("staffPage.title")}</h1>
+          <p className="text-sm text-muted-foreground sm:text-base">
             {t("staffPage.subtitle", { count: String(totalCount) })}
           </p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger render={<Button />}>{t("staffPage.addStaff")}</DialogTrigger>
+          <DialogTrigger render={<Button className="w-full sm:w-auto" />}>{t("staffPage.addStaff")}</DialogTrigger>
           <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>{t("staffPage.dialogTitle")}</DialogTitle>

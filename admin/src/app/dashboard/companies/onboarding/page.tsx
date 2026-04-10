@@ -20,24 +20,26 @@ export default function OnboardingPage() {
 
   return (
     <div className="mx-auto max-w-5xl">
-      <div className="mb-8">
+      <div className="mb-6 sm:mb-8">
         <div className="flex items-center gap-3 mb-1">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <Sparkles className="h-5 w-5" />
+          <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+            <Sparkles className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">New Company</h1>
-            <p className="text-sm text-muted-foreground">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">New Company</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">
               Set up a rental company in just a few steps
             </p>
           </div>
         </div>
       </div>
 
-      <div className="flex gap-8">
-        <StepSidebar currentStep={step} />
+      <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
+        <div className="lg:w-auto">
+          <StepSidebar currentStep={step} />
+        </div>
 
-        <div className="min-w-0 flex-1 pb-24 md:pb-0">
+        <div className="min-w-0 flex-1 pb-24 lg:pb-0">
           {step === 0 && (
             <StepCompany
               company={company}

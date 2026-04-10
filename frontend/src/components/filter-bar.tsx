@@ -49,9 +49,9 @@ export function FilterBar({
   const activeFilterCount = Object.values(filterValues).filter(Boolean).length;
 
   return (
-    <div className="flex flex-wrap items-center gap-3">
+    <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
       {/* Search */}
-      <div className="relative flex-1 min-w-[200px] max-w-sm">
+      <div className="relative flex-1 min-w-0 sm:min-w-[200px] sm:max-w-sm">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={search}
@@ -64,7 +64,7 @@ export function FilterBar({
       {/* Filter Popover */}
       <Popover open={filterOpen} onOpenChange={setFilterOpen}>
         <PopoverTrigger render={
-          <Button variant="outline" className="gap-2">
+          <Button variant="outline" className="gap-2 w-full sm:w-auto">
             <Filter className="h-4 w-4" />
             Filters
             {activeFilterCount > 0 && (
@@ -74,7 +74,7 @@ export function FilterBar({
             )}
           </Button>
         } />
-        <PopoverContent className="w-80" align="start">
+        <PopoverContent className="w-[calc(100vw-2rem)] sm:w-80" align="start">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h4 className="font-medium">Filters</h4>

@@ -79,10 +79,10 @@ export default function SettingsPage() {
     <div className="flex h-[calc(100vh-6rem)] flex-col">
       {/* Header */}
       <div className="mb-4 shrink-0">
-        <h1 className="text-3xl font-bold tracking-tight">
+        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
           {t("settings.title")}
         </h1>
-        <p className="text-muted-foreground">{t("settings.subtitle")}</p>
+        <p className="text-sm text-muted-foreground sm:text-base">{t("settings.subtitle")}</p>
       </div>
 
       {/* Tabs */}
@@ -91,22 +91,25 @@ export default function SettingsPage() {
         onValueChange={(val) => setActiveTab(val)}
         className="flex min-h-0 flex-1 flex-col"
       >
-        <TabsList className="shrink-0">
-          <TabsTrigger value="preferences" className="gap-1.5">
-            <Settings className="h-4 w-4" />
-            {t("settings.tabs.preferences")}
-          </TabsTrigger>
-          <TabsTrigger value="account" className="gap-1.5">
-            <User className="h-4 w-4" />
-            {t("settings.tabs.account")}
-          </TabsTrigger>
-          {isManager && (
-            <TabsTrigger value="company" className="gap-1.5">
-              <Building2 className="h-4 w-4" />
-              {t("settings.tabs.company")}
+        <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+          <TabsList className="w-max shrink-0 sm:w-auto">
+            <TabsTrigger value="preferences" className="gap-1.5">
+              <Settings className="h-4 w-4" />
+              <span className="hidden sm:inline">{t("settings.tabs.preferences")}</span>
+              <span className="sm:hidden">Prefs</span>
             </TabsTrigger>
-          )}
-        </TabsList>
+            <TabsTrigger value="account" className="gap-1.5">
+              <User className="h-4 w-4" />
+              {t("settings.tabs.account")}
+            </TabsTrigger>
+            {isManager && (
+              <TabsTrigger value="company" className="gap-1.5">
+                <Building2 className="h-4 w-4" />
+                {t("settings.tabs.company")}
+              </TabsTrigger>
+            )}
+          </TabsList>
+        </div>
 
         <TabsContent value="preferences" className="mt-4 overflow-y-auto p-1">
           <TabPreferences isManager={isManager} />

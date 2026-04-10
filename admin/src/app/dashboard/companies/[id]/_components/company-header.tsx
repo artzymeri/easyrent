@@ -54,11 +54,11 @@ export function CompanyHeader({
   onOpenLogoCropper,
 }: CompanyHeaderProps) {
   return (
-    <div className="flex items-start justify-between">
-      <div className="flex items-start gap-5">
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex items-start gap-4 sm:gap-5">
         {/* Logo */}
-        <div className="group relative">
-          <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border-2 border-muted bg-muted/50">
+        <div className="group relative shrink-0">
+          <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-xl border-2 border-muted bg-muted/50 sm:h-20 sm:w-20 sm:rounded-2xl">
             {company.logoUrl ? (
               <img
                 src={company.logoUrl}
@@ -66,20 +66,20 @@ export function CompanyHeader({
                 className="h-full w-full object-cover"
               />
             ) : (
-              <Building2 className="h-8 w-8 text-muted-foreground" />
+              <Building2 className="h-6 w-6 text-muted-foreground sm:h-8 sm:w-8" />
             )}
           </div>
           <button
             onClick={onOpenLogoCropper}
-            className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
+            className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/50 opacity-0 transition-opacity group-hover:opacity-100 sm:rounded-2xl"
           >
             <Camera className="h-5 w-5 text-white" />
           </button>
         </div>
 
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold tracking-tight">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-xl font-bold tracking-tight sm:text-3xl">
               {company.name}
             </h1>
             <Badge variant={company.isActive ? "default" : "destructive"}>
@@ -105,16 +105,16 @@ export function CompanyHeader({
         </div>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <Button variant="outline" size="sm" onClick={onBack}>
           <ArrowLeft className="mr-1 h-3.5 w-3.5" />
-          Back
+          <span className="hidden sm:inline">Back</span>
         </Button>
         {!editing ? (
           <>
             <Button variant="outline" size="sm" onClick={onEdit}>
               <Edit2 className="mr-1 h-3.5 w-3.5" />
-              Edit
+              <span className="hidden sm:inline">Edit</span>
             </Button>
             <Button
               variant={company.isActive ? "destructive" : "default"}
@@ -128,7 +128,7 @@ export function CompanyHeader({
                 render={
                   <Button variant="destructive" size="sm">
                     <Trash2 className="mr-1 h-3.5 w-3.5" />
-                    Delete
+                    <span className="hidden sm:inline">Delete</span>
                   </Button>
                 }
               />
@@ -159,11 +159,11 @@ export function CompanyHeader({
           <>
             <Button variant="outline" size="sm" onClick={onCancelEdit}>
               <X className="mr-1 h-3.5 w-3.5" />
-              Cancel
+              <span className="hidden sm:inline">Cancel</span>
             </Button>
             <Button size="sm" onClick={onSave} disabled={saving}>
               <Save className="mr-1 h-3.5 w-3.5" />
-              {saving ? "Saving…" : "Save Changes"}
+              {saving ? "Saving…" : "Save"}
             </Button>
           </>
         )}

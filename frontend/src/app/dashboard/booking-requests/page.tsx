@@ -103,10 +103,10 @@ export default function BookingRequestsPage() {
 
   // ── Render ────────────────────────────────────────────────
   return (
-    <div className="space-y-6 p-4 md:p-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">
+        <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
           {t("bookingRequestsPage.title")}
           {pendingCount > 0 && filter === "all" && (
             <span className="ml-2 inline-flex items-center justify-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-sm font-medium text-yellow-800">
@@ -119,18 +119,21 @@ export default function BookingRequestsPage() {
         </p>
       </div>
 
-      {/* Filter tabs */}
-      <div className="flex gap-2">
-        {filters.map((f) => (
-          <Button
-            key={f.key}
-            variant={filter === f.key ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFilter(f.key)}
-          >
-            {t(f.labelKey)}
-          </Button>
-        ))}
+      {/* Filter tabs - scrollable on mobile */}
+      <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+        <div className="flex gap-2 w-max sm:w-auto">
+          {filters.map((f) => (
+            <Button
+              key={f.key}
+              variant={filter === f.key ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilter(f.key)}
+              className="whitespace-nowrap"
+            >
+              {t(f.labelKey)}
+            </Button>
+          ))}
+        </div>
       </div>
 
       {/* Loading overlay for filter changes */}

@@ -30,15 +30,15 @@ function BookingsPageContent() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t("bookingsPage.title")}</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{t("bookingsPage.title")}</h1>
+          <p className="text-sm text-muted-foreground sm:text-base">
             {t("bookingsPage.subtitle", { count: String(b.bookings.length) })}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <div className="flex rounded-lg border">
             <Button
               variant={b.view === "calendar" ? "default" : "ghost"}
@@ -46,7 +46,8 @@ function BookingsPageContent() {
               onClick={() => b.setView("calendar")}
             >
               <CalendarDays className="mr-1.5 h-4 w-4" />
-              {t("bookingsPage.calendarView")}
+              <span className="hidden sm:inline">{t("bookingsPage.calendarView")}</span>
+              <span className="sm:hidden">Cal</span>
             </Button>
             <Button
               variant={b.view === "list" ? "default" : "ghost"}
@@ -54,10 +55,13 @@ function BookingsPageContent() {
               onClick={() => b.setView("list")}
             >
               <List className="mr-1.5 h-4 w-4" />
-              {t("bookingsPage.listView")}
+              <span className="hidden sm:inline">{t("bookingsPage.listView")}</span>
+              <span className="sm:hidden">List</span>
             </Button>
           </div>
-          <Button onClick={() => b.setDialogOpen(true)}>{t("bookingsPage.newBooking")}</Button>
+          <Button onClick={() => b.setDialogOpen(true)} className="flex-1 sm:flex-none">
+            {t("bookingsPage.newBooking")}
+          </Button>
         </div>
       </div>
 

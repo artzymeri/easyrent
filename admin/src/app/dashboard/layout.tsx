@@ -7,6 +7,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { api } from "@/lib/api";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
+import { Menu, X } from "lucide-react";
 
 interface AdminUser {
   id: number;
@@ -57,6 +59,7 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const [user, setUser] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("admin_token");
@@ -92,8 +95,16 @@ export default function DashboardLayout({
 
   return (
     <div className="flex min-h-screen">
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r bg-background">
+      <aside className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r bg-background transition-transform lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
         {/* Logo */}
         <div className="flex h-16 items-center gap-2 border-b px-6">
           <Image src="/logo_without_bg.png" alt="EasyRent" width={30} height={30} className="drop-shadow-md" />
@@ -101,6 +112,15 @@ export default function DashboardLayout({
           <span className="ml-auto rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
             Admin
           </span>
+          {/* Close button on mobile */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="ml-2 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <X className="h-5 w-5" />
+          </Button>
         </div>
 
         {/* Navigation */}
@@ -111,6 +131,7 @@ export default function DashboardLayout({
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={() => setSidebarOpen(false)}
                 className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
                   isActive
                     ? "bg-primary text-primary-foreground"
@@ -151,7 +172,23 @@ export default function DashboardLayout({
       </aside>
 
       {/* Main content */}
-      <main className="ml-64 flex-1 p-8">{children}</main>
+      <main className="flex-1 lg:ml-64">
+        {/* Mobile header */}
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 lg:hidden">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setSidebarOpen(true)}
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+          <div className="flex items-center gap-2">
+            <Image src="/logo_without_bg.png" alt="EasyRent" width={24} height={24} />
+            <span className="font-semibold">EasyRent Admin</span>
+          </div>
+        </header>
+        <div className="p-4 sm:p-6 lg:p-8">{children}</div>
+      </main>
     </div>
   );
 }

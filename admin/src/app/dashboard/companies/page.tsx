@@ -97,15 +97,15 @@ export default function CompaniesPage() {
 
   return (
     <div>
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Companies</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Companies</h1>
+          <p className="text-sm text-muted-foreground sm:text-base">
             Manage rental companies on the platform
           </p>
         </div>
         <Link href="/dashboard/companies/onboarding">
-          <Button>
+          <Button className="w-full sm:w-auto">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
             Add Company
           </Button>
@@ -126,8 +126,72 @@ export default function CompaniesPage() {
           </CardContent>
         </Card>
       ) : (
-        <Card>
-          <Table>
+        <>
+          {/* Mobile card view */}
+          <div className="space-y-3 md:hidden">
+            {companies.map((company) => (
+              <Card key={company.id} className="p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-muted">
+                      {company.logoUrl ? (
+                        <img
+                          src={company.logoUrl}
+                          alt={company.name}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium">{company.name}</div>
+                      <code className="text-xs text-muted-foreground">{company.subdomain}</code>
+                    </div>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" />}>
+                      <MoreHorizontal className="h-4 w-4" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => router.push(`/dashboard/companies/${company.id}`)}>
+                        <Eye className="mr-2 h-4 w-4" />
+                        View
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => router.push(`/dashboard/companies/${company.id}?edit=true`)}>
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        variant="destructive"
+                        onClick={() => setDeleteTarget(company)}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
+                  <Badge variant={company.isActive ? "default" : "secondary"}>
+                    {company.isActive ? "Active" : "Inactive"}
+                  </Badge>
+                  <Badge variant={company.onboardingCompleted ? "default" : "outline"}>
+                    {company.onboardingCompleted ? "Completed" : "Pending"}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">
+                    {company.staff?.length || 0} staff
+                  </span>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          {/* Desktop table view */}
+          <Card className="hidden md:block">
+            <div className="overflow-x-auto">
+              <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Company</TableHead>
@@ -213,7 +277,9 @@ export default function CompaniesPage() {
               ))}
             </TableBody>
           </Table>
-        </Card>
+            </div>
+          </Card>
+        </>
       )}
 
       {/* Delete confirmation dialog */}

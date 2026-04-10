@@ -65,6 +65,15 @@ frontend/
 7. **NEVER use emojis in the UI.** Always use **Lucide React icons** (`lucide-react`) instead of emoji characters. This applies to navigation, buttons, feature cards, labels — everywhere.
 8. **Loading states must always use the `<Spinner>` component** (`@/components/ui/spinner`), never text like "Loading...". Use `<Spinner className="h-8 w-8" />` centered in a flex container. For full-page loading use `h-screen`, for section loading use `h-64`.
 
+## Code Quality — MANDATORY
+
+1. **Every TSX file must be under 300 lines of code.** If a component grows beyond 300 lines, extract subcomponents into separate files.
+2. Create a `_components/` folder next to the page file for page-specific subcomponents.
+3. For shared components, place them in `src/components/` with their subcomponents alongside.
+4. Each subcomponent file must also stay under 300 lines — if it grows, split it further.
+5. Use custom hooks (`use-*.ts`) to extract complex state logic from components.
+6. Prefer composition over large monolithic components.
+
 ## Localization (i18n) — MANDATORY
 
 **Every UI-facing string MUST be localized.** This project supports two languages:

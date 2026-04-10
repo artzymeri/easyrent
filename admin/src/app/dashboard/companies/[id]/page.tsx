@@ -227,20 +227,22 @@ export default function CompanyDetailPage({
       )}
 
       <Tabs defaultValue="staff">
-        <TabsList>
-          <TabsTrigger value="staff">
-            <Users className="mr-1.5 h-3.5 w-3.5" />
-            Staff ({staff.length})
-          </TabsTrigger>
-          <TabsTrigger value="cars">
-            <Car className="mr-1.5 h-3.5 w-3.5" />
-            Cars ({cars.length})
-          </TabsTrigger>
-          <TabsTrigger value="website">
-            <Globe className="mr-1.5 h-3.5 w-3.5" />
-            Website
-          </TabsTrigger>
-        </TabsList>
+        <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+          <TabsList className="w-max sm:w-auto">
+            <TabsTrigger value="staff">
+              <Users className="mr-1.5 h-3.5 w-3.5" />
+              Staff ({staff.length})
+            </TabsTrigger>
+            <TabsTrigger value="cars">
+              <Car className="mr-1.5 h-3.5 w-3.5" />
+              Cars ({cars.length})
+            </TabsTrigger>
+            <TabsTrigger value="website">
+              <Globe className="mr-1.5 h-3.5 w-3.5" />
+              Website
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="staff">
           <StaffTab staff={staff} />

@@ -50,14 +50,14 @@ export default function DashboardPage() {
   const navigate = (path: string) => router.push(path);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t("dashboard.title")}</h1>
-          <p className="text-muted-foreground">{t("dashboard.subtitle")}</p>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{t("dashboard.title")}</h1>
+          <p className="text-sm text-muted-foreground sm:text-base">{t("dashboard.subtitle")}</p>
         </div>
         <div className="flex gap-2">
-          <Button size="sm" onClick={() => navigate("/dashboard/bookings")}>
+          <Button size="sm" onClick={() => navigate("/dashboard/bookings")} className="w-full sm:w-auto">
             <CalendarDays className="mr-1.5 h-4 w-4" />
             {t("bookingsPage.newBooking")}
           </Button>

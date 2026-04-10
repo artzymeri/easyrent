@@ -26,7 +26,7 @@ interface FiltersData {
 }
 
 export default function CarsPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const { fc } = useCurrency();
   const router = useRouter();
   const [cars, setCars] = useState<Car[]>([]);
@@ -99,8 +99,7 @@ export default function CarsPage() {
     maintenance: t("carsPage.statusMaintenance"),
   };
 
-  // Get current locale for localized color names
-  const locale = t("_locale") || "en";
+  // Helper for localized color names
   const getColorName = (color: CarColor) => locale === "sq" ? color.nameSq : color.nameEn;
 
   const filterConfigs: FilterConfig[] = [
@@ -188,7 +187,7 @@ export default function CarsPage() {
       ) : (
         <DataTable<Car>
           data={cars}
-          columns={getCarColumns(t, fc)}
+          columns={getCarColumns(t, fc, locale)}
           getRowId={(c) => c.id}
           actions={getCarActions(t, router, sheet.openEditSheet, fetchCars)}
           emptyMessage={t("carsPage.emptyState")}

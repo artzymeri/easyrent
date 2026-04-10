@@ -14,24 +14,19 @@ export function statusColor(status: string) {
 }
 
 // Helper to get localized color name
-function getColorDisplay(car: Car, t: (key: string) => string): string {
+function getColorDisplay(car: Car, locale: string): string {
   // If we have the new carColor relation, use it
   if (car.carColor) {
-    const locale = t("_locale") || "en";
     return locale === "sq" ? car.carColor.nameSq : car.carColor.nameEn;
   }
-  // Fall back to legacy color field with translation
-  if (car.color) {
-    const colorKey = car.color.toLowerCase();
-    const colorTranslation = t(`carsPage.colors.${colorKey}`);
-    return colorTranslation.startsWith("carsPage.") ? car.color : colorTranslation;
-  }
-  return "";
+  // Fall back to legacy color field
+  return car.color || "";
 }
 
 export function getCarColumns(
   t: (key: string, params?: Record<string, string>) => string,
   fc: (amount: number) => string,
+  locale: string = "en",
 ): Column<Car>[] {
   return [
     {
@@ -39,7 +34,7 @@ export function getCarColumns(
       header: t("carsPage.tableHeaders.car"),
       sortValue: (c) => `${c.make} ${c.model}`,
       render: (c) => {
-        const colorDisplay = getColorDisplay(c, t);
+        const colorDisplay = getColorDisplay(c, locale);
         return (
           <div className="flex items-center gap-2">
             {c.carColor?.hex && (

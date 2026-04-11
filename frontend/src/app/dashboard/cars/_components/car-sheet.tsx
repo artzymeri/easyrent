@@ -13,6 +13,7 @@ import type { ImageItem } from "@/components/image-upload";
 import type { CarFormData, DocumentItem, CarColor } from "./types";
 import { CarFormFields } from "./car-form-fields";
 import { CarFormService } from "./car-form-service";
+import { CarDocumentScanner } from "./car-document-scanner";
 
 interface CarSheetProps {
   open: boolean;
@@ -59,16 +60,38 @@ export function CarSheet({
   t,
   locale,
 }: CarSheetProps) {
+  const handleScanComplete = (data: Partial<CarFormData>) => {
+    setForm((prev) => ({
+      ...prev,
+      ...data,
+    }));
+    // If make was extracted, load models for it
+    if (data.make) {
+      loadModels(data.make);
+    }
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full gap-0 sm:max-w-xl">
         <SheetHeader className="border-b">
-          <SheetTitle>{sheetMode === "edit" ? t("carEdit.title") : t("carsPage.dialogTitle")}</SheetTitle>
-          <SheetDescription>
-            {sheetMode === "edit"
-              ? `${form.make} ${form.model}${form.year ? ` (${form.year})` : ""}`
-              : t("carsPage.dialogDescription")}
-          </SheetDescription>
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <SheetTitle>{sheetMode === "edit" ? t("carEdit.title") : t("carsPage.dialogTitle")}</SheetTitle>
+              <SheetDescription>
+                {sheetMode === "edit"
+                  ? `${form.make} ${form.model}${form.year ? ` (${form.year})` : ""}`
+                  : t("carsPage.dialogDescription")}
+              </SheetDescription>
+            </div>
+            {sheetMode === "create" && (
+              <CarDocumentScanner
+                onScanComplete={handleScanComplete}
+                carColors={carColors}
+                t={t}
+              />
+            )}
+          </div>
         </SheetHeader>
         {sheetLoading ? (
           <div className="flex flex-1 items-center justify-center">

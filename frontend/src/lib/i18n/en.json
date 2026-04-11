@@ -263,6 +263,21 @@
       "failedLoadMakes": "Failed to load car makes",
       "failedAdd": "Failed to add car"
     },
+    "scanner": {
+      "scanDocument": "Scan Document",
+      "title": "Scan Car Registration",
+      "description": "Upload a photo of the car registration document (Car Card) to automatically fill in the car details.",
+      "uploadPrompt": "Click to upload or take a photo",
+      "uploadHint": "Supports JPG, PNG, HEIC (max 10MB)",
+      "retake": "Retake",
+      "extractData": "Extract Data",
+      "scanning": "Scanning...",
+      "success": "Car details extracted successfully!",
+      "failed": "Failed to scan document. Please try again.",
+      "notRecognized": "Document not recognized. Please upload a clear photo of the car registration.",
+      "invalidFileType": "Please upload an image file",
+      "fileTooLarge": "File is too large. Maximum size is 10MB"
+    },
     "repairParts": "Repair Parts",
     "repairPartsHint": "Select the parts that need repair",
     "repairPartsList": {

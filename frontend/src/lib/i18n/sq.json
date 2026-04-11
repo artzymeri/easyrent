@@ -263,6 +263,21 @@
       "failedLoadMakes": "Dështoi ngarkimi i markave",
       "failedAdd": "Dështoi shtimi i veturës"
     },
+    "scanner": {
+      "scanDocument": "Skano Dokumentin",
+      "title": "Skano Regjistrimin e Veturës",
+      "description": "Ngarko një foto të letërnjoftimit të automjetit për të plotësuar automatikisht detajet e veturës.",
+      "uploadPrompt": "Kliko për të ngarkuar ose fotografuar",
+      "uploadHint": "Mbështet JPG, PNG, HEIC (max 10MB)",
+      "retake": "Rifotografo",
+      "extractData": "Nxirr të Dhënat",
+      "scanning": "Duke skanuar...",
+      "success": "Detajet e veturës u nxorrën me sukses!",
+      "failed": "Dështoi skanimi i dokumentit. Provo përsëri.",
+      "notRecognized": "Dokumenti nuk u njoh. Ngarko një foto të qartë të regjistrimit.",
+      "invalidFileType": "Ngarko një skedar imazhi",
+      "fileTooLarge": "Skedari është shumë i madh. Madhësia maksimale është 10MB"
+    },
     "repairParts": "Pjesët për Riparim",
     "repairPartsHint": "Zgjidhni pjesët që kanë nevojë për riparim",
     "repairPartsList": {

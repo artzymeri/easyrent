@@ -6,6 +6,8 @@ const { authenticate } = require("../middleware/auth");
 const QRCode = require("qrcode");
 const db = require("../db");
 
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || "";
+
 router.use(authenticate);
 
 function ensureCompanyAccess(req, res, next) {
@@ -16,6 +18,97 @@ function ensureCompanyAccess(req, res, next) {
   }
   next();
 }
+
+// ── AI: Extract car data from registration document images ───
+router.post("/scan-document", async (req, res) => {
+  try {
+    const { image } = req.body; // base64 data URI
+    if (!image) {
+      return res.status(400).json({ error: "No image provided" });
+    }
+
+    if (!OPENROUTER_API_KEY) {
+      return res.status(500).json({ error: "AI service not configured" });
+    }
+
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.0-flash-001",
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: `You are an expert at reading vehicle registration documents (Car Cards / Letërnjoftim i Automjetit) from Kosovo and other European countries.
+
+Extract the following information from the document image and return ONLY a valid JSON object:
+{
+  "usable": boolean (false if the image is NOT a vehicle registration document or is too blurry to read),
+  "licensePlate": string or null (field A - registration number, e.g., "01-175-IM"),
+  "make": string or null (field D.1 - vehicle manufacturer/brand, e.g., "Toyota", "BMW", "Mercedes-Benz"),
+  "model": string or null (field D.3 - commercial name/model, e.g., "Avensis", "320d", "E-Class"),
+  "variant": string or null (field D.2 - type/variant if available, e.g., "T25", "F30"),
+  "year": string or null (field S or B - year of manufacture or first registration, just the year like "2008"),
+  "vin": string or null (field E - Vehicle Identification Number, 17 characters),
+  "engineCapacity": string or null (field P - engine capacity in cc, e.g., "1998"),
+  "enginePower": string or null (field P.2 - power in kW, e.g., "93"),
+  "fuelType": string or null (field P.3 - fuel type: "benzinë"/"gasoline", "dizel"/"diesel", "elektrik"/"electric", "hibrid"/"hybrid", "lpg"/"gaz"),
+  "colorName": string or null (field R - color in original language, e.g., "E HIRTË METALIKE", "E BARDHË"),
+  "seats": string or null (field S.1 - number of seats if visible),
+  "registrationDate": string or null (field I - date of registration in YYYY-MM-DD format),
+  "ownerName": string or null (field C.2 - owner name if visible)
+}
+
+Important rules:
+- Set "usable" to false if this is NOT a vehicle registration document or if it's too blurry/unclear
+- For VIN, be very careful with similar characters: 0/O, 1/I, 5/S, 8/B
+- For dates, convert to YYYY-MM-DD format (e.g., "21.04.2022" → "2022-04-21")
+- For Kosovo documents, fields are labeled A, B, C, D.1, D.2, D.3, E, I, P, P.2, P.3, R, S, etc.
+- Extract the model from field D.3 (Commercial name), not D.2 (Type/Variant)
+- Return ONLY the JSON object, no markdown, no explanation`,
+              },
+              {
+                type: "image_url",
+                image_url: { url: image },
+              },
+            ],
+          },
+        ],
+        max_tokens: 1000,
+      }),
+    });
+
+    if (!response.ok) {
+      const errBody = await response.text();
+      console.error("OpenRouter API error:", response.status, errBody);
+      return res.status(502).json({ error: "AI service request failed" });
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || "";
+
+    // Parse JSON from AI response (strip markdown fences if present)
+    let parsed;
+    try {
+      const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/) || [null, content];
+      parsed = JSON.parse(jsonMatch[1].trim());
+    } catch (parseErr) {
+      console.error("Failed to parse AI response:", content);
+      return res.status(500).json({ error: "Failed to parse AI response" });
+    }
+
+    res.json(parsed);
+  } catch (err) {
+    console.error("Scan document error:", err);
+    res.status(500).json({ error: "Failed to scan document" });
+  }
+});
 
 // ── Get all available car colors ──────────────────────────────
 router.get("/colors", async (req, res) => {

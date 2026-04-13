@@ -74,6 +74,7 @@ app.use("/api/bookings",   require("./routes/bookings"));
 app.use("/api/booking-requests", require("./routes/booking-requests"));
 app.use("/api/settings",   require("./routes/settings"));
 app.use("/api/delivery-points", require("./routes/delivery-points"));
+app.use("/api/insurance-providers", require("./routes/insurance-providers"));
 app.use("/api/dashboard",  require("./routes/dashboard"));
 app.use("/api/qr",         require("./routes/qr"));
 app.use("/api/public",     require("./routes/public"));

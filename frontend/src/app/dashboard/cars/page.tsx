@@ -11,7 +11,7 @@ import { DataTable } from "@/components/data-table";
 import { FilterBar, type FilterConfig } from "@/components/filter-bar";
 import { toast } from "sonner";
 
-import type { Car, CarColor } from "./_components/types";
+import type { Car, CarColor, InsuranceProviderOption } from "./_components/types";
 import { CarSheet } from "./_components/car-sheet";
 import { getCarColumns, getCarActions } from "./_components/car-table-columns";
 import { useCarSheet } from "./_components/use-car-sheet";
@@ -44,6 +44,14 @@ export default function CarsPage() {
   // Filter state
   const [search, setSearch] = useState("");
   const [filterValues, setFilterValues] = useState<Record<string, string>>({});
+  const [insuranceProviders, setInsuranceProviders] = useState<InsuranceProviderOption[]>([]);
+
+  const fetchInsuranceProviders = useCallback(async () => {
+    try {
+      const data = await api.get<InsuranceProviderOption[]>("/insurance-providers");
+      setInsuranceProviders(data);
+    } catch { /* ignore */ }
+  }, []);
 
   const fetchCars = useCallback(async () => {
     try {
@@ -81,6 +89,10 @@ export default function CarsPage() {
     return () => clearTimeout(timer);
   }, [fetchCars]);
 
+  useEffect(() => {
+    fetchInsuranceProviders();
+  }, [fetchInsuranceProviders]);
+
   const handleFilterChange = (key: string, value: string) => {
     setFilterValues((prev) => ({ ...prev, [key]: value }));
   };
@@ -90,7 +102,7 @@ export default function CarsPage() {
     setSearch("");
   };
 
-  const sheet = useCarSheet(t, fetchCars, filtersData.carColors);
+  const sheet = useCarSheet(t, fetchCars, filtersData.carColors, insuranceProviders);
 
   // Build filter config
   const statusLabels: Record<string, string> = {
@@ -168,6 +180,7 @@ export default function CarsPage() {
         makes={sheet.makes}
         models={sheet.models}
         carColors={sheet.carColors}
+        insuranceProviders={sheet.insuranceProviders}
         loadModels={sheet.loadModels}
         images={sheet.images}
         documents={sheet.documents}

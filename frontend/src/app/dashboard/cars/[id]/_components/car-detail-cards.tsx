@@ -41,7 +41,7 @@ export function CarDetailCards({ car, t }: CarDetailCardsProps) {
                 expired={car.registrationExpiry ? isExpired(car.registrationExpiry) : false}
               />
               <Separator />
-              <InfoRow label={t("carDetail.insuranceProvider")} value={car.insuranceProvider || "—"} />
+              <InfoRow label={t("carDetail.insuranceProvider")} value={car.insuranceProvider ? car.insuranceProvider.split("-").map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ") : "—"} />
               <Separator />
               <InfoRow label={t("carDetail.policyNumber")} value={car.insurancePolicyNumber || "—"} />
               <Separator />

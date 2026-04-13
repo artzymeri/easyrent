@@ -115,12 +115,19 @@ export interface CarFormFieldsProps {
   locale: string;
 }
 
+export interface InsuranceProviderOption {
+  id: number;
+  name: string;
+  isActive: boolean;
+}
+
 export interface CarFormServiceProps {
   form: CarFormData;
   setForm: React.Dispatch<React.SetStateAction<CarFormData>>;
   images: ImageItem[];
   documents: DocumentItem[];
   sheetMode: "create" | "edit";
+  insuranceProviders: InsuranceProviderOption[];
   onImageChange: (updated: ImageItem[]) => void;
   onDocumentFiles: (files: FileList | File[]) => void;
   onRemoveDocument: (index: number) => void;

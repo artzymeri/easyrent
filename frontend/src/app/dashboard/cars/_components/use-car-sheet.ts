@@ -3,11 +3,11 @@ import { api } from "@/lib/api";
 import type { ImageItem } from "@/components/image-upload";
 import { toast } from "sonner";
 
-import type { Car, CarFormData, DocumentItem, CarColor } from "./types";
+import type { Car, CarFormData, DocumentItem, CarColor, InsuranceProviderOption } from "./types";
 import { EMPTY_FORM } from "./types";
 type TFunc = (key: string, opts?: Record<string, string>) => string;
 
-export function useCarSheet(t: TFunc, fetchCars: () => Promise<void>, carColors: CarColor[] = []) {
+export function useCarSheet(t: TFunc, fetchCars: () => Promise<void>, carColors: CarColor[] = [], insuranceProviders: InsuranceProviderOption[] = []) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetMode, setSheetMode] = useState<"create" | "edit">("create");
   const [editCarId, setEditCarId] = useState<number | null>(null);
@@ -284,7 +284,7 @@ export function useCarSheet(t: TFunc, fetchCars: () => Promise<void>, carColors:
   };
   return {
     sheetOpen, setSheetOpen, sheetMode, sheetLoading, saving,
-    form, setForm, makes, models, loadModels, carColors,
+    form, setForm, makes, models, loadModels, carColors, insuranceProviders,
     images, setImages, documents, docInputRef,
     openCreateSheet, openEditSheet,
     handleImageChange, handleDocumentFiles, handleRemoveDocument, handleSubmit,

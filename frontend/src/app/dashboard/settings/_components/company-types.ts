@@ -7,6 +7,12 @@ export interface DeliveryPoint {
   isActive: boolean;
 }
 
+export interface InsuranceProvider {
+  id: number;
+  name: string;
+  isActive: boolean;
+}
+
 export interface CompanyInfoFieldsProps {
   company: CompanySettings;
   form: CompanyForm;

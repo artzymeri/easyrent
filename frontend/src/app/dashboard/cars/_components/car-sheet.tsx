@@ -10,7 +10,7 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import type { ImageItem } from "@/components/image-upload";
-import type { CarFormData, DocumentItem, CarColor } from "./types";
+import type { CarFormData, DocumentItem, CarColor, InsuranceProviderOption } from "./types";
 import { CarFormFields } from "./car-form-fields";
 import { CarFormService } from "./car-form-service";
 import { CarDocumentScanner } from "./car-document-scanner";
@@ -26,6 +26,7 @@ interface CarSheetProps {
   makes: string[];
   models: string[];
   carColors: CarColor[];
+  insuranceProviders: InsuranceProviderOption[];
   loadModels: (make: string) => void;
   images: ImageItem[];
   documents: DocumentItem[];
@@ -49,6 +50,7 @@ export function CarSheet({
   makes,
   models,
   carColors,
+  insuranceProviders,
   loadModels,
   images,
   documents,
@@ -117,6 +119,7 @@ export function CarSheet({
                 images={images}
                 documents={documents}
                 sheetMode={sheetMode}
+                insuranceProviders={insuranceProviders}
                 onImageChange={onImageChange}
                 onDocumentFiles={onDocumentFiles}
                 onRemoveDocument={onRemoveDocument}

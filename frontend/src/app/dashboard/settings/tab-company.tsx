@@ -7,10 +7,11 @@ import { Save, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import type { CompanySettings, CompanyForm } from "./types";
-import type { DeliveryPoint } from "./_components/company-types";
+import type { DeliveryPoint, InsuranceProvider } from "./_components/company-types";
 import { CompanyInfoFields } from "./_components/company-info-fields";
 import { CompanyBranding } from "./_components/company-branding";
 import { DeliveryPointsSection } from "./_components/delivery-points-section";
+import { InsuranceProvidersSection, formatInsuranceName } from "./_components/insurance-providers-section";
 
 interface TabCompanyProps {
   company: CompanySettings;
@@ -35,8 +36,18 @@ export function TabCompany({ company, onCompanyUpdate, initialForm }: TabCompany
   const [editDpName, setEditDpName] = useState("");
   const [editDpAddress, setEditDpAddress] = useState("");
 
+  // Insurance providers state
+  const [insuranceProviders, setInsuranceProviders] = useState<InsuranceProvider[]>([]);
+  const [ipLoading, setIpLoading] = useState(true);
+  const [newIpName, setNewIpName] = useState("");
+  const [addingIp, setAddingIp] = useState(false);
+  const [showAddIp, setShowAddIp] = useState(false);
+  const [editingIpId, setEditingIpId] = useState<number | null>(null);
+  const [editIpName, setEditIpName] = useState("");
+
   useEffect(() => {
     fetchDeliveryPoints();
+    fetchInsuranceProviders();
   }, []);
 
   const fetchDeliveryPoints = async () => {
@@ -103,6 +114,67 @@ export function TabCompany({ company, onCompanyUpdate, initialForm }: TabCompany
     setEditDpAddress(point.address || "");
   };
 
+  // ── Insurance providers ──────────────────────────────────────
+  const fetchInsuranceProviders = async () => {
+    try {
+      const data = await api.get<InsuranceProvider[]>("/insurance-providers");
+      setInsuranceProviders(data);
+    } catch {
+      toast.error(t("settings.failedInsuranceProviders"));
+    } finally {
+      setIpLoading(false);
+    }
+  };
+
+  const handleAddIp = async () => {
+    if (!newIpName.trim()) return;
+    setAddingIp(true);
+    try {
+      const provider = await api.post<InsuranceProvider>("/insurance-providers", {
+        name: newIpName.trim(),
+      });
+      setInsuranceProviders((prev) => [...prev, provider].sort((a, b) => a.name.localeCompare(b.name)));
+      setNewIpName("");
+      setShowAddIp(false);
+      toast.success(t("settings.insuranceProviderAdded"));
+    } catch {
+      toast.error(t("settings.failedAddInsuranceProvider"));
+    } finally {
+      setAddingIp(false);
+    }
+  };
+
+  const handleUpdateIp = async (id: number) => {
+    if (!editIpName.trim()) return;
+    try {
+      const updated = await api.put<InsuranceProvider>(`/insurance-providers/${id}`, {
+        name: editIpName.trim(),
+      });
+      setInsuranceProviders((prev) =>
+        prev.map((p) => (p.id === id ? updated : p)).sort((a, b) => a.name.localeCompare(b.name))
+      );
+      setEditingIpId(null);
+      toast.success(t("settings.insuranceProviderUpdated"));
+    } catch {
+      toast.error(t("settings.failedUpdateInsuranceProvider"));
+    }
+  };
+
+  const handleDeleteIp = async (id: number) => {
+    try {
+      await api.delete(`/insurance-providers/${id}`);
+      setInsuranceProviders((prev) => prev.filter((p) => p.id !== id));
+      toast.success(t("settings.insuranceProviderDeleted"));
+    } catch {
+      toast.error(t("settings.failedDeleteInsuranceProvider"));
+    }
+  };
+
+  const startEditIp = (provider: InsuranceProvider) => {
+    setEditingIpId(provider.id);
+    setEditIpName(formatInsuranceName(provider.name));
+  };
+
   const updateField = (field: keyof CompanyForm, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
@@ -151,6 +223,24 @@ export function TabCompany({ company, onCompanyUpdate, initialForm }: TabCompany
           handleDeleteDp={handleDeleteDp}
           startEditDp={startEditDp}
           setEditingDpId={setEditingDpId}
+        />
+
+        <InsuranceProvidersSection
+          providers={insuranceProviders}
+          ipLoading={ipLoading}
+          showAddIp={showAddIp}
+          setShowAddIp={setShowAddIp}
+          newIpName={newIpName}
+          setNewIpName={setNewIpName}
+          addingIp={addingIp}
+          handleAddIp={handleAddIp}
+          editingIpId={editingIpId}
+          editIpName={editIpName}
+          setEditIpName={setEditIpName}
+          handleUpdateIp={handleUpdateIp}
+          handleDeleteIp={handleDeleteIp}
+          startEditIp={startEditIp}
+          setEditingIpId={setEditingIpId}
         />
       </div>
 

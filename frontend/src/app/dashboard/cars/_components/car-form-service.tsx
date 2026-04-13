@@ -6,8 +6,23 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/date-picker";
 import { ImageUpload } from "@/components/image-upload";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { FileText, Upload, X } from "lucide-react";
 import type { CarFormServiceProps } from "./types";
+
+/** Format stored name (lowercase-dashed) to display name (Capitalized Words) */
+function formatInsuranceName(name: string): string {
+  return name
+    .split("-")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
 
 export function CarFormService({
   form,
@@ -15,6 +30,7 @@ export function CarFormService({
   images,
   documents,
   sheetMode,
+  insuranceProviders,
   onImageChange,
   onDocumentFiles,
   onRemoveDocument,
@@ -30,7 +46,25 @@ export function CarFormService({
       </div>
       <div className="space-y-2">
         <Label>{t("carDetail.insuranceProvider")}</Label>
-        <Input value={form.insuranceProvider} onChange={(e) => setForm({ ...form, insuranceProvider: e.target.value })} />
+        <Select
+          value={form.insuranceProvider}
+          onValueChange={(val) => setForm({ ...form, insuranceProvider: val ?? "" })}
+        >
+          <SelectTrigger className="w-full">
+            {form.insuranceProvider ? (
+              <span className="flex flex-1 text-left">{formatInsuranceName(form.insuranceProvider)}</span>
+            ) : (
+              <SelectValue placeholder={t("carDetail.selectInsuranceProvider")} />
+            )}
+          </SelectTrigger>
+          <SelectContent>
+            {insuranceProviders.filter((p) => p.isActive).map((p) => (
+              <SelectItem key={p.id} value={p.name}>
+                {formatInsuranceName(p.name)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">

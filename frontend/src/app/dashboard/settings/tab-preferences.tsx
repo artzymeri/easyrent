@@ -16,7 +16,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
 
@@ -63,24 +62,16 @@ export function TabPreferences({ isManager }: TabPreferencesProps) {
             }}
           >
             <SelectTrigger className="w-72">
-              <SelectValue
-                placeholder={
-                  locale === "sq"
-                    ? t("settings.albanian")
-                    : t("settings.english")
-                }
-              />
+              <span className="flex flex-1 text-left">
+                {locale === "en" ? t("settings.english") : t("settings.albanian")}
+              </span>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="en">
-                <span className="flex items-center gap-2">
-                  {t("settings.english")}
-                </span>
+                {t("settings.english")}
               </SelectItem>
               <SelectItem value="sq">
-                <span className="flex items-center gap-2">
-                  {t("settings.albanian")}
-                </span>
+                {t("settings.albanian")}
               </SelectItem>
             </SelectContent>
           </Select>
@@ -105,9 +96,12 @@ export function TabPreferences({ isManager }: TabPreferencesProps) {
               onValueChange={handleCurrencyChange}
             >
               <SelectTrigger className="w-72">
-                <SelectValue
-                  placeholder={`${currency.symbol} ${currency.name} (${currency.code})`}
-                />
+                <span className="flex flex-1 items-center gap-2 text-left">
+                  <span className="w-8 font-mono text-muted-foreground">
+                    {currency.symbol}
+                  </span>
+                  {currency.name} ({currency.code})
+                </span>
               </SelectTrigger>
               <SelectContent>
                 {CURRENCIES.map((c) => (

@@ -44,14 +44,17 @@ export function useCarSheet(t: TFunc, fetchCars: () => Promise<void>, carColors:
 
   // ── Open sheet for creating ──────────────────────────────────
   const openCreateSheet = () => {
+    // Only reset form if switching from edit mode
+    if (sheetMode === "edit") {
+      setForm({ ...EMPTY_FORM });
+      setImages([]);
+      setDocuments([]);
+      setModels([]);
+    }
     setSheetMode("create");
     setEditCarId(null);
-    setForm({ ...EMPTY_FORM });
-    setImages([]);
     setDeletedImageIds([]);
-    setDocuments([]);
     setDeletedDocumentIds([]);
-    setModels([]);
     setSheetOpen(true);
     loadMakes();
   };

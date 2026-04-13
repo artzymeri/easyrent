@@ -126,10 +126,13 @@ export default function CustomersPage() {
 
   // ── Open sheet for creating ──────────────────────────────────
   const openCreateSheet = () => {
+    // Only reset form if switching from edit/view mode
+    if (sheetMode !== "create") {
+      setForm({ ...EMPTY_FORM });
+      setDocuments([]);
+    }
     setSheetMode("create");
     setEditCustomerId(null);
-    setForm({ ...EMPTY_FORM });
-    setDocuments([]);
     setSheetOpen(true);
   };
 

@@ -156,13 +156,7 @@ function BookingsPageContent() {
 
       <NewBookingSheet
         open={b.dialogOpen}
-        onOpenChange={(open) => {
-          b.setDialogOpen(open);
-          if (!open) {
-            b.setPendingRequestId(null);
-            b.setPendingRequestInfo(null);
-          }
-        }}
+        onOpenChange={b.setDialogOpen}
         form={b.form}
         setForm={b.setForm}
         cars={b.cars}

@@ -39,6 +39,9 @@ const CarDocument = require("./models/CarDocument")(sequelize, Sequelize.DataTyp
 const DeliveryPoint = require("./models/DeliveryPoint")(sequelize, Sequelize.DataTypes);
 const InsuranceProvider = require("./models/InsuranceProvider")(sequelize, Sequelize.DataTypes);
 const BookingRequest = require("./models/BookingRequest")(sequelize, Sequelize.DataTypes);
+const WebsiteSlide = require("./models/WebsiteSlide")(sequelize, Sequelize.DataTypes);
+const WebsitePage = require("./models/WebsitePage")(sequelize, Sequelize.DataTypes);
+const BlogPost = require("./models/BlogPost")(sequelize, Sequelize.DataTypes);
 
 db.User = User;
 db.Company = Company;
@@ -55,6 +58,9 @@ db.BookingImage = BookingImage;
 db.DeliveryPoint = DeliveryPoint;
 db.InsuranceProvider = InsuranceProvider;
 db.BookingRequest = BookingRequest;
+db.WebsiteSlide = WebsiteSlide;
+db.WebsitePage = WebsitePage;
+db.BlogPost = BlogPost;
 
 // Run associations after all models are loaded
 Object.keys(db).forEach((modelName) => {

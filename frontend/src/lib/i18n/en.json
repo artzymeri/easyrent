@@ -38,6 +38,7 @@
     "cars": "Cars",
     "customers": "Customers",
     "staff": "Staff",
+    "website": "Website",
     "settings": "Settings"
   },
   "roles": {
@@ -796,5 +797,84 @@
     "filterPending": "Pending",
     "filterConfirmed": "Confirmed",
     "filterRejected": "Rejected"
+  },
+  "website": {
+    "title": "Website Manager",
+    "subtitle": "Customize your public website appearance and content",
+    "tabs": {
+      "general": "General",
+      "slides": "Slides",
+      "pages": "Pages",
+      "blog": "Blog"
+    },
+    "general": {
+      "template": "Template",
+      "selectTemplate": "Select a template for your website",
+      "published": "Published",
+      "publishedDesc": "Your website is live and accessible via your subdomain",
+      "unpublishedDesc": "Your website is hidden from the public",
+      "heroTitle": "Hero Title",
+      "heroSubtitle": "Hero Subtitle",
+      "primaryColor": "Primary Color",
+      "slideSource": "Hero Slide Source",
+      "slideSourceCustom": "Custom Slides",
+      "slideSourceCars": "Car Images",
+      "slideSourceBoth": "Both",
+      "navLinks": "Navigation Links",
+      "saved": "Website settings saved"
+    },
+    "slides": {
+      "title": "Hero Slides",
+      "description": "Add slides to your homepage hero section. If no slides are added, car images will be shown.",
+      "addSlide": "Add Slide",
+      "editSlide": "Edit Slide",
+      "slideTitle": "Title",
+      "slideSubtitle": "Subtitle",
+      "slideImage": "Image",
+      "buttonText": "Button Text",
+      "buttonLink": "Button Link",
+      "noSlides": "No slides yet. Add your first slide or car images will be displayed.",
+      "deleted": "Slide deleted",
+      "saved": "Slide saved"
+    },
+    "pages": {
+      "about": "About Us",
+      "contact": "Contact",
+      "pageTitle": "Page Title",
+      "pageContent": "Content",
+      "heroImage": "Hero Image",
+      "contactHours": "Business Hours",
+      "contactMapEmbed": "Google Maps Embed URL",
+      "saved": "Page saved"
+    },
+    "blog": {
+      "title": "Blog Posts",
+      "description": "Create and manage blog posts for your website",
+      "addPost": "New Post",
+      "editPost": "Edit Post",
+      "postTitle": "Title",
+      "postContent": "Content",
+      "postExcerpt": "Excerpt",
+      "coverImage": "Cover Image",
+      "publish": "Publish",
+      "unpublish": "Unpublish",
+      "draft": "Draft",
+      "published": "Published",
+      "noPosts": "No blog posts yet",
+      "deleted": "Post deleted",
+      "saved": "Post saved"
+    },
+    "templates": {
+      "classic": "Classic",
+      "modern": "Modern",
+      "elegant": "Elegant",
+      "sporty": "Sporty",
+      "minimal": "Minimal",
+      "starter": "Starter",
+      "bold": "Bold",
+      "oceanic": "Oceanic",
+      "nature": "Nature",
+      "corporate": "Corporate"
+    }
   }
 }

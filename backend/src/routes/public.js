@@ -8,7 +8,7 @@ router.get("/:subdomain", async (req, res) => {
   try {
     const company = await db.Company.findOne({
       where: { subdomain: req.params.subdomain, isActive: true, websitePublished: true },
-      attributes: ["id", "name", "subdomain", "logoUrl", "slogan", "email", "phone", "address", "city", "country", "currency", "websiteTemplate"],
+      attributes: ["id", "name", "subdomain", "logoUrl", "slogan", "email", "phone", "address", "city", "country", "currency", "websiteTemplate", "heroSlideSource", "websiteNavLinks", "websitePrimaryColor", "websiteHeroTitle", "websiteHeroSubtitle"],
     });
     if (!company) return res.status(404).json({ error: "Company not found" });
     res.json(company);
@@ -172,6 +172,114 @@ router.post("/:subdomain/booking-requests", async (req, res) => {
   } catch (err) {
     console.error("Public booking request error:", err);
     res.status(500).json({ error: "Failed to submit booking request" });
+  }
+});
+
+// ── Get website slides (public) ───────────────────────────────
+router.get("/:subdomain/slides", async (req, res) => {
+  try {
+    const company = await db.Company.findOne({
+      where: { subdomain: req.params.subdomain, isActive: true, websitePublished: true },
+    });
+    if (!company) return res.status(404).json({ error: "Company not found" });
+
+    const slides = await db.WebsiteSlide.findAll({
+      where: { companyId: company.id, isActive: true },
+      order: [["sortOrder", "ASC"]],
+      attributes: ["id", "title", "subtitle", "imageUrl", "buttonText", "buttonLink", "sortOrder"],
+    });
+
+    // If no custom slides and source includes cars, generate from car images
+    if (slides.length === 0 || company.heroSlideSource === "cars" || company.heroSlideSource === "both") {
+      const carSlides = [];
+      if (company.heroSlideSource === "cars" || (company.heroSlideSource === "both") || slides.length === 0) {
+        const cars = await db.Car.findAll({
+          where: { companyId: company.id, status: { [Op.ne]: "maintenance" } },
+          include: [{ model: db.CarImage, as: "images", attributes: ["url", "isPrimary"], limit: 1, order: [["isPrimary", "DESC"]] }],
+          attributes: ["id", "make", "model", "dailyRate"],
+          limit: 10,
+        });
+        for (const car of cars) {
+          const img = car.images?.[0];
+          if (img) {
+            carSlides.push({
+              id: `car-${car.id}`,
+              title: `${car.make} ${car.model}`,
+              subtitle: `Starting from ${car.dailyRate}/day`,
+              imageUrl: img.url,
+              buttonText: "Book Now",
+              buttonLink: "#cars",
+            });
+          }
+        }
+      }
+      if (company.heroSlideSource === "cars") return res.json(carSlides);
+      if (company.heroSlideSource === "both") return res.json([...slides, ...carSlides]);
+      if (slides.length === 0) return res.json(carSlides);
+    }
+
+    res.json(slides);
+  } catch (err) {
+    console.error("Public slides fetch error:", err);
+    res.status(500).json({ error: "Failed to fetch slides" });
+  }
+});
+
+// ── Get website page (public) ─────────────────────────────────
+router.get("/:subdomain/pages/:slug", async (req, res) => {
+  try {
+    const company = await db.Company.findOne({
+      where: { subdomain: req.params.subdomain, isActive: true, websitePublished: true },
+    });
+    if (!company) return res.status(404).json({ error: "Company not found" });
+
+    const page = await db.WebsitePage.findOne({
+      where: { companyId: company.id, slug: req.params.slug, isPublished: true },
+    });
+    if (!page) return res.status(404).json({ error: "Page not found" });
+    res.json(page);
+  } catch (err) {
+    console.error("Public page fetch error:", err);
+    res.status(500).json({ error: "Failed to fetch page" });
+  }
+});
+
+// ── Get blog posts (public) ───────────────────────────────────
+router.get("/:subdomain/blog", async (req, res) => {
+  try {
+    const company = await db.Company.findOne({
+      where: { subdomain: req.params.subdomain, isActive: true, websitePublished: true },
+    });
+    if (!company) return res.status(404).json({ error: "Company not found" });
+
+    const posts = await db.BlogPost.findAll({
+      where: { companyId: company.id, isPublished: true },
+      attributes: ["id", "title", "slug", "excerpt", "coverImageUrl", "authorName", "publishedAt"],
+      order: [["publishedAt", "DESC"]],
+    });
+    res.json(posts);
+  } catch (err) {
+    console.error("Public blog fetch error:", err);
+    res.status(500).json({ error: "Failed to fetch blog posts" });
+  }
+});
+
+// ── Get single blog post (public) ─────────────────────────────
+router.get("/:subdomain/blog/:slug", async (req, res) => {
+  try {
+    const company = await db.Company.findOne({
+      where: { subdomain: req.params.subdomain, isActive: true, websitePublished: true },
+    });
+    if (!company) return res.status(404).json({ error: "Company not found" });
+
+    const post = await db.BlogPost.findOne({
+      where: { companyId: company.id, slug: req.params.slug, isPublished: true },
+    });
+    if (!post) return res.status(404).json({ error: "Post not found" });
+    res.json(post);
+  } catch (err) {
+    console.error("Public blog post fetch error:", err);
+    res.status(500).json({ error: "Failed to fetch blog post" });
   }
 });
 

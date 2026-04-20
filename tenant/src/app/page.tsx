@@ -1,9 +1,5 @@
-import { getCompany, getCars } from "@/lib/api";
-import { ClassicTemplate } from "@/templates/classic";
-import { ModernTemplate } from "@/templates/modern";
-import { ElegantTemplate } from "@/templates/elegant";
-import { SportyTemplate } from "@/templates/sporty";
-import { MinimalTemplate } from "@/templates/minimal";
+import { getCompany, getCars, getSlides } from "@/lib/api";
+import { getTemplate } from "@/templates";
 
 interface PageProps {
   searchParams: Promise<{ subdomain?: string }>;
@@ -24,9 +20,10 @@ export default async function TenantPage({ searchParams }: PageProps) {
     );
   }
 
-  const [company, carsData] = await Promise.all([
+  const [company, carsData, slides] = await Promise.all([
     getCompany(subdomain),
     getCars(subdomain),
+    getSlides(subdomain),
   ]);
 
   if (!company) {
@@ -41,20 +38,7 @@ export default async function TenantPage({ searchParams }: PageProps) {
   }
 
   const { rows: cars, currency } = carsData;
+  const Template = getTemplate(company.websiteTemplate);
 
-  const templateProps = { company, cars, currency, subdomain };
-
-  switch (company.websiteTemplate) {
-    case "modern":
-      return <ModernTemplate {...templateProps} />;
-    case "elegant":
-      return <ElegantTemplate {...templateProps} />;
-    case "sporty":
-      return <SportyTemplate {...templateProps} />;
-    case "minimal":
-      return <MinimalTemplate {...templateProps} />;
-    case "classic":
-    default:
-      return <ClassicTemplate {...templateProps} />;
-  }
+  return <Template company={company} cars={cars} currency={currency} subdomain={subdomain} slides={slides} page="home" />;
 }

@@ -19,6 +19,7 @@ import {
   Settings,
   Menu,
   Inbox,
+  Globe,
 } from "lucide-react";
 
 interface StaffUser {
@@ -40,6 +41,7 @@ const NAV_KEYS = [
 
 const MANAGER_KEYS = [
   { href: "/dashboard/staff", labelKey: "nav.staff", icon: UserCog },
+  { href: "/dashboard/website", labelKey: "nav.website", icon: Globe },
 ];
 
 const SETTINGS_KEY = { href: "/dashboard/settings", labelKey: "nav.settings", icon: Settings };

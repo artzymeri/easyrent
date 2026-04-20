@@ -10,6 +10,9 @@ module.exports = (sequelize, DataTypes) => {
       Company.hasMany(models.Booking, { foreignKey: "companyId", as: "bookings" });
       Company.hasMany(models.DeliveryPoint, { foreignKey: "companyId", as: "deliveryPoints" });
       Company.hasMany(models.BookingRequest, { foreignKey: "companyId", as: "bookingRequests" });
+      Company.hasMany(models.WebsiteSlide, { foreignKey: "companyId", as: "websiteSlides" });
+      Company.hasMany(models.WebsitePage, { foreignKey: "companyId", as: "websitePages" });
+      Company.hasMany(models.BlogPost, { foreignKey: "companyId", as: "blogPosts" });
     }
   }
 
@@ -75,6 +78,35 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
         field: "website_published",
+      },
+      heroSlideSource: {
+        type: DataTypes.STRING(20),
+        defaultValue: "custom",
+        field: "hero_slide_source",
+      },
+      websiteNavLinks: {
+        type: DataTypes.TEXT,
+        field: "website_nav_links",
+        get() {
+          const raw = this.getDataValue("websiteNavLinks");
+          if (!raw) return ["home", "cars", "about", "contact", "blog"];
+          try { return JSON.parse(raw); } catch { return ["home", "cars", "about", "contact", "blog"]; }
+        },
+        set(val) {
+          this.setDataValue("websiteNavLinks", val ? JSON.stringify(val) : null);
+        },
+      },
+      websitePrimaryColor: {
+        type: DataTypes.STRING(7),
+        field: "website_primary_color",
+      },
+      websiteHeroTitle: {
+        type: DataTypes.STRING(500),
+        field: "website_hero_title",
+      },
+      websiteHeroSubtitle: {
+        type: DataTypes.STRING(1000),
+        field: "website_hero_subtitle",
       },
       isActive: {
         type: DataTypes.BOOLEAN,

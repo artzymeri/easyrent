@@ -1,4 +1,4 @@
-import type { Company, Car, BookedRange, BookingRequestPayload } from "./types";
+import type { Company, Car, BookedRange, BookingRequestPayload, WebsiteSlide, WebsitePage, BlogPost } from "./types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4344/api";
 
@@ -52,5 +52,53 @@ export async function submitBookingRequest(subdomain: string, data: BookingReque
     return { success: true };
   } catch {
     return { success: false, error: "Network error" };
+  }
+}
+
+export async function getSlides(subdomain: string): Promise<WebsiteSlide[]> {
+  try {
+    const res = await fetch(`${API_URL}/public/${subdomain}/slides`, {
+      next: { revalidate: 60 },
+    });
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
+}
+
+export async function getPage(subdomain: string, slug: string): Promise<WebsitePage | null> {
+  try {
+    const res = await fetch(`${API_URL}/public/${subdomain}/pages/${slug}`, {
+      next: { revalidate: 60 },
+    });
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
+}
+
+export async function getBlogPosts(subdomain: string): Promise<BlogPost[]> {
+  try {
+    const res = await fetch(`${API_URL}/public/${subdomain}/blog`, {
+      next: { revalidate: 60 },
+    });
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
+}
+
+export async function getBlogPost(subdomain: string, slug: string): Promise<BlogPost | null> {
+  try {
+    const res = await fetch(`${API_URL}/public/${subdomain}/blog/${slug}`, {
+      next: { revalidate: 60 },
+    });
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
   }
 }

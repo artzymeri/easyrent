@@ -38,6 +38,7 @@
     "cars": "Veturat",
     "customers": "Klientët",
     "staff": "Stafi",
+    "website": "Uebfaqja",
     "settings": "Cilësimet"
   },
   "roles": {
@@ -796,5 +797,84 @@
     "filterPending": "Në pritje",
     "filterConfirmed": "Konfirmuara",
     "filterRejected": "Refuzuara"
+  },
+  "website": {
+    "title": "Menaxheri i Uebfaqjes",
+    "subtitle": "Personalizoni pamjen dhe përmbajtjen e uebfaqjes tuaj publike",
+    "tabs": {
+      "general": "Përgjithshme",
+      "slides": "Slidet",
+      "pages": "Faqet",
+      "blog": "Blog"
+    },
+    "general": {
+      "template": "Shablloni",
+      "selectTemplate": "Zgjidhni një shabllon për uebfaqjen tuaj",
+      "published": "Publikuar",
+      "publishedDesc": "Uebfaqja juaj është aktive dhe e aksesueshme përmes nëndomenit tuaj",
+      "unpublishedDesc": "Uebfaqja juaj është e fshehur nga publiku",
+      "heroTitle": "Titulli Kryesor",
+      "heroSubtitle": "Nëntitulli Kryesor",
+      "primaryColor": "Ngjyra Kryesore",
+      "slideSource": "Burimi i Slideve",
+      "slideSourceCustom": "Slide të Personalizuara",
+      "slideSourceCars": "Imazhe Veturash",
+      "slideSourceBoth": "Të dyja",
+      "navLinks": "Lidhjet e Navigimit",
+      "saved": "Cilësimet e uebfaqjes u ruajtën"
+    },
+    "slides": {
+      "title": "Slidet Kryesore",
+      "description": "Shtoni slide në seksionin kryesor. Nëse nuk ka slide, do të shfaqen imazhet e veturave.",
+      "addSlide": "Shto Slide",
+      "editSlide": "Ndrysho Slide",
+      "slideTitle": "Titulli",
+      "slideSubtitle": "Nëntitulli",
+      "slideImage": "Imazhi",
+      "buttonText": "Teksti i Butonit",
+      "buttonLink": "Lidhja e Butonit",
+      "noSlides": "Nuk ka slide ende. Shtoni slide-n e parë ose do të shfaqen imazhet e veturave.",
+      "deleted": "Slide u fshi",
+      "saved": "Slide u ruajt"
+    },
+    "pages": {
+      "about": "Rreth Nesh",
+      "contact": "Kontakti",
+      "pageTitle": "Titulli i Faqes",
+      "pageContent": "Përmbajtja",
+      "heroImage": "Imazhi Kryesor",
+      "contactHours": "Orari i Punës",
+      "contactMapEmbed": "URL e Google Maps Embed",
+      "saved": "Faqja u ruajt"
+    },
+    "blog": {
+      "title": "Postimet e Blogut",
+      "description": "Krijoni dhe menaxhoni postimet e blogut për uebfaqjen tuaj",
+      "addPost": "Postim i Ri",
+      "editPost": "Ndrysho Postimin",
+      "postTitle": "Titulli",
+      "postContent": "Përmbajtja",
+      "postExcerpt": "Përmbledhje",
+      "coverImage": "Imazhi i Kopertinës",
+      "publish": "Publiko",
+      "unpublish": "Çpubliko",
+      "draft": "Draft",
+      "published": "Publikuar",
+      "noPosts": "Nuk ka postime ende",
+      "deleted": "Postimi u fshi",
+      "saved": "Postimi u ruajt"
+    },
+    "templates": {
+      "classic": "Klasik",
+      "modern": "Modern",
+      "elegant": "Elegant",
+      "sporty": "Sportiv",
+      "minimal": "Minimal",
+      "starter": "Fillestar",
+      "bold": "I Guximshëm",
+      "oceanic": "Oqeanik",
+      "nature": "Natyra",
+      "corporate": "Korporativ"
+    }
   }
 }

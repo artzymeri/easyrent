@@ -77,6 +77,7 @@ app.use("/api/delivery-points", require("./routes/delivery-points"));
 app.use("/api/insurance-providers", require("./routes/insurance-providers"));
 app.use("/api/dashboard",  require("./routes/dashboard"));
 app.use("/api/qr",         require("./routes/qr"));
+app.use("/api/website",    require("./routes/website"));
 app.use("/api/public",     require("./routes/public"));
 
 // ── Static data endpoints ─────────────────────────────────────
